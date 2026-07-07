@@ -46,12 +46,11 @@ def _area_in_scope(scope: dict[str, Any], area: str) -> bool:
     return bool(tokens) and tokens[0] in haystack
 
 
-def _entry_points_for(scope: dict[str, Any], area: str) -> list[str]:
-    """Pull entry points from scope if it exposes them; else empty."""
-    ep = scope.get("entry_points") if isinstance(scope, dict) else None
-    if isinstance(ep, list):
-        return [str(x) for x in ep]
-    return []
+def _scope_value(scope: dict[str, Any], in_scope: bool) -> str:
+    """Canonical `reachability.bug_bounty_scope` STRING (schema default: conditional)."""
+    if not scope:
+        return "conditional"
+    return "in-scope" if in_scope else "out-of-scope"
 
 
 def _resolve_covers(covers_hint: list[str], subgraphs: list[dict] | None) -> str:
@@ -97,23 +96,31 @@ def build_property(
     liveness_only = bool(entry.get("liveness_only", False))
     attacker_controlled = bool(entry.get("attacker_controlled", False))
 
+    # Vocabulary aligned with bench-rq2a-20260508-speca (see schema.py):
+    #   classification  external-reachable | internal
+    #   exploitability  external-attack | local-attack
+    #   entry_points    CallbackHandler | FunctionCall | ProgramEntry | Initialization
     reach = Reachability(
-        classification="attacker_reachable" if attacker_controlled else "internal_invariant",
-        entry_points=_entry_points_for(scope, area),
+        classification="external-reachable" if attacker_controlled else "internal",
+        entry_points=[str(x) for x in entry.get("entry_points", [])],
         attacker_controlled=attacker_controlled,
-        bug_bounty_scope=in_scope,
+        bug_bounty_scope=_scope_value(scope, in_scope),
+    )
+    exploitability = entry.get(
+        "exploitability",
+        "external-attack" if attacker_controlled else "local-attack",
     )
 
     return Property(
         property_id=entry["property_id"],
         text=entry["text"],
-        type=entry["type"],
+        type=entry.get("type", "invariant"),
         assertion=entry["assertion"],
-        severity=entry["severity"],
+        severity=str(entry["severity"]).upper(),
         covers=_resolve_covers(entry.get("covers_hint", []), subgraphs),
         reachability=reach,
         bug_bounty_eligible=(in_scope and not liveness_only),
-        exploitability=entry["exploitability"],
+        exploitability=exploitability,
         lean_status=lean_status,
         lean_artifact=_lean_artifact(gasper_source, gasper_ref, module, theorem),
         kurtosis_test=None,  # filled by speca#88 task 5 (Kurtosis fixture generation)
