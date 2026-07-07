@@ -27,11 +27,23 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
             | sh -s -- -y --default-toolchain "$(cat lean/lean-toolchain)"
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: cache lake workspace (deps + build outputs)
+        uses: actions/cache@v4
+        with:
+          path: lean/.lake
+          key: lake-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'lean/lakefile.lean') }}-${{ github.run_id }}
+          restore-keys: |
+            lake-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'lean/lakefile.lean') }}-
+            lake-${{ runner.os }}-
+      - name: lake update (resolve gasper-lean4 + transitive deps)
+        working-directory: lean
+        run: lake update
+      - name: fetch mathlib olean cache (gasper-lean4 depends on mathlib)
+        working-directory: lean
+        run: lake exe cache get
       - name: lake build (gasper-lean4 + speca-export)
         working-directory: lean
-        run: |
-          lake update
-          lake build
+        run: lake build
       - name: smoke — export health for the mapped theorems
         working-directory: lean
         run: |
