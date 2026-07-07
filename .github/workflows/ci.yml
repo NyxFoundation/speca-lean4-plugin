@@ -1,0 +1,51 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    name: python driver + mapping tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e '.[dev]'
+      - run: pytest -q
+
+  lean:
+    name: lean exporter build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install elan (Lean toolchain manager)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain "$(cat lean/lean-toolchain)"
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: lake build (gasper-lean4 + speca-export)
+        working-directory: lean
+        run: |
+          lake update
+          lake build
+      - name: smoke — export health for the mapped theorems
+        working-directory: lean
+        run: |
+          python3 - <<'PY' > targets.txt
+          import json
+          m = json.load(open("../theorem_map.json"))
+          print("\n".join(e["theorem"] for e in m["properties"]))
+          PY
+          lake exe speca-export --targets targets.txt | tee health.json
+      - name: end-to-end — emit 01e from real Lean health
+        run: |
+          pip install -e '.[dev]'
+          speca-lean4 emit-01e \
+            --scope tests/fixtures/bug_bounty_scope.sample.json \
+            --health-json lean/health.json \
+            --out 01e_lean.json
+          python3 -c "import json,sys; d=json.load(open('01e_lean.json')); assert d['properties'], 'no properties'; print(len(d['properties']),'properties emitted from real Lean health')"

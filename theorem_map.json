@@ -1,0 +1,92 @@
+{
+  "version": "0.1.0",
+  "gasper_source": "NyxFoundation/gasper-lean4",
+  "gasper_ref": "main",
+  "note": "Declarative theorem -> 01e-property mapping (Stage C of the impl plan). Tune these entries to match the fusaka 01e benchmark granularity WITHOUT recompiling Lean. `theorem` must be the fully-qualified Lean name so `speca-export` can resolve it; `covers_hint` is matched against 01b subgraph element ids by the driver; `bug_bounty_area` is checked against BUG_BOUNTY_SCOPE.json.",
+  "properties": [
+    {
+      "property_id": "PROP-lean-slashing-001",
+      "theorem": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+      "casper_condition": "S1",
+      "text": "A validator MUST NOT sign two attestations with the same target epoch for distinct targets (equivocation).",
+      "type": "Repudiation",
+      "assertion": "For every validator v and target epoch e, at most one target block-root is signed by v. Two distinct signed targets at the same target epoch witness slashable equivocation (Casper FFG condition S1).",
+      "severity": "High",
+      "covers_hint": ["attestation validation", "slashing detection", "double vote", "process_attestation"],
+      "bug_bounty_area": "consensus/slashing",
+      "attacker_controlled": true,
+      "exploitability": "Requires a validator signing key. A client that fails to detect S1 equivocation lets a Byzantine validator commit to two histories without being slashed, weakening accountable safety.",
+      "liveness_only": false
+    },
+    {
+      "property_id": "PROP-lean-slashing-002",
+      "theorem": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex",
+      "casper_condition": "S2",
+      "text": "A validator MUST NOT cast an attestation whose (source, target) span strictly surrounds, or is surrounded by, another of its attestations (surround vote).",
+      "type": "Repudiation",
+      "assertion": "For every validator v, there are no two attestations a1, a2 by v such that source(a1) < source(a2) and target(a2) < target(a1). Such a pair witnesses slashable surround voting (Casper FFG condition S2).",
+      "severity": "High",
+      "covers_hint": ["attestation validation", "slashing detection", "surround vote", "process_attester_slashing"],
+      "bug_bounty_area": "consensus/slashing",
+      "attacker_controlled": true,
+      "exploitability": "Requires a validator signing key. Missing S2 detection permits surround voting that can finalize conflicting checkpoints.",
+      "liveness_only": false
+    },
+    {
+      "property_id": "PROP-lean-safety-001",
+      "theorem": "GasperBeaconChain.Executable.accountable_safety_witnessB",
+      "casper_condition": "accountable_safety",
+      "text": "If two conflicting checkpoints are both finalized, a ⅔ quorum intersection MUST be provably slashable.",
+      "type": "Tampering",
+      "assertion": "finalization-fork(state) implies q-intersection-slashed(state): every validator in the intersection of the two supporting ⅔ quorums has violated S1 or S2. A client MUST NOT finalize two conflicting checkpoints absent detectable slashing.",
+      "severity": "Critical",
+      "covers_hint": ["fork choice", "finalization", "checkpoint", "process_justification_and_finalization"],
+      "bug_bounty_area": "consensus/finality",
+      "attacker_controlled": true,
+      "exploitability": "A safety violation (two conflicting finalized checkpoints) is the strongest consensus failure. This property is the accountability guarantee; a client bug that finalizes a fork without the slashable-intersection invariant breaks it.",
+      "liveness_only": false
+    },
+    {
+      "property_id": "PROP-lean-quorum-001",
+      "theorem": "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness",
+      "casper_condition": "quorum_intersection",
+      "text": "The ⅔-quorum intersection forced to be slashed MUST have positive weight, accounting for validator activation/exit churn.",
+      "type": "Tampering",
+      "assertion": "The slashable quorum intersection weight is bounded below by max(wt(V_L)-a_L-e_R, wt(V_R)-a_R-e_L) - f_{1/3}(wt(V_L)) - f_{1/3}(wt(V_R)) > 0. Quorum weight arithmetic MUST NOT under/overflow or double-count churned validators.",
+      "severity": "High",
+      "covers_hint": ["committee", "quorum", "effective balance", "get_total_active_balance", "attesting balance"],
+      "bug_bounty_area": "consensus/finality",
+      "attacker_controlled": false,
+      "exploitability": "Incorrect quorum-weight arithmetic (overflow, churn double-count) can misjudge whether a ⅔ threshold is met, affecting justification/finalization decisions.",
+      "liveness_only": false
+    },
+    {
+      "property_id": "PROP-lean-justification-001",
+      "theorem": "GasperBeaconChain.Executable.justified_iff_bounded",
+      "casper_condition": "justification",
+      "text": "A checkpoint is justified iff there is a bounded justification link chain of supermajority links from the genesis/anchor.",
+      "type": "Tampering",
+      "assertion": "justified(c) holds iff a finite chain of ⅔-supermajority-linked checkpoints reaches c from the anchor. Justification-status computation MUST match this bounded-chain characterization (no unbounded recursion, no off-by-one on the height gap).",
+      "severity": "Medium",
+      "covers_hint": ["justification", "supermajority link", "checkpoint", "ancestor", "process_justification"],
+      "bug_bounty_area": "consensus/finality",
+      "attacker_controlled": false,
+      "exploitability": "A justification computation that diverges from the bounded-chain rule can justify/finalize incorrectly, but requires control over checkpoint structure rather than a single crafted message.",
+      "liveness_only": false
+    },
+    {
+      "property_id": "PROP-lean-liveness-001",
+      "theorem": "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum",
+      "casper_condition": "plausible_liveness",
+      "text": "While ⅔ of stake is honest, it is always possible to extend the chain and finalize without introducing new slashing.",
+      "type": "DenialOfService",
+      "assertion": "If ≥⅔ of stake is unslashed/honest then a good quorum exists at each step, so the protocol can always extend to finalize a new checkpoint without any honest validator becoming slashable (plausible liveness).",
+      "severity": "Medium",
+      "covers_hint": ["liveness", "quorum", "finalization"],
+      "bug_bounty_area": "consensus/liveness",
+      "attacker_controlled": false,
+      "exploitability": "Liveness property. Typically outside a client bug-bounty's safety scope; flagged bug_bounty_eligible=false unless the scope explicitly includes liveness.",
+      "liveness_only": true
+    }
+  ]
+}

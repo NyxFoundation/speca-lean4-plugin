@@ -1,0 +1,12 @@
+{
+  "project": "GasperBeaconChain",
+  "plugin": "speca-lean4-plugin",
+  "theorems": [
+    {"name": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.Slashing"},
+    {"name": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.Slashing"},
+    {"name": "GasperBeaconChain.Executable.accountable_safety_witnessB", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.AccountableSafety"},
+    {"name": "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.Quorums"},
+    {"name": "GasperBeaconChain.Executable.justified_iff_bounded", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.Justification"},
+    {"name": "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.PlausibleLiveness"}
+  ]
+}
