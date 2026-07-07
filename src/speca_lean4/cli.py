@@ -110,6 +110,18 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_verify_precision(args: argparse.Namespace) -> int:
+    from .precision import format_summary, verify_precision
+
+    report = verify_precision(args.ours, args.benchmark_dir, args.findings_map)
+    if args.out:
+        Path(args.out).write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+    print(format_summary(report))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="speca-lean4", description=__doc__)
     sub = p.add_subparsers(dest="command", required=True)
@@ -124,6 +136,22 @@ def build_parser() -> argparse.ArgumentParser:
     src.add_argument("--run-lean", action="store_true", help="run `lake exe speca-export` now")
     e.add_argument("--out", required=True, help="output 01e_PARTIAL JSON path")
     e.set_defaults(func=cmd_emit_01e)
+
+    v = sub.add_parser(
+        "verify-precision",
+        help="measure granularity vs the rq2a 01e benchmark and recall vs critical_high_findings",
+    )
+    v.add_argument("--ours", required=True, help="our generated 01e JSON")
+    v.add_argument(
+        "--benchmark-dir", required=True,
+        help="directory containing the restored bench-rq2a-20260508-speca 01e_*.json files",
+    )
+    v.add_argument(
+        "--findings-map", default=str(_REPO_ROOT / "data" / "findings_map.json"),
+        help="curated findings judgment table (default: data/findings_map.json)",
+    )
+    v.add_argument("--out", help="write the full JSON report here")
+    v.set_defaults(func=cmd_verify_precision)
     return p
 
 
