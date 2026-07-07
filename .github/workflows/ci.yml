@@ -53,6 +53,14 @@ jobs:
           print("\n".join(e["theorem"] for e in m["properties"]))
           PY
           lake exe speca-export --targets targets.txt | tee health.json
+          python3 - <<'PY'
+          import json
+          h = json.load(open("health.json"))
+          bad = [t["name"] for t in h["theorems"] if not t["resolved"]]
+          assert not bad, f"unresolved target theorems: {bad}"
+          print(f"all {len(h['theorems'])} targets resolved;",
+                sum(1 for t in h["theorems"] if t["lean_status"] == "proved"), "proved")
+          PY
       - name: end-to-end — emit 01e from real Lean health
         run: |
           pip install -e '.[dev]'

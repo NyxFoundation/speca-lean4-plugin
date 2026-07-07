@@ -1,6 +1,11 @@
 import Lean.Util.CollectAxioms
 import Lean.Data.Json
-import GasperBeaconChain
+-- NOTE: the gasper-lean4 root module `GasperBeaconChain` does NOT import the
+-- `Executable` layer (it stops at `Core.All`). The target theorems live in
+-- `GasperBeaconChain.Executable.*`, so we must import `Executable.All` here —
+-- both to make lake compile those modules and so the runtime `importModules`
+-- in Main.lean can load them.
+import GasperBeaconChain.Executable.All
 
 /-!
 Proof-health export for the SPECA Lean4 plugin.
