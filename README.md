@@ -76,8 +76,13 @@ field — per speca#88's contract.
 gh release download bench-rq2a-20260508-speca --repo NyxFoundation/speca
 tar --zstd -xf bench-rq2a-20260508-speca.tar.zst   # -> speca/01e_*.json (16 files)
 
+speca-lean4 emit-01e --scope scope.json --health-json health.json \
+    --out outputs/01e_PARTIAL_lean.json \
+    --out-dir outputs/01e_lean/            # sharded: 01e_PARTIAL_<shard>.json
+
 speca-lean4 verify-precision \
-    --ours outputs/01e_PARTIAL_lean.json \
+    --ours     outputs/01e_PARTIAL_lean.json \
+    --ours-dir outputs/01e_lean/ \          # per-shard props/file granularity
     --benchmark-dir speca \
     --out precision_report.json
 ```
@@ -93,26 +98,29 @@ transparent.
 Baseline, Core retarget (2026-07-08, 25 properties) vs the prior 7-property
 Executable-only baseline (2026-07-07):
 
-| metric | Core (25 props) | prior (7 props) | benchmark |
-|---|---|---|---|
-| schema validity | 100% | 100% | — |
-| vocabulary conformance | 100% | 100% | type/severity/classification/exploitability/entry_points |
-| properties per file | 25 (z = +3.6) | 7 (z = −1.24) | 11.62 ± 3.72 |
-| assertion length | mean z = −0.2; 40% within 1-sigma | mean z = −0.49; 100% | 93.55 ± 14.62 chars |
-| severity KL(ours‖bench) | 0.6004 nats | 0.3015 nats | CRITICAL/HIGH/MEDIUM = 95/81/10 |
-| recall (strict / lenient) | **0.333** / 0.667 | 0.0 / 0.667 | 3 in-domain of 14 consensus-layer findings |
+| metric | Core sharded (M3) | Core single-file | prior (7 props) | benchmark |
+|---|---|---|---|---|
+| schema validity | 100% | 100% | 100% | — |
+| vocabulary conformance | 100% | 100% | 100% | — |
+| properties per file | **12.5 ± 0.71** (safety 12 z=+0.10, finality 13 z=+0.37; both in 1-sigma) | 25 (z = +3.6) | 7 (z = −1.24) | 11.62 ± 3.72 |
+| assertion length | mean z = −0.2 | mean z = −0.2 | mean z = −0.49 | 93.55 ± 14.62 chars |
+| severity KL(ours‖bench) | 0.6004 nats | 0.6004 nats | 0.3015 nats | CRITICAL/HIGH/MEDIUM = 95/81/10 |
+| recall (strict / lenient) | **0.333** / 0.667 | 0.333 / 0.667 | 0.0 / 0.667 | 3 in-domain of 14 consensus-layer findings |
 
-Honest reading of the retarget. It captures the substantive Core theorems and
-**raises strict recall 0.0 → 0.333**: the Core `SlashableBound` trio pins exact
+Honest reading. The Core retarget captures the substantive Core theorems and
+**raised strict recall 0.0 → 0.333**: the Core `SlashableBound` trio pins exact
 validator-set weight arithmetic, giving full coverage of the Electra
 effective-balance finding (`GHSA-wm9c-xvqq-5c28`) that the Executable-only set
-could only cover partially. The cost is granularity: emitting all 25 into one
-`01e` file overshoots the benchmark's ~11.6 props/file (single-component files),
-and the many honestly-`MEDIUM` justification/quorum lemmas widen the severity
-KL. Both are addressable in M3 by sharding `emit-01e` per Core module (≈4-8
-props/file) rather than by relabeling severities. Most consensus-layer findings
-(OOM/DoS, LMD-GHOST, BLS internals, eth1 ops) remain out of the FFG formal
-remit by construction.
+could only cover partially. M3 then fixed granularity by **structure, not
+relabeling** — `emit-01e --out-dir` shards the 25 properties into two coherent
+protocol-area files (`safety` 12, `finality` 13), each landing within the
+benchmark's 1-sigma props/file band (single-file emit is kept for speca's
+provider call). The severity KL is deliberately unchanged: the
+justification/quorum lemmas are honestly `MEDIUM` and were not relabeled to game
+the metric — a formal-methods-derived set simply has a different, flatter
+severity profile than the CRITICAL/HIGH-heavy benchmark, which we report rather
+than fake. Most consensus-layer findings (OOM/DoS, LMD-GHOST, BLS internals,
+eth1 ops) remain out of the FFG formal remit by construction.
 
 ## Lean exporter directly
 
