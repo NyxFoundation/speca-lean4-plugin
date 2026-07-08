@@ -6,12 +6,18 @@
         [--subgraphs 01b_PARTIAL_glob ...] \
         [--gasper-ref <git-sha>] \
         (--health-json health.json | --run-lean) \
-        --out 01e_PARTIAL_lean.json
+        (--out 01e_PARTIAL_lean.json | --out-dir outputs/01e_lean/)
 
 Health source (Stage B) is one of:
   --health-json   a precomputed proof-health JSON from `lake exe speca-export`
   --run-lean      run `lake exe speca-export` in ./lean now (requires the Lean
                   toolchain; writes the target list from the theorem map)
+
+Output is one of (or both):
+  --out       single 01e_PARTIAL JSON with all properties (speca provider call)
+  --out-dir   sharded: one 01e_PARTIAL_<shard>.json per theorem_map `shard`
+              group, so per-file property count matches the benchmark
+              granularity (M3). Shard groups: safety, finality.
 
 speca#87's `LeanPropertyProvider.generate()` shells out to this and reads --out.
 """
@@ -28,7 +34,7 @@ from pathlib import Path
 from typing import Any
 
 from .health import index_health, load_health
-from .mapping import build_properties
+from .mapping import build_properties, build_properties_by_shard
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _DEFAULT_MAP = _REPO_ROOT / "theorem_map.json"
@@ -74,6 +80,9 @@ def _run_lean(theorem_map: dict[str, Any]) -> dict[str, Any]:
 
 
 def cmd_emit_01e(args: argparse.Namespace) -> int:
+    if not args.out and not args.out_dir:
+        print("error: pass --out (single file) and/or --out-dir (sharded)", file=sys.stderr)
+        return 2
     theorem_map = _load_json(args.map)
     scope = _load_json(args.scope)
     subgraphs = _load_subgraphs(args.subgraphs)
@@ -90,30 +99,54 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
         )
         health = {}
 
-    properties = build_properties(theorem_map, health, scope, subgraphs, args.gasper_ref)
+    gasper_source = theorem_map.get("gasper_source")
+    gasper_ref = args.gasper_ref or theorem_map.get("gasper_ref")
 
-    out = {
-        "phase": "01e",
-        "provider": "lean",
-        "gasper_source": theorem_map.get("gasper_source"),
-        "gasper_ref": args.gasper_ref or theorem_map.get("gasper_ref"),
-        "properties": properties,
-    }
-    Path(args.out).write_text(json.dumps(out, indent=2, ensure_ascii=False), encoding="utf-8")
+    def _doc(props: list, shard: str | None = None) -> dict:
+        d = {
+            "phase": "01e",
+            "provider": "lean",
+            "gasper_source": gasper_source,
+            "gasper_ref": gasper_ref,
+        }
+        if shard is not None:
+            d["shard"] = shard
+        d["properties"] = props
+        return d
 
-    n_proved = sum(1 for p in properties if p.get("lean_status") == "proved")
-    n_scope = sum(1 for p in properties if p.get("bug_bounty_eligible"))
-    print(
-        f"wrote {len(properties)} properties to {args.out} "
-        f"({n_proved} proved, {n_scope} bug-bounty-eligible)"
-    )
+    def _summary(props: list) -> str:
+        n_proved = sum(1 for p in props if p.get("lean_status") == "proved")
+        n_scope = sum(1 for p in props if p.get("bug_bounty_eligible"))
+        return f"{len(props)} properties ({n_proved} proved, {n_scope} bug-bounty-eligible)"
+
+    # Sharded output: one 01e_PARTIAL_<shard>.json per protocol-area group, so
+    # per-file property count matches the benchmark granularity (M3).
+    if args.out_dir:
+        groups = build_properties_by_shard(theorem_map, health, scope, subgraphs, args.gasper_ref)
+        out_dir = Path(args.out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        total = 0
+        for shard, props in groups.items():
+            fp = out_dir / f"01e_PARTIAL_{shard}.json"
+            fp.write_text(json.dumps(_doc(props, shard), indent=2, ensure_ascii=False), encoding="utf-8")
+            total += len(props)
+            print(f"wrote {fp}: {_summary(props)}")
+        print(f"total: {total} properties across {len(groups)} shard(s)")
+
+    # Single-file output (back-compat; what speca's provider call uses).
+    if args.out:
+        properties = build_properties(theorem_map, health, scope, subgraphs, args.gasper_ref)
+        Path(args.out).write_text(
+            json.dumps(_doc(properties), indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        print(f"wrote {args.out}: {_summary(properties)}")
     return 0
 
 
 def cmd_verify_precision(args: argparse.Namespace) -> int:
     from .precision import format_summary, verify_precision
 
-    report = verify_precision(args.ours, args.benchmark_dir, args.findings_map)
+    report = verify_precision(args.ours, args.benchmark_dir, args.findings_map, args.ours_dir)
     if args.out:
         Path(args.out).write_text(
             json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -134,14 +167,22 @@ def build_parser() -> argparse.ArgumentParser:
     src = e.add_mutually_exclusive_group()
     src.add_argument("--health-json", help="precomputed speca-export health JSON")
     src.add_argument("--run-lean", action="store_true", help="run `lake exe speca-export` now")
-    e.add_argument("--out", required=True, help="output 01e_PARTIAL JSON path")
+    e.add_argument("--out", help="single-file output 01e_PARTIAL JSON path (speca provider call)")
+    e.add_argument(
+        "--out-dir",
+        help="sharded output: write one 01e_PARTIAL_<shard>.json per theorem_map shard here",
+    )
     e.set_defaults(func=cmd_emit_01e)
 
     v = sub.add_parser(
         "verify-precision",
         help="measure granularity vs the rq2a 01e benchmark and recall vs critical_high_findings",
     )
-    v.add_argument("--ours", required=True, help="our generated 01e JSON")
+    v.add_argument("--ours", required=True, help="our generated 01e JSON (single-file, for recall + vocab)")
+    v.add_argument(
+        "--ours-dir",
+        help="directory of our sharded 01e_PARTIAL_<shard>.json files, for per-shard props/file granularity",
+    )
     v.add_argument(
         "--benchmark-dir", required=True,
         help="directory containing the restored bench-rq2a-20260508-speca 01e_*.json files",

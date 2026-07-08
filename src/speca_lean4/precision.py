@@ -183,19 +183,58 @@ def recall_report(our_props: list[dict], findings_map: dict[str, Any]) -> dict[s
     }
 
 
+def shard_granularity(ours_dir: str | Path, bench: dict[str, Any]) -> dict[str, Any]:
+    """Per-file (per-shard) property-count granularity for our sharded output.
+
+    The benchmark measures props PER FILE (mean 11.62, sd 3.72). When we emit
+    one 01e file per shard, granularity should be judged the same way — one z
+    per shard file, not a single z over the concatenation. Returns each shard's
+    count + z and the overall props-per-file distribution across our files.
+    """
+    files = sorted(Path(ours_dir).glob("01e_PARTIAL_*.json"))
+    counts: list[int] = []
+    per_shard: list[dict[str, Any]] = []
+    for fp in files:
+        doc = json.loads(fp.read_text(encoding="utf-8"))
+        n = len(_props_of(doc))
+        counts.append(n)
+        per_shard.append({
+            "file": fp.name,
+            "shard": doc.get("shard"),
+            "n_properties": n,
+            "props_per_file_z": _z(n, bench["props_per_file"]),
+            "within_bench_1sigma": bool(
+                bench["props_per_file"]["mean"] - bench["props_per_file"]["stdev"]
+                <= n
+                <= bench["props_per_file"]["mean"] + bench["props_per_file"]["stdev"]
+            ),
+        })
+    return {
+        "n_files": len(files),
+        "total_properties": sum(counts),
+        "per_shard": per_shard,
+        "props_per_file": _dist(counts) if counts else None,
+        "all_within_bench_1sigma": all(s["within_bench_1sigma"] for s in per_shard) if per_shard else False,
+    }
+
+
 def verify_precision(
     our_01e: str | Path,
     benchmark_dir: str | Path,
     findings_map_path: str | Path,
+    ours_dir: str | Path | None = None,
 ) -> dict[str, Any]:
     ours = _props_of(json.loads(Path(our_01e).read_text(encoding="utf-8")))
     bench = load_benchmark(benchmark_dir)
     fmap = json.loads(Path(findings_map_path).read_text(encoding="utf-8"))
-    return {
+    report = {
         "benchmark": bench,
         "granularity": granularity_report(ours, bench),
         "recall": recall_report(ours, fmap),
     }
+    if ours_dir is not None:
+        report["shard_granularity"] = shard_granularity(ours_dir, bench)
+    return report
 
 
 def format_summary(report: dict[str, Any]) -> str:
@@ -216,4 +255,16 @@ def format_summary(report: dict[str, Any]) -> str:
         f"strict {r['recall_strict']} | lenient {r['recall_lenient']} "
         f"(full={r['covered_full']}, partial={r['covered_partial']})",
     ]
+    sg = report.get("shard_granularity")
+    if sg:
+        shard_bits = ", ".join(
+            f"{s['shard']}={s['n_properties']} (z={s['props_per_file_z']}"
+            f"{'' if s['within_bench_1sigma'] else ', OUT'})"
+            for s in sg["per_shard"]
+        )
+        lines.append(
+            f"sharded granularity: {sg['n_files']} files, "
+            f"props/file {sg['props_per_file']['mean']} +/- {sg['props_per_file']['stdev']} "
+            f"| {shard_bits} | all within bench 1-sigma: {sg['all_within_bench_1sigma']}"
+        )
     return "\n".join(lines)

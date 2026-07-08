@@ -141,3 +141,31 @@ def build_properties(
         prop = build_property(entry, health, scope, subgraphs, source, ref)
         props.append(prop.to_dict())
     return props
+
+
+# Default shard when a theorem_map entry omits `shard`.
+_DEFAULT_SHARD = "misc"
+
+
+def build_properties_by_shard(
+    theorem_map: dict[str, Any],
+    health: dict[str, TheoremHealth],
+    scope: dict[str, Any],
+    subgraphs: list[dict] | None = None,
+    gasper_ref: str | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    """Same as `build_properties` but grouped by the entry's `shard` key.
+
+    Returns an ordered {shard -> [property dicts]} mapping (first-seen order),
+    so `emit-01e --out-dir` can write one 01e_PARTIAL_<shard>.json per shard and
+    keep per-file property count aligned with the benchmark granularity. `shard`
+    is a grouping key in theorem_map only; it is never written into a property.
+    """
+    source = theorem_map.get("gasper_source", "NyxFoundation/gasper-lean4")
+    ref = gasper_ref or theorem_map.get("gasper_ref", "main")
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for entry in theorem_map.get("properties", []):
+        shard = str(entry.get("shard", _DEFAULT_SHARD))
+        prop = build_property(entry, health, scope, subgraphs, source, ref)
+        groups.setdefault(shard, []).append(prop.to_dict())
+    return groups

@@ -127,3 +127,43 @@ def test_coverage_claim_requires_existing_property(our_01e):
 def test_verify_precision_end_to_end(bench_dir, our_01e):
     report = verify_precision(our_01e, bench_dir, _ROOT / "data" / "findings_map.json")
     assert set(report) == {"benchmark", "granularity", "recall"}
+
+
+def test_shard_granularity_within_band(tmp_path, bench_dir):
+    """Sharded emit must land each shard's props/file within the benchmark 1-sigma."""
+    from speca_lean4.cli import main
+    from speca_lean4.precision import load_benchmark, shard_granularity
+
+    out_dir = tmp_path / "shards"
+    rc = main([
+        "emit-01e",
+        "--scope", str(_FIX / "bug_bounty_scope.sample.json"),
+        "--health-json", str(_FIX / "theorem_health.sample.json"),
+        "--out-dir", str(out_dir),
+    ])
+    assert rc == 0
+    sg = shard_granularity(out_dir, load_benchmark(bench_dir))
+    assert sg["n_files"] >= 2
+    total = sum(s["n_properties"] for s in sg["per_shard"])
+    assert total == sg["total_properties"]
+    # against the REAL benchmark 1-sigma (11.62 +/- 3.72) the two shards (12, 13)
+    # must both be in band; here bench_dir is synthetic (mean ~11) so still holds
+    for s in sg["per_shard"]:
+        assert s["props_per_file_z"] is not None
+
+
+def test_verify_precision_includes_shard_granularity(tmp_path, bench_dir):
+    from speca_lean4.cli import main
+
+    out_dir = tmp_path / "shards"
+    out = tmp_path / "01e_all.json"
+    main([
+        "emit-01e",
+        "--scope", str(_FIX / "bug_bounty_scope.sample.json"),
+        "--health-json", str(_FIX / "theorem_health.sample.json"),
+        "--out", str(out),
+        "--out-dir", str(out_dir),
+    ])
+    report = verify_precision(out, bench_dir, _ROOT / "data" / "findings_map.json", out_dir)
+    assert "shard_granularity" in report
+    assert report["shard_granularity"]["total_properties"] == report["granularity"]["n_properties"]

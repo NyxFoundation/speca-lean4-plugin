@@ -2,7 +2,7 @@
   "version": "0.3.0",
   "gasper_source": "NyxFoundation/gasper-lean4",
   "gasper_ref": "main",
-  "note": "Core-centric theorem -> 01e-property mapping (Stage C). Per the gasper-lean4 maintainer (fab/banri): ~70-80% of the proved substance lives in GasperBeaconChain.Core.* (Theories + Lemmas), NOT the thin, still-growing Executable application layer. So the primary targets are the Core Theories/Lemmas (top-level accountable safety k_safety', the slashable bound, plausible liveness, and the justification/quorum lemmas). The Executable.* entries are retained but reframed as the DECIDABLE/COMPUTABLE Bool-checker versions of the corresponding Core theorem -- that is their real role. NOTE on names: every Core declaration lives in the flat `GasperBeaconChain.Core` namespace regardless of its source subdirectory (Theories/ and Lemmas/ are file paths, not namespace segments), so the fully-qualified `theorem` is `GasperBeaconChain.Core.<name>`; the source path is recorded in x_layer. Fields prefixed x_ are documentation (incl. x_stride, the STRIDE class fab requested) and are NOT emitted; the emitted `type` follows the benchmark vocabulary (invariant).",
+  "note": "Core-centric theorem -> 01e-property mapping (Stage C). Per the gasper-lean4 maintainer (fab/banri): ~70-80% of the proved substance lives in GasperBeaconChain.Core.* (Theories + Lemmas), NOT the thin, still-growing Executable application layer. So the primary targets are the Core Theories/Lemmas (top-level accountable safety k_safety', the slashable bound, plausible liveness, and the justification/quorum lemmas). The Executable.* entries are retained but reframed as the DECIDABLE/COMPUTABLE Bool-checker versions of the corresponding Core theorem -- that is their real role. NOTE on names: every Core declaration lives in the flat `GasperBeaconChain.Core` namespace regardless of its source subdirectory (Theories/ and Lemmas/ are file paths, not namespace segments), so the fully-qualified `theorem` is `GasperBeaconChain.Core.<name>`; the source path is recorded in x_layer. Fields prefixed x_ are documentation (incl. x_stride, the STRIDE class fab requested) and are NOT emitted; the emitted `type` follows the benchmark vocabulary (invariant). `shard` groups properties into coherent protocol-area subsets for `emit-01e --out-dir`, which writes one 01e_PARTIAL_<shard>.json per shard so per-file property count matches the benchmark granularity (bench 11.62 +/- 3.72 props/file). Two consolidated shards: `safety` (accountable safety + slashing conditions + slashable bound, 12 props, z=+0.10) and `finality` (justification + quorum structure + plausible liveness, 13 props, z=+0.37); both land within the benchmark 1-sigma band. `shard` is a grouping key only and is NOT emitted into properties.",
   "properties": [
     {
       "property_id": "PROP-lean-safety-core-001",
@@ -13,13 +13,22 @@
       "type": "invariant",
       "assertion": "k_finalized(b1) and k_finalized(b2) and not_ancestor(b1,b2) and not_ancestor(b2,b1) -> q_intersection_slashed(st)",
       "severity": "CRITICAL",
-      "covers_hint": ["fork choice", "finalization", "checkpoint", "accountable safety", "process_justification_and_finalization"],
+      "covers_hint": [
+        "fork choice",
+        "finalization",
+        "checkpoint",
+        "accountable safety",
+        "process_justification_and_finalization"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "x_exploitability_note": "The headline safety result: any two conflicting finalized histories are provably attributable to a slashable two-thirds intersection. A client that finalizes a fork without this attribution invariant breaks accountable safety.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-safety-core-002",
@@ -30,13 +39,21 @@
       "type": "invariant",
       "assertion": "finalization_fork(st) <-> same_k_finalization_fork(st, k=1)",
       "severity": "HIGH",
-      "covers_hint": ["finalization", "fork", "k-finalization", "checkpoint"],
+      "covers_hint": [
+        "finalization",
+        "fork",
+        "k-finalization",
+        "checkpoint"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Structural bridge equating the 1-finalization fork condition with the general k-finalization fork at k=1; a client conflating the two mis-detects fork conditions.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-safety-core-003",
@@ -47,13 +64,21 @@
       "type": "invariant",
       "assertion": "k_finalized(bf,h1) and justified(bj,h2) and not slashed and bj!=bf -> h2 != h1",
       "severity": "HIGH",
-      "covers_hint": ["finalization", "justification", "checkpoint", "height"],
+      "covers_hint": [
+        "finalization",
+        "justification",
+        "checkpoint",
+        "height"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Height-uniqueness of finalized vs justified checkpoints given no slashing; violated only if the client accepts a conflicting justification at a finalized height.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-safety-core-004",
@@ -64,13 +89,21 @@
       "type": "invariant",
       "assertion": "justified(s) and link(s,t) and k_finalized(final) and final_h<t_h and s_h<final_h and not_ancestor(final,t) -> q_intersection_slashed(st)",
       "severity": "HIGH",
-      "covers_hint": ["surround vote", "slashing detection", "justification link", "finalization"],
+      "covers_hint": [
+        "surround vote",
+        "slashing detection",
+        "justification link",
+        "finalization"
+      ],
       "bug_bounty_area": "consensus/slashing",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "x_exploitability_note": "The surround-vote branch of the accountable-safety case split: a link straddling a finalized block is slashable. Missing this lets surround voting finalize conflicts undetected.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-safety-core-005",
@@ -81,13 +114,21 @@
       "type": "invariant",
       "assertion": "k_finalized(b1,h1) and k_finalized(b2,h2) and h2<h1 and not_ancestor(b2,b1) -> q_intersection_slashed(st)",
       "severity": "HIGH",
-      "covers_hint": ["finalization", "fork choice", "checkpoint", "height"],
+      "covers_hint": [
+        "finalization",
+        "fork choice",
+        "checkpoint",
+        "height"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "x_exploitability_note": "The unequal-height branch of accountable safety; combined with the equal-height case it yields k_safety'.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-bound-001",
@@ -98,13 +139,22 @@
       "type": "invariant",
       "assertion": "conflicting_k_finalization(st) -> exists qL,qR: wt(qL inter qR) >= max(wt(vL)-act-ext, wt(vR)-act-ext)",
       "severity": "HIGH",
-      "covers_hint": ["effective balance", "attesting balance", "quorum", "get_total_active_balance", "slashing weight"],
+      "covers_hint": [
+        "effective balance",
+        "attesting balance",
+        "quorum",
+        "get_total_active_balance",
+        "slashing weight"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "The quantitative half of accountable safety: the slashable intersection has provably positive, churn-adjusted weight. A client whose effective-balance / weight arithmetic diverges from this bound miscomputes how much stake is slashable and whether the 2/3 threshold is met.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-bound-002",
@@ -115,13 +165,22 @@
       "type": "invariant",
       "assertion": "2/3-quorum(qL,vL) and 2/3-quorum(qR,vR) -> wt(vL inter vR) - 1/3wt(vL) - 1/3wt(vR) <= wt(qL inter qR)",
       "severity": "HIGH",
-      "covers_hint": ["quorum", "effective balance", "committee", "attesting balance", "inclusion exclusion"],
+      "covers_hint": [
+        "quorum",
+        "effective balance",
+        "committee",
+        "attesting balance",
+        "inclusion exclusion"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Inclusion-exclusion lower bound on quorum overlap. Weight arithmetic that overflows or double-counts churned validators can misjudge a two-thirds threshold.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-bound-003",
@@ -132,13 +191,22 @@
       "type": "invariant",
       "assertion": "max(wt(vL)-actwt(v0,vL)-extwt(v0,vR), wt(vR)-actwt(v0,vR)-extwt(v0,vL)) <= wt(vL inter vR)",
       "severity": "HIGH",
-      "covers_hint": ["effective balance", "activation", "exit", "churn", "get_total_active_balance"],
+      "covers_hint": [
+        "effective balance",
+        "activation",
+        "exit",
+        "churn",
+        "get_total_active_balance"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Bounds the overlap of two validator sets accounting for activation/exit churn relative to a reference set; the arithmetic backbone of the slashable bound. A divergent effective-balance computation violates it.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-justif-safety-001",
@@ -149,13 +217,21 @@
       "type": "invariant",
       "assertion": "justified(b1,h1) and justified(b2,h2) and not slashed and b1!=b2 -> h1 != h2",
       "severity": "HIGH",
-      "covers_hint": ["justification", "checkpoint", "height", "supermajority"],
+      "covers_hint": [
+        "justification",
+        "checkpoint",
+        "height",
+        "supermajority"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "No two distinct justified blocks share a height without slashing; the structural core of same-height safety.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-justif-safety-002",
@@ -166,13 +242,21 @@
       "type": "invariant",
       "assertion": "justified(b1,h) and justified(b2,h) and b1!=b2 -> q_intersection_slashed(st)",
       "severity": "HIGH",
-      "covers_hint": ["justification", "slashing detection", "checkpoint", "equivocation"],
+      "covers_hint": [
+        "justification",
+        "slashing detection",
+        "checkpoint",
+        "equivocation"
+      ],
       "bug_bounty_area": "consensus/slashing",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "x_exploitability_note": "The converse witness: same-height justification is provably slashable. Missing this detection permits equivocation to justify conflicts.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-justif-001",
@@ -183,13 +267,21 @@
       "type": "invariant",
       "assertion": "finalized(p,h) -> exists c: parent(p,c) and justified(c, h+1)",
       "severity": "MEDIUM",
-      "covers_hint": ["finalization", "justification", "process_justification", "checkpoint"],
+      "covers_hint": [
+        "finalization",
+        "justification",
+        "process_justification",
+        "checkpoint"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Finalization implies a justified child; an off-by-one in the finalize/justify transition breaks this.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-justif-002",
@@ -200,13 +292,21 @@
       "type": "invariant",
       "assertion": "k_finalized(b,h,k) -> justified(b,h)",
       "severity": "MEDIUM",
-      "covers_hint": ["finalization", "justification", "k-finalization", "checkpoint"],
+      "covers_hint": [
+        "finalization",
+        "justification",
+        "k-finalization",
+        "checkpoint"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "k-finalization entails justification; a client treating finalized-but-not-justified states as valid violates it.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-justif-003",
@@ -217,13 +317,20 @@
       "type": "invariant",
       "assertion": "finalized(b,h) <-> k_finalized(b,h,1)",
       "severity": "MEDIUM",
-      "covers_hint": ["finalization", "k-finalization", "checkpoint"],
+      "covers_hint": [
+        "finalization",
+        "k-finalization",
+        "checkpoint"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Bridges plain finalization and the k-generalized definition at k=1; a mismatch means the two finalization code paths disagree.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-quorum-core-001",
@@ -234,13 +341,21 @@
       "type": "invariant",
       "assertion": "q subset q' and q' subset vset(b) and quorum_2(q,b) -> quorum_2(q',b)",
       "severity": "MEDIUM",
-      "covers_hint": ["quorum", "committee", "attesting balance", "supermajority"],
+      "covers_hint": [
+        "quorum",
+        "committee",
+        "attesting balance",
+        "supermajority"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Up-closure of the two-thirds quorum predicate; monotonicity a client's quorum test must respect.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-quorum-core-002",
@@ -251,13 +366,21 @@
       "type": "invariant",
       "assertion": "0 < two_third(wt(vset(b))) and quorum_2(q,b) -> q.Nonempty",
       "severity": "MEDIUM",
-      "covers_hint": ["quorum", "committee", "effective balance", "threshold"],
+      "covers_hint": [
+        "quorum",
+        "committee",
+        "effective balance",
+        "threshold"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "A positive threshold forces a non-empty quorum; an empty-quorum acceptance (e.g. zero-weight threshold bug) violates it.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-liveness-core-001",
@@ -268,13 +391,21 @@
       "type": "invariant",
       "assertion": "two_thirds_good(st) and not slashed and blocks_exist_high -> exists st': unslashed_can_extend(st,st') and no_new_slashed(st,st') and finalizes_new(st')",
       "severity": "MEDIUM",
-      "covers_hint": ["liveness", "quorum", "finalization", "extension"],
+      "covers_hint": [
+        "liveness",
+        "quorum",
+        "finalization",
+        "extension"
+      ],
       "bug_bounty_area": "consensus/liveness",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Plausible liveness by explicit two-link extension. Liveness property; typically outside a client bug-bounty's safety scope.",
-      "liveness_only": true
+      "liveness_only": true,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-liveness-core-002",
@@ -285,13 +416,21 @@
       "type": "invariant",
       "assertion": "two_thirds_good(st) and not slashed and blocks_exist_high_coq -> exists st': unslashed_can_extend(st,st') and no_new_slashed(st,st') and finalizes_new(st')",
       "severity": "MEDIUM",
-      "covers_hint": ["liveness", "quorum", "finalization", "block existence"],
+      "covers_hint": [
+        "liveness",
+        "quorum",
+        "finalization",
+        "block existence"
+      ],
       "bug_bounty_area": "consensus/liveness",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "The plausible-liveness result restated against the Coq block-existence predicate (interoperability with the reference Coq model). Liveness; out of safety scope.",
-      "liveness_only": true
+      "liveness_only": true,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-liveness-core-003",
@@ -302,15 +441,22 @@
       "type": "invariant",
       "assertion": "highest_justified(s1) and good_votes and quorum_2(q1,t1) and quorum_2(q2,t2) and s1_h<=H -> no_new_slashed(st, extend_two_links(st))",
       "severity": "MEDIUM",
-      "covers_hint": ["liveness", "slashing detection", "extension", "supermajority link"],
+      "covers_hint": [
+        "liveness",
+        "slashing detection",
+        "extension",
+        "supermajority link"
+      ],
       "bug_bounty_area": "consensus/liveness",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "The no-new-slashing guarantee that makes the liveness extension honest; underpins plausible liveness. Liveness; out of safety scope.",
-      "liveness_only": true
+      "liveness_only": true,
+      "shard": "finality"
     },
-
     {
       "property_id": "PROP-lean-slashing-001",
       "theorem": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
@@ -321,13 +467,21 @@
       "type": "invariant",
       "assertion": "slashedB_S1(st,v) <-> exists two attestations by v with same target_epoch and distinct target_root",
       "severity": "HIGH",
-      "covers_hint": ["attestation validation", "slashing detection", "double vote", "process_attestation"],
+      "covers_hint": [
+        "attestation validation",
+        "slashing detection",
+        "double vote",
+        "process_attestation"
+      ],
       "bug_bounty_area": "consensus/slashing",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "x_exploitability_note": "Computable Bool checker (iff a bounded existential) for Casper condition S1. A client whose detection disagrees with this predicate misses equivocation.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-slashing-002",
@@ -339,13 +493,21 @@
       "type": "invariant",
       "assertion": "slashedB_S2(st,v) <-> exists a1,a2 by v with source(a1)<source(a2) and target(a2)<target(a1)",
       "severity": "HIGH",
-      "covers_hint": ["attestation validation", "slashing detection", "surround vote", "process_attester_slashing"],
+      "covers_hint": [
+        "attestation validation",
+        "slashing detection",
+        "surround vote",
+        "process_attester_slashing"
+      ],
       "bug_bounty_area": "consensus/slashing",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "x_exploitability_note": "Computable Bool checker (iff a bounded existential) for Casper condition S2. A client whose detection disagrees permits surround voting.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-safety-001",
@@ -357,13 +519,21 @@
       "type": "invariant",
       "assertion": "finalization_fork(st) -> witnessB(st) constructs a q_intersection_slashed witness",
       "severity": "CRITICAL",
-      "covers_hint": ["fork choice", "finalization", "checkpoint", "process_justification_and_finalization"],
+      "covers_hint": [
+        "fork choice",
+        "finalization",
+        "checkpoint",
+        "process_justification_and_finalization"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "x_exploitability_note": "The computable witness form of accountable safety (Core.accountable_safety); lets a client actually produce the slashable intersection rather than only assert it exists.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-safety-002",
@@ -375,13 +545,21 @@
       "type": "invariant",
       "assertion": "k_finalization_fork(st,k1,k2) -> k_witnessB(st) constructs a q_intersection_slashed witness",
       "severity": "CRITICAL",
-      "covers_hint": ["finalization", "checkpoint", "k-finalization", "process_justification_and_finalization"],
+      "covers_hint": [
+        "finalization",
+        "checkpoint",
+        "k-finalization",
+        "process_justification_and_finalization"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "x_exploitability_note": "Computable witness form of k_safety' under dynamic validator sets; the executable counterpart of the headline Core theorem.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "safety"
     },
     {
       "property_id": "PROP-lean-quorum-001",
@@ -393,13 +571,22 @@
       "type": "invariant",
       "assertion": "qIntersectionWitnessB(st) <-> exists witness w: q_intersection_slashed via w",
       "severity": "HIGH",
-      "covers_hint": ["committee", "quorum", "effective balance", "attesting balance", "get_total_active_balance"],
+      "covers_hint": [
+        "committee",
+        "quorum",
+        "effective balance",
+        "attesting balance",
+        "get_total_active_balance"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Makes the q_intersection_slashed predicate (the conclusion of every accountable-safety theorem) decidable by an explicit witness search.",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-justification-001",
@@ -411,13 +598,22 @@
       "type": "invariant",
       "assertion": "justified(c) <-> exists bounded chain of supermajority links from anchor to c (decNthAncestor bounded)",
       "severity": "MEDIUM",
-      "covers_hint": ["justification", "supermajority link", "checkpoint", "ancestor", "process_justification"],
+      "covers_hint": [
+        "justification",
+        "supermajority link",
+        "checkpoint",
+        "ancestor",
+        "process_justification"
+      ],
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Decidable, bounded characterization of justification; an unbounded slot/ancestor iterator diverges from it (off-by-one on the height gap or non-termination).",
-      "liveness_only": false
+      "liveness_only": false,
+      "shard": "finality"
     },
     {
       "property_id": "PROP-lean-liveness-001",
@@ -429,13 +625,20 @@
       "type": "invariant",
       "assertion": "two_thirds_good(st) <-> forall target, exists good quorum at that target (goodQuorumAtB)",
       "severity": "MEDIUM",
-      "covers_hint": ["liveness", "quorum", "finalization"],
+      "covers_hint": [
+        "liveness",
+        "quorum",
+        "finalization"
+      ],
       "bug_bounty_area": "consensus/liveness",
       "attacker_controlled": false,
-      "entry_points": ["FunctionCall"],
+      "entry_points": [
+        "FunctionCall"
+      ],
       "exploitability": "local-attack",
       "x_exploitability_note": "Decidable form of the two-thirds-honest hypothesis that plausible liveness needs. Liveness; out of safety scope.",
-      "liveness_only": true
+      "liveness_only": true,
+      "shard": "finality"
     }
   ]
 }
