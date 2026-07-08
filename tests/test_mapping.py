@@ -101,7 +101,10 @@ def test_assertion_granularity_matches_benchmark(theorem_map, health, scope):
     so one theorem never lowers into a multi-invariant blob (impl plan section 4)."""
     props = build_properties(theorem_map, health, scope)
     for p in props:
-        assert 40 <= len(p["assertion"]) <= 160, (p["property_id"], len(p["assertion"]))
+        # lower bound is loose: some faithful Core lemmas are short implications
+        # (e.g. "k_finalized(b,h,k) -> justified(b,h)"); the upper bound is the
+        # real guard against lowering one theorem into a multi-invariant blob.
+        assert 30 <= len(p["assertion"]) <= 160, (p["property_id"], len(p["assertion"]))
         assert 40 <= len(p["text"]) <= 200, (p["property_id"], len(p["text"]))
 
 

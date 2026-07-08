@@ -2,12 +2,230 @@
   "project": "GasperBeaconChain",
   "plugin": "speca-lean4-plugin",
   "theorems": [
-    {"name": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.Slashing"},
-    {"name": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.Slashing"},
-    {"name": "GasperBeaconChain.Executable.accountable_safety_witnessB", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.AccountableSafety"},
-    {"name": "GasperBeaconChain.Executable.k_accountable_safety_witnessB", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.AccountableSafety"},
-    {"name": "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.Quorums"},
-    {"name": "GasperBeaconChain.Executable.justified_iff_bounded", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.Justification"},
-    {"name": "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum", "resolved": true, "lean_status": "proved", "sorry_free": true, "choice_free": true, "native_free": true, "module": "GasperBeaconChain.Executable.PlausibleLiveness"}
+    {
+      "name": "GasperBeaconChain.Core.k_safety'",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Core.k_slash_surround_case_general",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Core.k_non_equal_height_case",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Core.slashable_bound",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.SlashableBound"
+    },
+    {
+      "name": "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.SlashableBound"
+    },
+    {
+      "name": "GasperBeaconChain.Core.validator_intersection_lower_bound",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.SlashableBound"
+    },
+    {
+      "name": "GasperBeaconChain.Core.no_two_justified_same_height",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Core.two_justified_same_height_slashed",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Core.finalized_means_justified_child",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.Justification"
+    },
+    {
+      "name": "GasperBeaconChain.Core.k_finalized_means_justified",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.Justification"
+    },
+    {
+      "name": "GasperBeaconChain.Core.finalized_means_one_finalized",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.Justification"
+    },
+    {
+      "name": "GasperBeaconChain.Core.quorum_2_upclosed",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.Quorums"
+    },
+    {
+      "name": "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.Quorums"
+    },
+    {
+      "name": "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.PlausibleLiveness"
+    },
+    {
+      "name": "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.PlausibleLiveness"
+    },
+    {
+      "name": "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Core.PlausibleLiveness"
+    },
+    {
+      "name": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Executable.Slashing"
+    },
+    {
+      "name": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Executable.Slashing"
+    },
+    {
+      "name": "GasperBeaconChain.Executable.accountable_safety_witnessB",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Executable.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Executable.k_accountable_safety_witnessB",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Executable.AccountableSafety"
+    },
+    {
+      "name": "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Executable.Quorums"
+    },
+    {
+      "name": "GasperBeaconChain.Executable.justified_iff_bounded",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Executable.Justification"
+    },
+    {
+      "name": "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum",
+      "resolved": true,
+      "lean_status": "proved",
+      "sorry_free": true,
+      "choice_free": true,
+      "native_free": true,
+      "module": "GasperBeaconChain.Executable.PlausibleLiveness"
+    }
   ]
 }

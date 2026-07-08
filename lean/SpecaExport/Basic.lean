@@ -1,10 +1,13 @@
 import Lean.Util.CollectAxioms
 import Lean.Data.Json
--- NOTE: the gasper-lean4 root module `GasperBeaconChain` does NOT import the
--- `Executable` layer (it stops at `Core.All`). The target theorems live in
--- `GasperBeaconChain.Executable.*`, so we must import `Executable.All` here —
--- both to make lake compile those modules and so the runtime `importModules`
--- in Main.lean can load them.
+-- The substantive proved results (~70-80% of gasper-lean4) live in
+-- `GasperBeaconChain.Core.*` (Theories/Lemmas): the top-level accountable
+-- safety (`k_safety'`), the slashable bound, plausible liveness, and the
+-- justification/quorum lemmas. `Executable.*` is the thin, still-growing
+-- application layer that exposes decidable Bool checkers on top of Core. We
+-- import BOTH so every Core and Executable target resolves; the gasper root
+-- module `GasperBeaconChain` only reaches `Core.All` and never `Executable`.
+import GasperBeaconChain.Core.All
 import GasperBeaconChain.Executable.All
 
 /-!

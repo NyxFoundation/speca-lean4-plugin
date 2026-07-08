@@ -27,12 +27,13 @@ def test_emit_01e_end_to_end(tmp_path):
     assert doc["provider"] == "lean"
     assert doc["gasper_ref"] == "deadbeef"
     props = doc["properties"]
-    assert len(props) == 7
+    n_map = len(json.loads((_ROOT / "theorem_map.json").read_text(encoding="utf-8"))["properties"])
+    assert len(props) == n_map  # every mapped theorem emits exactly one property
     for p in props:
         assert not validate_property(p), p["property_id"]
         assert "@deadbeef:" in p["lean_artifact"]
     proved = [p for p in props if p["lean_status"] == "proved"]
-    assert len(proved) == 7  # fixture marks every target proved
+    assert len(proved) == n_map  # fixture marks every target proved
 
 
 def test_emit_01e_no_health_is_honest_unknown(tmp_path, capsys):

@@ -11,9 +11,10 @@ lines and `#` comments ignored). Emits the proof-health JSON (see
 the targets file from `theorem_map.json`, runs this exe, and maps the health
 records onto the `01e` property schema.
 
-The environment is loaded at runtime via
-`importModules #[GasperBeaconChain.Executable.All]`,
-then `collectAxioms` runs in `CoreM` over that environment — the same axiom
+The environment is loaded at runtime via `importModules` of both
+`GasperBeaconChain.Core.All` (the substantive Theories/Lemmas) and
+`GasperBeaconChain.Executable.All` (the decidable checker layer), then
+`collectAxioms` runs in `CoreM` over that environment — the same axiom
 mechanism gasper-lean4's compile-time `#mr_audit_json` uses.
 -/
 
@@ -38,9 +39,12 @@ unsafe def main (args : List String) : IO Unit := do
   let targets ← parseTargets targetPath
   initSearchPath (← findSysroot)
   enableInitializersExecution
-  -- `GasperBeaconChain.Executable.All` (not the bare root module): the root
-  -- only reaches `Core.All`, while every target theorem lives in `Executable`.
-  let env ← importModules #[{ module := `GasperBeaconChain.Executable.All }] Options.empty
+  -- Import BOTH layers: the substantive proved theorems live in
+  -- `GasperBeaconChain.Core.*` (Theories/Lemmas), and `Executable.All` adds the
+  -- decidable checker versions on top. The bare root module reaches only Core.
+  let env ← importModules
+    #[{ module := `GasperBeaconChain.Core.All },
+      { module := `GasperBeaconChain.Executable.All }] Options.empty
   let coreCtx : Core.Context :=
     { fileName := "<speca-export>", fileMap := FileMap.ofString "" }
   let coreState : Core.State := { env := env }

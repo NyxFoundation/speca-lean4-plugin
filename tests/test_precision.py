@@ -77,7 +77,8 @@ def test_granularity_report_on_real_output(bench_dir, our_01e):
     g = granularity_report(props, load_benchmark(bench_dir))
     assert g["schema_validity"] == 1.0, g["schema_problems"]
     assert g["vocabulary_conformance"] == 1.0, g["vocabulary_nonconforming"]
-    assert g["n_properties"] == 7
+    n_map = len(json.loads((_ROOT / "theorem_map.json").read_text(encoding="utf-8"))["properties"])
+    assert g["n_properties"] == n_map
     assert g["severity_kl_divergence_nats"] >= 0
 
 
