@@ -7,12 +7,16 @@ formally-verified Casper FFG theorems in
 [`NyxFoundation/gasper-lean4`](https://github.com/NyxFoundation/gasper-lean4)
 into SPECA `01e` security properties.
 
-> Status: **M2 baseline** (see the impl plan). CI builds gasper-lean4 and runs
-> the exporter end-to-end: all mapped theorems resolve and certify
-> `lean_status: proved` (sorry-free, choice-free, native-free) from real
-> `collectAxioms` output. The precision harness (`verify-precision`) measures
-> granularity against `bench-rq2a-20260508-speca` and recall against
-> `ethereum-vuln-dataset`; closing the gaps it reports is M3.
+> Status: **M2 baseline, Core-retargeted** (see the impl plan). Per the
+> gasper-lean4 maintainer, ~70-80% of the proved substance lives in
+> `GasperBeaconChain.Core.*` (Theories + Lemmas), not the thin, still-growing
+> `Executable` application layer, so the target set is Core-centric (18 Core
+> theorems + 7 Executable decidable-checker counterparts = 25 properties). CI
+> imports both `Core.All` and `Executable.All`, runs the exporter end-to-end,
+> and certifies every target `lean_status: proved` (sorry-free, choice-free,
+> native-free) from real `collectAxioms` output. The precision harness
+> (`verify-precision`) measures granularity against `bench-rq2a-20260508-speca`
+> and recall against `ethereum-vuln-dataset`; closing the gaps it reports is M3.
 
 ## Why a plugin (not vendored into speca)
 
@@ -86,23 +90,29 @@ is the curated, reviewable judgment table [`data/findings_map.json`](data/findin
 flag and a full/partial/none coverage judgment, so the denominator is
 transparent.
 
-Baseline (2026-07-07, 7 properties):
+Baseline, Core retarget (2026-07-08, 25 properties) vs the prior 7-property
+Executable-only baseline (2026-07-07):
 
-| metric | value | benchmark |
-|---|---|---|
-| schema validity | 100% | — |
-| vocabulary conformance | 100% | type/severity/classification/exploitability/entry_points vocab |
-| properties per file | 7 (z = -1.24) | 11.62 +/- 3.72 |
-| assertion length | mean z = -0.49; 100% within 1-sigma | 93.55 +/- 14.62 chars |
-| severity KL(ours‖bench) | 0.3015 nats | CRITICAL/HIGH/MEDIUM = 95/81/10 |
-| recall (strict / lenient) | 0.0 / 0.667 | 3 in-domain of 14 consensus-layer findings |
+| metric | Core (25 props) | prior (7 props) | benchmark |
+|---|---|---|---|
+| schema validity | 100% | 100% | — |
+| vocabulary conformance | 100% | 100% | type/severity/classification/exploitability/entry_points |
+| properties per file | 25 (z = +3.6) | 7 (z = −1.24) | 11.62 ± 3.72 |
+| assertion length | mean z = −0.2; 40% within 1-sigma | mean z = −0.49; 100% | 93.55 ± 14.62 chars |
+| severity KL(ours‖bench) | 0.6004 nats | 0.3015 nats | CRITICAL/HIGH/MEDIUM = 95/81/10 |
+| recall (strict / lenient) | **0.333** / 0.667 | 0.0 / 0.667 | 3 in-domain of 14 consensus-layer findings |
 
-Honest reading: gasper-lean4 proves protocol-level FFG safety, while the
-findings corpus is implementation-level bugs — most consensus-layer findings
-(OOM/DoS, LMD-GHOST fork choice, BLS internals, eth1 ops) are out of the FFG
-formal remit, and of the 3 in-domain findings the current invariants cover 2
-only partially. Raising strict recall means lowering theorems further toward
-implementation invariants (M3), not relabeling.
+Honest reading of the retarget. It captures the substantive Core theorems and
+**raises strict recall 0.0 → 0.333**: the Core `SlashableBound` trio pins exact
+validator-set weight arithmetic, giving full coverage of the Electra
+effective-balance finding (`GHSA-wm9c-xvqq-5c28`) that the Executable-only set
+could only cover partially. The cost is granularity: emitting all 25 into one
+`01e` file overshoots the benchmark's ~11.6 props/file (single-component files),
+and the many honestly-`MEDIUM` justification/quorum lemmas widen the severity
+KL. Both are addressable in M3 by sharding `emit-01e` per Core module (≈4-8
+props/file) rather than by relabeling severities. Most consensus-layer findings
+(OOM/DoS, LMD-GHOST, BLS internals, eth1 ops) remain out of the FFG formal
+remit by construction.
 
 ## Lean exporter directly
 
@@ -125,18 +135,40 @@ cd lean && lake build
 
 ## What is proved (from gasper-lean4)
 
-| theorem | 01e property | Casper condition |
-|---|---|---|
-| `slashed_double_vote_iff_bex` | equivocation must be slashable | S1 |
-| `slashed_surround_vote_iff_bex` | surround voting must be slashable | S2 |
-| `accountable_safety_witnessB` | conflicting finalization ⇒ slashable ⅔ intersection | accountable safety |
-| `k_accountable_safety_witnessB` | k-finalized accountable safety under validator churn | k-accountable safety |
-| `q_intersection_slashed_iff_exists_witness` | slashable intersection has positive weight | quorum bound |
-| `justified_iff_bounded` | justification = bounded supermajority-link chain | justification |
-| `two_thirds_good_iff_forall_exists_goodQuorum` | honest ⅔ can always extend | plausible liveness (out of bounty scope) |
+The substantive results — the primary targets — are the **Core** theorems
+(`GasperBeaconChain.Core.*`, in Theories/ and Lemmas/). Note the whole Core
+layer shares the flat `GasperBeaconChain.Core` namespace; `Theories/` and
+`Lemmas/` are file paths, not namespace segments.
 
-The full theorem → implementation-invariant lowering lives in
-[`theorem_map.json`](theorem_map.json).
+| Core theorem | 01e property | role |
+|---|---|---|
+| `k_safety'` | conflicting k-finalized blocks ⇒ slashable ⅔ intersection | headline k-accountable safety |
+| `finalization_fork_means_same_finalization_fork_one` | 1-fork = same-height k-fork at k=1 | fork-condition bridge |
+| `no_k_finalized_justified_same_height` | no justified block at a finalized height (no slashing) | height uniqueness |
+| `k_slash_surround_case_general` | surround of a finalized block ⇒ slashable | AS surround case |
+| `k_non_equal_height_case` | unequal-height conflicting finalization ⇒ slashable | AS unequal-height case |
+| `slashable_bound` | slashable intersection meets churn-adjusted weight bound | quantitative AS |
+| `quorum_intersection_weight_lower` | ⅔-quorum overlap ≥ combined weight − ⅓ thresholds | inclusion-exclusion |
+| `validator_intersection_lower_bound` | validator-set overlap ≥ churn-adjusted expression | weight arithmetic |
+| `no_two_justified_same_height` | no two distinct justified blocks at one height (no slashing) | same-height safety |
+| `two_justified_same_height_slashed` | same-height justification ⇒ slashable | same-height witness |
+| `finalized_means_justified_child` | finalized ⇒ justified child at next height | justification bookkeeping |
+| `k_finalized_means_justified` | k-finalized ⇒ justified | justification bookkeeping |
+| `finalized_means_one_finalized` | finalized ⇔ 1-finalized | definition bridge |
+| `quorum_2_upclosed` | superset of a ⅔-quorum is a ⅔-quorum | quorum monotonicity |
+| `quorum_2_nonempty_of_threshold_pos` | positive threshold ⇒ non-empty quorum | quorum non-emptiness |
+| `plausible_liveness_construct_extension` | honest ⅔ can always extend + finalize without new slashing | plausible liveness (out of bounty scope) |
+| `plausible_liveness_from_coq_blocks_exist` | same, under the Coq block-existence hypothesis | plausible liveness (out of scope) |
+| `no_new_slashed_two_link_extension` | the two-link extension introduces no new slashing | liveness support (out of scope) |
+
+The **Executable** layer (`GasperBeaconChain.Executable.*`) is thin and still
+growing; its theorems are the **decidable/computable Bool checkers** for the
+Core results, and are mapped as such (S1/S2 slashing checkers,
+accountable-safety witnesses, the decidable quorum/justification/liveness
+predicates).
+
+The full theorem → implementation-invariant lowering (and the STRIDE class per
+property) lives in [`theorem_map.json`](theorem_map.json).
 
 ## Related
 
