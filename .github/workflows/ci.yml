@@ -16,6 +16,20 @@ jobs:
           python-version: "3.11"
       - run: pip install -e '.[dev]'
       - run: pytest -q
+      - name: honesty check — theorem_map integrity
+        run: |
+          python3 -c "
+          import json, sys
+          m = json.load(open('theorem_map.json'))
+          tnames = [e['theorem'] for e in m['properties']]
+          pids = [e['property_id'] for e in m['properties']]
+          assert len(tnames) == len(set(tnames)), 'duplicate theorem in theorem_map'
+          assert len(pids) == len(set(pids)), 'duplicate property_id in theorem_map'
+          assert all(t.strip() for t in tnames), 'empty theorem name'
+          assert all(p.strip() for p in pids), 'empty property_id'
+          assert all(e.get('label', '').strip() for e in m['properties']), 'missing label'
+          print(f'OK: {len(tnames)} unique theorems, all with property_id and label')
+          "
 
   lean:
     name: lean exporter build

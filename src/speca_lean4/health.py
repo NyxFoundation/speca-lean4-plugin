@@ -41,6 +41,38 @@ class TheoremHealth(dict):
     def resolved(self) -> bool:
         return bool(self.get("resolved", False))
 
+    @property
+    def statement(self) -> str:
+        return self.get("statement", "")
+
+    @property
+    def hypotheses(self) -> list[dict]:
+        return self.get("hypotheses", [])
+
+    @property
+    def must_establish(self) -> list[dict]:
+        return [h for h in self.hypotheses if h.get("class") == "must-establish"]
+
+    @property
+    def depend_allowed(self) -> list[dict]:
+        return [h for h in self.hypotheses if h.get("class") == "depend-allowed"]
+
+    @property
+    def referenced_constants(self) -> list[str]:
+        return self.get("referenced_constants", [])
+
+    @property
+    def gasper_axioms(self) -> list[str]:
+        return self.get("gasper_axioms", [])
+
+    @property
+    def proof_provenance(self) -> str:
+        return self.get("proof_provenance", "unknown")
+
+    @property
+    def proof_code(self) -> str:
+        return self.get("proof_code", "")
+
 
 def load_health(path: str | Path) -> dict[str, TheoremHealth]:
     data = json.loads(Path(path).read_text(encoding="utf-8"))
@@ -62,3 +94,11 @@ def status_for(health: dict[str, TheoremHealth], theorem: str) -> tuple[str, str
     if rec is None:
         return "unknown", ""
     return rec.lean_status, rec.module
+
+
+def health_for(health: dict[str, TheoremHealth], theorem: str) -> TheoremHealth:
+    """Return the full TheoremHealth record, defaulting gracefully for missing theorems."""
+    rec = health.get(theorem)
+    if rec is None:
+        return TheoremHealth({"lean_status": "unknown", "module": ""})
+    return rec

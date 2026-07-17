@@ -6,6 +6,7 @@
     {
       "id": "lighthouse-electra-effective-balance",
       "area": "beacon-chain:sync-committee",
+      "label": "beacon-chain:sync-committee",
       "client": "Lighthouse",
       "summary": "Incorrect effective-balance computation in process_epoch (Electra) diverged from the network, risking a fork away from the canonical chain and a finality stall.",
       "ref": "GHSA-wm9c-xvqq-5c28",
@@ -18,6 +19,7 @@
     {
       "id": "lodestar-slashing-uint64-as-js-number",
       "area": "beacon-chain:slashing",
+      "label": "beacon-chain:slashing",
       "client": "Lodestar",
       "summary": "uint64 slashing values stored as JS numbers; values above 2^53 rounded, making some clients reject a block others accepted (consensus split).",
       "ref": "CWE-190, fixed v0.36.0",
@@ -30,6 +32,7 @@
     {
       "id": "lighthouse-slasher-oom-validator-index",
       "area": "beacon-chain:attestation",
+      "label": "beacon-chain:attestation",
       "client": "Lighthouse",
       "summary": "Slasher allocated memory proportional to an uncapped attestation validator_index; one crafted attestation could OOM the node.",
       "ref": "PR#9141",
@@ -42,6 +45,7 @@
     {
       "id": "lighthouse-gossip-duplicate-cache-overrun",
       "area": "beacon-chain:attestation",
+      "label": "beacon-chain:attestation",
       "client": "Lighthouse",
       "summary": "256-entry gossipsub duplicate cache overrun caused re-propagation loops of already-seen attestations.",
       "ref": "PR#832",
@@ -54,6 +58,7 @@
     {
       "id": "lighthouse-unbounded-slot-counter",
       "area": "beacon-chain:attestation",
+      "label": "beacon-chain:attestation",
       "client": "Lighthouse",
       "summary": "Epoch-slot iterator did not bound its counter; a slot near u64::MAX sent it into an infinite loop.",
       "ref": "PR#249",
@@ -66,6 +71,7 @@
     {
       "id": "lighthouse-reprocess-queue-leak",
       "area": "beacon-chain:attestation",
+      "label": "beacon-chain:attestation",
       "client": "Lighthouse",
       "summary": "Reprocess-queue entries for never-imported block roots were never evicted, growing memory without bound.",
       "ref": "PR#8065",
@@ -78,6 +84,7 @@
     {
       "id": "lighthouse-skip-slot-memory-exhaustion",
       "area": "beacon-chain:block-processing",
+      "label": "beacon-chain:block-processing",
       "client": "Lighthouse",
       "summary": "Skip-slot fast-forward stored every intermediate multi-MB state in RAM; long skips exhausted memory.",
       "ref": "ISSUE#800, CWE-770",
@@ -90,6 +97,7 @@
     {
       "id": "lighthouse-verify-transfer-underflow",
       "area": "beacon-chain:block-processing",
+      "label": "beacon-chain:block-processing",
       "client": "Lighthouse",
       "summary": "verify_transfer checked balance against amount alone instead of amount+fee; underflow let an unaffordable transfer be accepted.",
       "ref": "PR#457",
@@ -102,6 +110,7 @@
     {
       "id": "lighthouse-deposit-count-underflow",
       "area": "beacon-chain:block-processing",
+      "label": "beacon-chain:block-processing",
       "client": "Lighthouse",
       "summary": "Underflow in Eth1 deposit-count bookkeeping during block processing, triggerable by a crafted deposit count.",
       "ref": "PR#977",
@@ -114,6 +123,7 @@
     {
       "id": "lighthouse-filter-block-tree-recursion",
       "area": "fork-choice",
+      "label": "fork-choice",
       "client": "Lighthouse",
       "summary": "filter_block_tree recursed per block with O(n^2) rescans; ~30k-block chains overflowed the stack.",
       "ref": "PR#9090",
@@ -126,6 +136,7 @@
     {
       "id": "lighthouse-slasher-lmdb-cursor-corruption",
       "area": "fork-choice",
+      "label": "fork-choice",
       "client": "Lighthouse",
       "summary": "Slasher's LMDB layer returned references into a cursor buffer later overwritten after deletes (memory corruption).",
       "ref": "PR#6211",
@@ -138,6 +149,7 @@
     {
       "id": "prysm-bls-zero-coefficient-bypass",
       "area": "bls",
+      "label": "bls",
       "client": "Prysm",
       "summary": "Batch signature verification never checked random coefficients were nonzero; a zero coefficient dropped that signature from the check.",
       "ref": "ISSUE#9098, CWE-327",
@@ -150,6 +162,7 @@
     {
       "id": "lighthouse-bls-is-infinity-flag",
       "area": "bls",
+      "label": "bls",
       "client": "Lighthouse",
       "summary": "Aggregate signature is_infinity flag computed before branching, risking clients disagreeing on aggregate validity.",
       "ref": "PR#8496",
@@ -162,6 +175,7 @@
     {
       "id": "lighthouse-fork-choice-timing-attack",
       "area": "p2p-interface",
+      "label": "p2p-interface",
       "client": "Lighthouse",
       "summary": "Timing attack against LMD-GHOST: attestation broadcast timing relative to slot boundaries biases fork-choice convergence.",
       "ref": "ISSUE#1773, consensus-specs#2101",

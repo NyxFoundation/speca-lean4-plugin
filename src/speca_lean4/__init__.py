@@ -6,7 +6,7 @@ External, version-pinned plugin resolved by speca's `lean` property provider
     from speca_lean4 import build_properties, load_health, validate_property
 """
 
-from .health import index_health, load_health, status_for
+from .health import index_health, load_health, status_for, health_for
 from .mapping import build_properties, build_properties_by_shard, build_property
 from .schema import Property, Reachability, validate_property
 
@@ -17,6 +17,7 @@ __all__ = [
     "index_health",
     "load_health",
     "status_for",
+    "health_for",
     "Property",
     "Reachability",
     "validate_property",

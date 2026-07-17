@@ -34,6 +34,8 @@ def test_emit_01e_end_to_end(tmp_path):
         assert "@deadbeef:" in p["lean_artifact"]
     proved = [p for p in props if p["lean_status"] == "proved"]
     assert len(proved) == n_map  # fixture marks every target proved
+    for p in props:
+        assert "label" in p, f"{p['property_id']} missing label"
 
 
 def test_emit_01e_sharded_out_dir(tmp_path):

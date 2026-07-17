@@ -218,6 +218,41 @@ def shard_granularity(ours_dir: str | Path, bench: dict[str, Any]) -> dict[str, 
     }
 
 
+def label_recall_report(our_props: list[dict], findings_map: dict[str, Any]) -> dict[str, Any]:
+    """D6: Recall computed by label correspondence against the dataset vocabulary."""
+    our_labels = {p.get("label") for p in our_props if p.get("label")}
+    label_prop_count: dict[str, int] = {}
+    for p in our_props:
+        lbl = p.get("label")
+        if lbl:
+            label_prop_count[lbl] = label_prop_count.get(lbl, 0) + 1
+
+    findings = findings_map.get("findings", [])
+    in_domain = [f for f in findings if f.get("in_domain")]
+    matched = 0
+    uncovered: list[str] = []
+    rows = []
+    for f in in_domain:
+        f_label = f.get("label") or f.get("area", "")
+        has_match = f_label in our_labels
+        if has_match:
+            matched += 1
+        else:
+            if f_label and f_label not in uncovered:
+                uncovered.append(f_label)
+        rows.append({"id": f["id"], "label": f_label, "matched": has_match})
+
+    n = len(in_domain)
+    return {
+        "findings_in_domain": n,
+        "label_matched": matched,
+        "label_recall": round(matched / n, 3) if n else None,
+        "label_coverage": label_prop_count,
+        "uncovered_labels": uncovered,
+        "rows": rows,
+    }
+
+
 def verify_precision(
     our_01e: str | Path,
     benchmark_dir: str | Path,
@@ -231,6 +266,7 @@ def verify_precision(
         "benchmark": bench,
         "granularity": granularity_report(ours, bench),
         "recall": recall_report(ours, fmap),
+        "label_recall": label_recall_report(ours, fmap),
     }
     if ours_dir is not None:
         report["shard_granularity"] = shard_granularity(ours_dir, bench)
@@ -255,6 +291,13 @@ def format_summary(report: dict[str, Any]) -> str:
         f"strict {r['recall_strict']} | lenient {r['recall_lenient']} "
         f"(full={r['covered_full']}, partial={r['covered_partial']})",
     ]
+    lr = report.get("label_recall")
+    if lr:
+        lines.append(
+            f"label-grounded recall (in-domain n={lr['findings_in_domain']}): "
+            f"{lr['label_recall']} ({lr['label_matched']} label-matched)"
+            + (f" | uncovered labels: {lr['uncovered_labels']}" if lr["uncovered_labels"] else "")
+        )
     sg = report.get("shard_granularity")
     if sg:
         shard_bits = ", ".join(

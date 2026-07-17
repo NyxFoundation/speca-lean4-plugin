@@ -126,7 +126,7 @@ def test_coverage_claim_requires_existing_property(our_01e):
 
 def test_verify_precision_end_to_end(bench_dir, our_01e):
     report = verify_precision(our_01e, bench_dir, _ROOT / "data" / "findings_map.json")
-    assert set(report) == {"benchmark", "granularity", "recall"}
+    assert set(report) == {"benchmark", "granularity", "recall", "label_recall"}
 
 
 def test_shard_granularity_within_band(tmp_path, bench_dir):
@@ -150,6 +150,43 @@ def test_shard_granularity_within_band(tmp_path, bench_dir):
     # must both be in band; here bench_dir is synthetic (mean ~11) so still holds
     for s in sg["per_shard"]:
         assert s["props_per_file_z"] is not None
+
+
+def test_label_recall_basic(our_01e):
+    from speca_lean4.precision import label_recall_report
+    props = json.loads(our_01e.read_text(encoding="utf-8"))["properties"]
+    fmap = {
+        "findings": [
+            {"id": "f1", "in_domain": True, "label": "beacon-chain:slashing"},
+            {"id": "f2", "in_domain": True, "label": "beacon-chain:justification-and-finality"},
+        ]
+    }
+    r = label_recall_report(props, fmap)
+    assert r["findings_in_domain"] == 2
+    assert r["label_matched"] == 2
+    assert r["label_recall"] == 1.0
+
+
+def test_label_recall_no_matching_label(our_01e):
+    from speca_lean4.precision import label_recall_report
+    props = json.loads(our_01e.read_text(encoding="utf-8"))["properties"]
+    fmap = {
+        "findings": [
+            {"id": "f1", "in_domain": True, "label": "no-such-label"},
+        ]
+    }
+    r = label_recall_report(props, fmap)
+    assert r["label_matched"] == 0
+    assert r["label_recall"] == 0.0
+    assert "no-such-label" in r["uncovered_labels"]
+
+
+def test_verify_precision_includes_label_recall(bench_dir, our_01e):
+    report = verify_precision(our_01e, bench_dir, _ROOT / "data" / "findings_map.json")
+    assert "label_recall" in report
+    lr = report["label_recall"]
+    assert lr["findings_in_domain"] > 0
+    assert lr["label_recall"] is not None
 
 
 def test_verify_precision_includes_shard_granularity(tmp_path, bench_dir):

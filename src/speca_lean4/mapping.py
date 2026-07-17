@@ -13,7 +13,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from .health import TheoremHealth, status_for
+from .health import TheoremHealth, status_for, health_for
+
 from .schema import Property, Reachability
 
 
@@ -72,6 +73,37 @@ def _resolve_covers(covers_hint: list[str], subgraphs: list[dict] | None) -> str
     return covers_hint[0] if covers_hint else "UNRESOLVED"
 
 
+def _audit_assertion(
+    original_assertion: str,
+    theorem_statement: str,
+    must_establish_list: list[str],
+) -> str:
+    """B2: Reframe assertion as a neutral audit result when must-establish data is available.
+
+    Returns the original assertion unchanged if must_establish_list is empty.
+    """
+    if not must_establish_list:
+        return original_assertion
+    preconditions = "; ".join(must_establish_list)
+    return (
+        f"If the implementation preserves [{preconditions}], "
+        f"then [{theorem_statement}]. "
+        f"Investigation result: {original_assertion}"
+    )
+
+
+def _type_consistent(property_type: str, lean_type: str) -> bool:
+    """B5: Check if the property's claimed type is consistent with the Lean declaration type.
+
+    Always returns True; actual type-analysis check is future work.
+    """
+    return True
+
+
+# TODO: B3 (DAG severity) — requires proof DAG data from Lean; not implementable yet.
+# TODO: B4 (DAG dedup) — requires proof DAG data from Lean; not implementable yet.
+
+
 def _lean_artifact(gasper_source: str, gasper_ref: str, module: str, theorem: str) -> str:
     short = theorem.rsplit(".", 1)[-1]
     if module:
@@ -91,15 +123,38 @@ def build_property(
     theorem = entry["theorem"]
     lean_status, module = status_for(health, theorem)
 
+    # Enriched health data (B1 must-establish decomposition, B2 neutral framing)
+    th = health_for(health, theorem)
+    lean_statement = None
+    lean_hypotheses = None
+    lean_must_establish: list[str] | None = None
+    lean_referenced_defs = None
+    lean_axioms = None
+    lean_proof_provenance = None
+    lean_proof_code = None
+
+    if th is not None and hasattr(th, "statement"):
+        stmt = getattr(th, "statement", None)
+        if stmt:
+            lean_statement = stmt
+            lean_hypotheses = getattr(th, "hypotheses", None) or None
+            me = getattr(th, "must_establish", None)
+            lean_must_establish = [h["type"] for h in me] if me else None
+            lean_referenced_defs = getattr(th, "referenced_constants", None) or None
+            lean_axioms = getattr(th, "gasper_axioms", None) or None
+            lean_proof_provenance = getattr(th, "proof_provenance", None) or None
+            lean_proof_code = getattr(th, "proof_code", None) or None
+
+    # B2: reframe assertion when enriched must-establish data is available
+    assertion = entry["assertion"]
+    if lean_must_establish:
+        assertion = _audit_assertion(assertion, lean_statement, lean_must_establish)
+
     area = entry.get("bug_bounty_area", "")
     in_scope = _area_in_scope(scope, area)
     liveness_only = bool(entry.get("liveness_only", False))
     attacker_controlled = bool(entry.get("attacker_controlled", False))
 
-    # Vocabulary aligned with bench-rq2a-20260508-speca (see schema.py):
-    #   classification  external-reachable | internal
-    #   exploitability  external-attack | local-attack
-    #   entry_points    CallbackHandler | FunctionCall | ProgramEntry | Initialization
     reach = Reachability(
         classification="external-reachable" if attacker_controlled else "internal",
         entry_points=[str(x) for x in entry.get("entry_points", [])],
@@ -111,11 +166,14 @@ def build_property(
         "external-attack" if attacker_controlled else "local-attack",
     )
 
+    # D5: label from theorem_map entry
+    label = entry.get("label")
+
     return Property(
         property_id=entry["property_id"],
         text=entry["text"],
         type=entry.get("type", "invariant"),
-        assertion=entry["assertion"],
+        assertion=assertion,
         severity=str(entry["severity"]).upper(),
         covers=_resolve_covers(entry.get("covers_hint", []), subgraphs),
         reachability=reach,
@@ -123,7 +181,15 @@ def build_property(
         exploitability=exploitability,
         lean_status=lean_status,
         lean_artifact=_lean_artifact(gasper_source, gasper_ref, module, theorem),
-        kurtosis_test=None,  # filled by speca#88 task 5 (Kurtosis fixture generation)
+        kurtosis_test=None,
+        label=label,
+        lean_statement=lean_statement,
+        lean_hypotheses=lean_hypotheses,
+        lean_must_establish=lean_must_establish,
+        lean_referenced_defs=lean_referenced_defs,
+        lean_axioms=lean_axioms,
+        lean_proof_provenance=lean_proof_provenance,
+        lean_proof_code=lean_proof_code,
     )
 
 

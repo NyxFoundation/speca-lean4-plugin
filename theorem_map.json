@@ -7,6 +7,7 @@
     {
       "property_id": "PROP-lean-safety-core-001",
       "theorem": "GasperBeaconChain.Core.k_safety'",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Theories/AccountableSafety.lean",
       "x_stride": "Tampering",
       "text": "Two conflicting k-finalized blocks must force a slashable two-thirds quorum intersection (top-level k-accountable safety)",
@@ -33,6 +34,7 @@
     {
       "property_id": "PROP-lean-safety-core-002",
       "theorem": "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Theories/AccountableSafety.lean",
       "x_stride": "Tampering",
       "text": "A one-finalization fork must be exactly a same-height k-finalization fork at k=1",
@@ -58,6 +60,7 @@
     {
       "property_id": "PROP-lean-safety-core-003",
       "theorem": "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Theories/AccountableSafety.lean",
       "x_stride": "Tampering",
       "text": "Absent slashing, no justified block may share the height of a distinct k-finalized block",
@@ -83,6 +86,7 @@
     {
       "property_id": "PROP-lean-safety-core-004",
       "theorem": "GasperBeaconChain.Core.k_slash_surround_case_general",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Theories/AccountableSafety.lean",
       "x_stride": "Repudiation",
       "text": "A justification link surrounding a k-finalized block must force a slashable quorum intersection (surround case)",
@@ -108,6 +112,7 @@
     {
       "property_id": "PROP-lean-safety-core-005",
       "theorem": "GasperBeaconChain.Core.k_non_equal_height_case",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Theories/AccountableSafety.lean",
       "x_stride": "Tampering",
       "text": "Two conflicting k-finalized blocks at different heights must force a slashable quorum intersection",
@@ -133,6 +138,7 @@
     {
       "property_id": "PROP-lean-bound-001",
       "theorem": "GasperBeaconChain.Core.slashable_bound",
+      "label": "beacon-chain:effective-balance-updates",
       "x_layer": "Core/Theories/SlashableBound.lean",
       "x_stride": "Tampering",
       "text": "A conflicting k-finalization must exhibit two quorums whose intersection weight meets the churn-adjusted slashable lower bound",
@@ -159,6 +165,7 @@
     {
       "property_id": "PROP-lean-bound-002",
       "theorem": "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+      "label": "beacon-chain:effective-balance-updates",
       "x_layer": "Core/Theories/SlashableBound.lean",
       "x_stride": "Tampering",
       "text": "Two two-thirds quorums must intersect in weight at least their combined weight minus the one-third thresholds",
@@ -185,6 +192,7 @@
     {
       "property_id": "PROP-lean-bound-003",
       "theorem": "GasperBeaconChain.Core.validator_intersection_lower_bound",
+      "label": "beacon-chain:effective-balance-updates",
       "x_layer": "Core/Theories/SlashableBound.lean",
       "x_stride": "Tampering",
       "text": "Validator-set intersection weight must be bounded below by a churn-adjusted (activation/exit) expression",
@@ -211,6 +219,7 @@
     {
       "property_id": "PROP-lean-justif-safety-001",
       "theorem": "GasperBeaconChain.Core.no_two_justified_same_height",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Lemmas/AccountableSafety.lean",
       "x_stride": "Tampering",
       "text": "Absent slashing, two distinct blocks must never both be justified at the same height",
@@ -236,6 +245,7 @@
     {
       "property_id": "PROP-lean-justif-safety-002",
       "theorem": "GasperBeaconChain.Core.two_justified_same_height_slashed",
+      "label": "beacon-chain:slashing",
       "x_layer": "Core/Lemmas/AccountableSafety.lean",
       "x_stride": "Repudiation",
       "text": "Two distinct blocks justified at the same height must force a slashable quorum intersection",
@@ -261,6 +271,7 @@
     {
       "property_id": "PROP-lean-justif-001",
       "theorem": "GasperBeaconChain.Core.finalized_means_justified_child",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Lemmas/Justification.lean",
       "x_stride": "Tampering",
       "text": "A finalized block must have a justified child at the next height",
@@ -286,6 +297,7 @@
     {
       "property_id": "PROP-lean-justif-002",
       "theorem": "GasperBeaconChain.Core.k_finalized_means_justified",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Lemmas/Justification.lean",
       "x_stride": "Tampering",
       "text": "A k-finalized block must itself be justified",
@@ -311,6 +323,7 @@
     {
       "property_id": "PROP-lean-justif-003",
       "theorem": "GasperBeaconChain.Core.finalized_means_one_finalized",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Lemmas/Justification.lean",
       "x_stride": "Tampering",
       "text": "The plain finalized predicate must coincide exactly with one-finalization (k=1)",
@@ -335,6 +348,7 @@
     {
       "property_id": "PROP-lean-quorum-core-001",
       "theorem": "GasperBeaconChain.Core.quorum_2_upclosed",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Lemmas/Quorums.lean",
       "x_stride": "Tampering",
       "text": "Any superset of a two-thirds quorum within the validator set must itself be a two-thirds quorum",
@@ -360,6 +374,7 @@
     {
       "property_id": "PROP-lean-quorum-core-002",
       "theorem": "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Lemmas/Quorums.lean",
       "x_stride": "Tampering",
       "text": "A two-thirds quorum must be non-empty whenever the two-thirds weight threshold is positive",
@@ -385,6 +400,7 @@
     {
       "property_id": "PROP-lean-liveness-core-001",
       "theorem": "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Theories/PlausibleLiveness.lean",
       "x_stride": "DenialOfService",
       "text": "With two-thirds honest stake and no slashing the state must be extendable to finalize a new checkpoint without new slashing",
@@ -410,6 +426,7 @@
     {
       "property_id": "PROP-lean-liveness-core-002",
       "theorem": "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Theories/PlausibleLiveness.lean",
       "x_stride": "DenialOfService",
       "text": "Plausible liveness must hold under the Coq-style block-existence hypothesis for the highest justified block",
@@ -435,6 +452,7 @@
     {
       "property_id": "PROP-lean-liveness-core-003",
       "theorem": "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Core/Theories/PlausibleLiveness.lean",
       "x_stride": "DenialOfService",
       "text": "Extending the state with two supermajority-link vote batches must introduce no new slashing",
@@ -460,6 +478,7 @@
     {
       "property_id": "PROP-lean-slashing-001",
       "theorem": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+      "label": "beacon-chain:slashing",
       "x_layer": "Executable/Slashing.lean (decidable checker)",
       "x_core_counterpart": "S1 equivocation; underlies two_justified_same_height_slashed",
       "x_stride": "Repudiation",
@@ -486,6 +505,7 @@
     {
       "property_id": "PROP-lean-slashing-002",
       "theorem": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex",
+      "label": "beacon-chain:slashing",
       "x_layer": "Executable/Slashing.lean (decidable checker)",
       "x_core_counterpart": "S2 surround; underlies k_slash_surround_case_general",
       "x_stride": "Repudiation",
@@ -512,6 +532,7 @@
     {
       "property_id": "PROP-lean-safety-001",
       "theorem": "GasperBeaconChain.Executable.accountable_safety_witnessB",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Executable/AccountableSafety.lean (decidable checker)",
       "x_core_counterpart": "decidable witness for Core.accountable_safety",
       "x_stride": "Tampering",
@@ -538,6 +559,7 @@
     {
       "property_id": "PROP-lean-safety-002",
       "theorem": "GasperBeaconChain.Executable.k_accountable_safety_witnessB",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Executable/AccountableSafety.lean (decidable checker)",
       "x_core_counterpart": "decidable witness for Core.k_safety' / k_accountable_safety",
       "x_stride": "Tampering",
@@ -564,6 +586,7 @@
     {
       "property_id": "PROP-lean-quorum-001",
       "theorem": "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Executable/Quorums.lean (decidable checker)",
       "x_core_counterpart": "decidable form of the q_intersection_slashed predicate used across Core",
       "x_stride": "Tampering",
@@ -591,6 +614,7 @@
     {
       "property_id": "PROP-lean-justification-001",
       "theorem": "GasperBeaconChain.Executable.justified_iff_bounded",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Executable/Justification.lean (decidable checker)",
       "x_core_counterpart": "decidable characterization backing Core.Lemmas.Justification",
       "x_stride": "Tampering",
@@ -618,6 +642,7 @@
     {
       "property_id": "PROP-lean-liveness-001",
       "theorem": "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum",
+      "label": "beacon-chain:justification-and-finality",
       "x_layer": "Executable/PlausibleLiveness.lean (decidable checker)",
       "x_core_counterpart": "decidable form used by Core plausible-liveness hypotheses",
       "x_stride": "DenialOfService",

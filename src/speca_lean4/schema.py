@@ -35,6 +35,7 @@ EXPLOITABILITIES = {"external-attack", "local-attack"}
 SCOPE_VALUES = {"in-scope", "out-of-scope", "conditional"}
 ENTRY_POINTS = {"CallbackHandler", "FunctionCall", "ProgramEntry", "Initialization"}
 LEAN_STATUSES = {"proved", "unknown", "counterexample"}
+PROOF_PROVENANCES = {"automated", "hand-written", "unknown"}
 
 
 @dataclass
@@ -60,11 +61,26 @@ class Property:
     lean_status: str | None = None
     lean_artifact: str | None = None
     kurtosis_test: str | None = None
+    label: str | None = None
+    lean_statement: str | None = None
+    lean_hypotheses: list[dict] | None = None
+    lean_must_establish: list[str] | None = None
+    lean_referenced_defs: list[str] | None = None
+    lean_axioms: list[str] | None = None
+    lean_proof_provenance: str | None = None
+    lean_proof_code: str | None = None
+
+    _ADDITIVE_FIELDS = (
+        "lean_status", "lean_artifact", "kurtosis_test", "label",
+        "lean_statement", "lean_hypotheses", "lean_must_establish",
+        "lean_referenced_defs", "lean_axioms", "lean_proof_provenance",
+        "lean_proof_code",
+    )
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
-        # drop additive fields that are unset to keep output clean
-        for k in ("lean_status", "lean_artifact", "kurtosis_test"):
+        d.pop("_ADDITIVE_FIELDS", None)
+        for k in self._ADDITIVE_FIELDS:
             if d.get(k) is None:
                 d.pop(k, None)
         return d
@@ -136,5 +152,25 @@ def validate_property(d: dict[str, Any]) -> list[str]:
     ls = d.get("lean_status")
     if ls is not None and ls not in LEAN_STATUSES:
         problems.append(f"lean_status {ls!r} not in {sorted(LEAN_STATUSES)}")
+
+    lbl = d.get("label")
+    if lbl is not None and not isinstance(lbl, str):
+        problems.append("label must be a string")
+
+    lstmt = d.get("lean_statement")
+    if lstmt is not None and not isinstance(lstmt, str):
+        problems.append("lean_statement must be a string")
+
+    lpp = d.get("lean_proof_provenance")
+    if lpp is not None and lpp not in PROOF_PROVENANCES:
+        problems.append(f"lean_proof_provenance {lpp!r} not in {sorted(PROOF_PROVENANCES)}")
+
+    lhyp = d.get("lean_hypotheses")
+    if lhyp is not None and not isinstance(lhyp, list):
+        problems.append("lean_hypotheses must be a list")
+
+    lme = d.get("lean_must_establish")
+    if lme is not None and not isinstance(lme, list):
+        problems.append("lean_must_establish must be a list")
 
     return problems

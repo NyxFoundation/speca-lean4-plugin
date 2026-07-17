@@ -104,7 +104,10 @@ def test_assertion_granularity_matches_benchmark(theorem_map, health, scope):
         # lower bound is loose: some faithful Core lemmas are short implications
         # (e.g. "k_finalized(b,h,k) -> justified(b,h)"); the upper bound is the
         # real guard against lowering one theorem into a multi-invariant blob.
-        assert 30 <= len(p["assertion"]) <= 160, (p["property_id"], len(p["assertion"]))
+        if "Investigation result:" in p["assertion"]:
+            assert len(p["assertion"]) <= 600, (p["property_id"], len(p["assertion"]))
+        else:
+            assert 30 <= len(p["assertion"]) <= 160, (p["property_id"], len(p["assertion"]))
         assert 40 <= len(p["text"]) <= 200, (p["property_id"], len(p["text"]))
 
 
@@ -136,3 +139,53 @@ def test_covers_resolves_against_subgraphs(theorem_map, health, scope):
 
 def test_status_for_defaults_unknown():
     assert status_for({}, "no.such.theorem") == ("unknown", "")
+
+
+def test_enriched_health_populates_lean_fields(theorem_map, health, scope):
+    props = build_properties(theorem_map, health, scope)
+    k = next(p for p in props if p["property_id"] == "PROP-lean-safety-core-001")
+    assert k.get("lean_statement") is not None
+    assert "k_finalized" in k["lean_statement"]
+    assert k.get("lean_must_establish") is not None
+    assert len(k["lean_must_establish"]) > 0
+    assert k.get("lean_proof_provenance") == "hand-written"
+    assert k.get("lean_proof_code") is not None
+
+
+def test_label_from_theorem_map(theorem_map, health, scope):
+    props = build_properties(theorem_map, health, scope)
+    for p in props:
+        assert "label" in p, f"{p['property_id']} missing label"
+        assert isinstance(p["label"], str)
+
+
+def test_unenriched_health_has_none_lean_fields(theorem_map, scope):
+    from speca_lean4.health import TheoremHealth
+    old_health = {
+        "GasperBeaconChain.Core.k_safety'": TheoremHealth({
+            "name": "GasperBeaconChain.Core.k_safety'",
+            "resolved": True, "lean_status": "proved",
+            "sorry_free": True, "choice_free": True, "native_free": True,
+            "module": "GasperBeaconChain.Core.AccountableSafety",
+        })
+    }
+    props = build_properties(theorem_map, old_health, scope)
+    k = next(p for p in props if p["property_id"] == "PROP-lean-safety-core-001")
+    assert "lean_statement" not in k
+    assert "lean_must_establish" not in k
+    assert "lean_proof_code" not in k
+
+
+def test_must_establish_extracted(theorem_map, health, scope):
+    props = build_properties(theorem_map, health, scope)
+    k = next(p for p in props if p["property_id"] == "PROP-lean-safety-core-001")
+    me = k.get("lean_must_establish", [])
+    assert all(isinstance(s, str) for s in me)
+    assert any("k_finalized" in s for s in me)
+
+
+def test_audit_assertion_reframing(theorem_map, health, scope):
+    props = build_properties(theorem_map, health, scope)
+    k = next(p for p in props if p["property_id"] == "PROP-lean-safety-core-001")
+    assert "Investigation result:" in k["assertion"]
+    assert "If the implementation preserves" in k["assertion"]
