@@ -133,17 +133,14 @@ def build_property(
     lean_proof_provenance = None
     lean_proof_code = None
 
-    if th is not None and hasattr(th, "statement"):
-        stmt = getattr(th, "statement", None)
-        if stmt:
-            lean_statement = stmt
-            lean_hypotheses = getattr(th, "hypotheses", None) or None
-            me = getattr(th, "must_establish", None)
-            lean_must_establish = [h["type"] for h in me] if me else None
-            lean_referenced_defs = getattr(th, "referenced_constants", None) or None
-            lean_axioms = getattr(th, "gasper_axioms", None) or None
-            lean_proof_provenance = getattr(th, "proof_provenance", None) or None
-            lean_proof_code = getattr(th, "proof_code", None) or None
+    if th.statement:
+        lean_statement = th.statement
+        lean_hypotheses = th.hypotheses or None
+        lean_must_establish = [h["type"] for h in th.must_establish] if th.must_establish else None
+        lean_referenced_defs = th.referenced_constants or None
+        lean_axioms = th.gasper_axioms or None
+        lean_proof_provenance = th.proof_provenance or None
+        lean_proof_code = th.proof_code or None
 
     # B2: reframe assertion when enriched must-establish data is available
     assertion = entry["assertion"]
