@@ -166,9 +166,9 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
     let proofCode ← match value? with
       | some v => do
         let fmt ← Meta.ppExpr v
-        return toString fmt
-      | none => return ""
-    return (stmt, hyps, proofCode)
+        pure (toString fmt)
+      | none => pure ""
+    pure (stmt, hyps, proofCode)
   return {
     name := toString target, resolved := true, leanStatus := status,
     sorryFree := !hasSorry, choiceFree := !hasChoice, nativeFree := !hasNative,
