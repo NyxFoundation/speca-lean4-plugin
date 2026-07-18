@@ -15,6 +15,12 @@ from .mapping import (
     lower_entry,
 )
 from .schema import Property, Reachability, validate_property
+from .kurtosis import (
+    attach_checkers,
+    emit_kurtosis,
+    load_checker_map,
+    load_evidence_seeds,
+)
 
 __all__ = [
     "build_properties",
@@ -29,6 +35,10 @@ __all__ = [
     "Property",
     "Reachability",
     "validate_property",
+    "attach_checkers",
+    "emit_kurtosis",
+    "load_checker_map",
+    "load_evidence_seeds",
 ]
 
 __version__ = "0.1.0"

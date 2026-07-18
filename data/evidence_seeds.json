@@ -1,0 +1,101 @@
+{
+  "version": "0.1.0",
+  "source": "NyxFoundation/ethereum-vuln-dataset data/ethereum_vulns.csv (2,225 rows)",
+  "note": "E6 (issue #7): implementation-linked evidence seeding the Kurtosis repro target. Curated from the dataset rows whose `label` matches a label used by our 01e properties (beacon-chain:justification-and-finality, beacon-chain:slashing, beacon-chain:effective-balance-updates) AND whose `pre_fix_code`/`files_changed` are non-empty — the pre-fix hunks pin the exact implementation site a devnet reproduction should target. Full hunks live in the dataset (fields pre_fix_code / post_fix_code / files_changed / fix_commit); only a capped excerpt of the first hunk is mirrored here. Selection is curated (label-matched + FFG-semantics-linked), not exhaustive: 37 dataset rows match our labels; rows whose fix is unrelated plumbing (dependency bumps, test-only, CLI deprecations) are not seeds.",
+  "match_rule": "seed.label == property.label (attached only to properties that have a real Executable checker)",
+  "seeds": [
+    {
+      "dataset_id": "nimbus:consensus:PR#461",
+      "label": "beacon-chain:justification-and-finality",
+      "client": "nimbus",
+      "title": "Fix an overflow in the justification bits processing",
+      "source_url": "https://github.com/status-im/nimbus-eth2/pull/461",
+      "fix_commit": "0b921e812ad06f169e9c725d488594bc12c6b069",
+      "root_cause": "integer_overflow_underflow",
+      "impact_type": "chain_split",
+      "files_changed": [
+        "beacon_chain/spec/state_transition_epoch.nim",
+        "beacon_chain/ssz/bytes_reader.nim",
+        "beacon_chain/state_transition.nim"
+      ],
+      "pre_fix_code_excerpt": "# beacon_chain/spec/state_transition_epoch.nim @ line 200\n  ## Spec:\n  ## state.justification_bits[1:] = state.justification_bits[:-1]\n  ## state.justification_bits[0] = 0b0\n  state.justification_bits = state.justification_bits shl 1\n\n  # This is a somewhat expensive approach\n  let active_validator_indices =",
+      "why_implementation_linked": "Justification-bits shift overflow in process_justification_and_finalization; a wrong bitfield diverges the justified/finalized checkpoint bookkeeping the justification/finality theorems (finalized_means_justified_child, k_finalized_means_justified) constrain."
+    },
+    {
+      "dataset_id": "lighthouse:networking:PR#4576",
+      "label": "beacon-chain:justification-and-finality",
+      "client": "lighthouse",
+      "title": "Fix deadlock in finalization migration",
+      "source_url": "https://github.com/sigp/lighthouse/pull/4576",
+      "fix_commit": "63ac09d0718fe0f839c83d8976c991c99eb9dd51",
+      "root_cause": "race_condition",
+      "impact_type": "liveness_dos",
+      "files_changed": [
+        "beacon_node/beacon_chain/src/migrate.rs"
+      ],
+      "pre_fix_code_excerpt": "# beacon_node/beacon_chain/src/migrate.rs @ line 163\n        let tx_thread = if config.blocking {\n            None\n        } else {\n            Some(Mutex::new(Self::spawn_thread(\n                db.clone(),\n                prev_migration.clone(),\n                log.clone(),\n            )))\n        };\n        Self {\n            db,",
+      "why_implementation_linked": "Deadlock in the finalization migration path; stalls the finalized-checkpoint advance whose consistency the justification/finality properties audit."
+    },
+    {
+      "dataset_id": "lighthouse:networking:PR#5037",
+      "label": "beacon-chain:slashing",
+      "client": "lighthouse",
+      "title": "Delete temporary mitigation for equivocation via RPC",
+      "source_url": "https://github.com/sigp/lighthouse/pull/5037",
+      "fix_commit": "3b0da0c88352f88b6dc554b923a6f944b2a10e9c",
+      "root_cause": "consensus_divergence",
+      "impact_type": "chain_split",
+      "files_changed": [
+        "beacon_node/network/src/network_beacon_processor/sync_methods.rs"
+      ],
+      "pre_fix_code_excerpt": "# beacon_node/network/src/network_beacon_processor/sync_methods.rs @ line 9\nuse beacon_chain::data_availability_checker::AvailabilityCheckError;\nuse beacon_chain::data_availability_checker::MaybeAvailableBlock;\nuse beacon_chain::{\n    observed_block_producers::Error as ObserveError,\n    validator_monitor::{get_block_delay_ms, get_slot_delay_ms},\n    AvailabilityProcessingStatus, BeaconChainError, BeaconChainTypes, BlockError,\n    ChainSegmentResult, HistoricalBlockError, NotifyExecutionLayer,\n};\nuse beacon_processor::{\n    work_reprocessing_queue::{QueuedRpcBlock, ReprocessQueueMessage},",
+      "why_implementation_linked": "Equivocation-via-RPC mitigation path; equivocation detection is exactly the S1 double-vote predicate slashedB decides (slashed_double_vote_iff_bex)."
+    },
+    {
+      "dataset_id": "nimbus:consensus:PR#2392",
+      "label": "beacon-chain:slashing",
+      "client": "nimbus",
+      "title": "annotate slashing protection v2 with uint64 -> int64 overflow conditions",
+      "source_url": "https://github.com/status-im/nimbus-eth2/pull/2392",
+      "fix_commit": "c0d8ecd7c3951c72880e4fd47fea1740fc1ca34f",
+      "root_cause": "integer_overflow_underflow",
+      "impact_type": "liveness_dos",
+      "files_changed": [
+        "beacon_chain/validators/slashing_protection_v2.nim"
+      ],
+      "pre_fix_code_excerpt": "# beacon_chain/validators/slashing_protection_v2.nim @ line 720\n  block:\n    # Condition 1 at https://eips.ethereum.org/EIPS/eip-3076\n    var root: ETH2Digest\n    let status = db.sqlBlockForSameSlot.exec(\n          (valID, int64 slot)\n        ) do (res: Hash32):",
+      "why_implementation_linked": "uint64 -> int64 overflow conditions in slashing-protection v2 (EIP-3076 conditions); numeric-representation divergence in the S1/S2 slashing predicates slashedB decides. Same numeric class as findings_map lodestar-slashing-uint64-as-js-number."
+    },
+    {
+      "dataset_id": "lighthouse:networking:PR#9106",
+      "label": "beacon-chain:effective-balance-updates",
+      "client": "lighthouse",
+      "title": "Fix total_effective_balance=0 in `PreEpochCache`",
+      "source_url": "https://github.com/sigp/lighthouse/pull/9106",
+      "fix_commit": "342e6f77399e450b5f7ab6d708587a6a691fba10",
+      "root_cause": "consensus_divergence",
+      "impact_type": "chain_split",
+      "files_changed": [
+        "consensus/state_processing/src/epoch_cache.rs"
+      ],
+      "pre_fix_code_excerpt": "# consensus/state_processing/src/epoch_cache.rs @ line 74\n        }\n    }\n\n    pub fn get_total_active_balance(&self) -> u64 {\n        self.total_active_balance\n    }",
+      "why_implementation_linked": "total_effective_balance=0 in PreEpochCache / get_total_active_balance; weight arithmetic feeding the 2/3-quorum threshold that quorum_2 / q_intersection_slashed (qIntersectionWitnessB) depend on."
+    },
+    {
+      "dataset_id": "lodestar:scope-networking:PR#3045",
+      "label": "beacon-chain:effective-balance-updates",
+      "client": "lodestar",
+      "title": "Guard against unsafe numbers",
+      "source_url": "https://github.com/ChainSafe/lodestar/pull/3045",
+      "fix_commit": "8d6b66630f14a670f80f0ba0a7582275d67713e3",
+      "root_cause": "consensus_divergence",
+      "impact_type": "chain_split",
+      "files_changed": [
+        "packages/beacon-state-transition/src/allForks/util/epochContext.ts",
+        "packages/beacon-state-transition/src/allForks/util/epochProcess.ts"
+      ],
+      "pre_fix_code_excerpt": "# packages/beacon-state-transition/src/allForks/util/epochContext.ts @ line 143\n  // 1 = 1 unit of EFFECTIVE_BALANCE_INCREMENT\n  if (totalActiveBalanceByIncrement < 1) {\n    totalActiveBalanceByIncrement = 1;\n  }\n\n  const currentShuffling = computeEpochShuffling(state, currentActiveIndices, currentEpoch);",
+      "why_implementation_linked": "Guard against unsafe JS numbers in totalActiveBalanceByIncrement; effective- balance weight representation feeding the quorum threshold arithmetic."
+    }
+  ]
+}

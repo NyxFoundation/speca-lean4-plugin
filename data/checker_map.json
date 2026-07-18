@@ -1,0 +1,115 @@
+{
+  "version": "0.1.0",
+  "gasper_source": "NyxFoundation/gasper-lean4",
+  "note": "E1 (issue #7): theorem -> Executable decidable checker / constructive witness. Keyed by fully-qualified theorem name (the same key as theorem_map.json entries); every property lowered from a theorem inherits its entry. `checkers` are the decidable Bool functions in GasperBeaconChain.Executable.* that decide the predicates the property's precondition/conclusion is stated over; `correctness` lists the proved iff-theorems certifying each checker against the Core predicate; `witness` is the constructive result that BUILDS a concrete scenario (slashable intersection / two-link liveness extension) rather than only deciding one. Only theorems with a REAL Executable counterpart appear here — the pure-arithmetic and definitional Core theorems (slashable_bound, quorum_intersection_weight_lower, validator_intersection_lower_bound, finalization_fork_means_same_finalization_fork_one, finalized_means_one_finalized, quorum_2_upclosed, quorum_2_nonempty_of_threshold_pos) have no decidable checker yet and are honestly absent, so their properties keep kurtosis_test=null. All names verified against gasper-lean4 GasperBeaconChain/Executable/{Slashing,Justification,Quorums,AccountableSafety,PlausibleLiveness}.lean.",
+  "checkers": {
+    "GasperBeaconChain.Core.k_safety'": {
+      "checkers": ["GasperBeaconChain.Executable.qIntersectionWitnessB"],
+      "correctness": ["GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"],
+      "witness": "GasperBeaconChain.Executable.k_accountable_safety_witnessB",
+      "role": "the theorem's conclusion q_intersection_slashed is decided by explicit witness search; the k-witness theorem constructs the slashable intersection for a k-finalization fork"
+    },
+    "GasperBeaconChain.Core.no_k_finalized_justified_same_height": {
+      "checkers": ["GasperBeaconChain.Executable.justifiedB", "GasperBeaconChain.Executable.notSlashedB"],
+      "correctness": ["GasperBeaconChain.Executable.justifiedB_iff", "GasperBeaconChain.Executable.notSlashedB_iff"],
+      "witness": null,
+      "role": "the justified(-, -) preconditions are decided by the bounded justification checker; the no-slashing hypothesis by notSlashedB"
+    },
+    "GasperBeaconChain.Core.k_slash_surround_case_general": {
+      "checkers": ["GasperBeaconChain.Executable.qIntersectionWitnessB", "GasperBeaconChain.Executable.slashedB"],
+      "correctness": ["GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness", "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex"],
+      "witness": null,
+      "role": "conclusion decided by quorum-intersection witness search; the surround (S2) arm of slashedB decides the per-validator slashing predicate the case rests on"
+    },
+    "GasperBeaconChain.Core.k_non_equal_height_case": {
+      "checkers": ["GasperBeaconChain.Executable.qIntersectionWitnessB"],
+      "correctness": ["GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"],
+      "witness": null,
+      "role": "conclusion q_intersection_slashed decided by explicit witness search"
+    },
+    "GasperBeaconChain.Core.no_two_justified_same_height": {
+      "checkers": ["GasperBeaconChain.Executable.justifiedB", "GasperBeaconChain.Executable.notSlashedB"],
+      "correctness": ["GasperBeaconChain.Executable.justifiedB_iff", "GasperBeaconChain.Executable.notSlashedB_iff"],
+      "witness": null,
+      "role": "both justified preconditions and the no-slashing hypothesis are decidable"
+    },
+    "GasperBeaconChain.Core.two_justified_same_height_slashed": {
+      "checkers": ["GasperBeaconChain.Executable.qIntersectionWitnessB", "GasperBeaconChain.Executable.justifiedB"],
+      "correctness": ["GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness", "GasperBeaconChain.Executable.justifiedB_iff"],
+      "witness": null,
+      "role": "same-height justification preconditions decided by justifiedB; the slashable conclusion by witness search"
+    },
+    "GasperBeaconChain.Core.finalized_means_justified_child": {
+      "checkers": ["GasperBeaconChain.Executable.justifiedB"],
+      "correctness": ["GasperBeaconChain.Executable.justifiedB_iff"],
+      "witness": null,
+      "role": "the guaranteed justified child is checkable by the bounded justification checker (the finalized precondition itself has no dedicated Bool checker yet)"
+    },
+    "GasperBeaconChain.Core.k_finalized_means_justified": {
+      "checkers": ["GasperBeaconChain.Executable.justifiedB"],
+      "correctness": ["GasperBeaconChain.Executable.justifiedB_iff"],
+      "witness": null,
+      "role": "the guaranteed justification is decided by justifiedB"
+    },
+    "GasperBeaconChain.Core.plausible_liveness_construct_extension": {
+      "checkers": ["GasperBeaconChain.Executable.goodQuorumAtB", "GasperBeaconChain.Executable.notSlashedB"],
+      "correctness": ["GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum", "GasperBeaconChain.Executable.notSlashedB_iff"],
+      "witness": "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+      "role": "the two-thirds-honest hypothesis is decided per target by goodQuorumAtB; the theorem itself constructs the two-link extension scenario (constructive witness)"
+    },
+    "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist": {
+      "checkers": ["GasperBeaconChain.Executable.goodQuorumAtB", "GasperBeaconChain.Executable.notSlashedB"],
+      "correctness": ["GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum", "GasperBeaconChain.Executable.notSlashedB_iff"],
+      "witness": "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+      "role": "same two-link extension construction, restated under the Coq block-existence hypothesis"
+    },
+    "GasperBeaconChain.Core.no_new_slashed_two_link_extension": {
+      "checkers": ["GasperBeaconChain.Executable.notSlashedB"],
+      "correctness": ["GasperBeaconChain.Executable.notSlashedB_iff"],
+      "witness": null,
+      "role": "no_new_slashed across the extension is checkable per validator by notSlashedB"
+    },
+    "GasperBeaconChain.Executable.slashed_double_vote_iff_bex": {
+      "checkers": ["GasperBeaconChain.Executable.slashedB"],
+      "correctness": ["GasperBeaconChain.Executable.slashed_double_vote_iff_bex"],
+      "witness": null,
+      "role": "the S1 double-vote arm of slashedB; the mapped theorem IS the checker's correctness statement"
+    },
+    "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex": {
+      "checkers": ["GasperBeaconChain.Executable.slashedB"],
+      "correctness": ["GasperBeaconChain.Executable.slashed_surround_vote_iff_bex"],
+      "witness": null,
+      "role": "the S2 surround-vote arm of slashedB; the mapped theorem IS the checker's correctness statement"
+    },
+    "GasperBeaconChain.Executable.accountable_safety_witnessB": {
+      "checkers": ["GasperBeaconChain.Executable.qIntersectionWitnessB"],
+      "correctness": ["GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"],
+      "witness": "GasperBeaconChain.Executable.accountable_safety_witnessB",
+      "role": "constructs the slashable quorum-intersection witness for a one-finalization fork"
+    },
+    "GasperBeaconChain.Executable.k_accountable_safety_witnessB": {
+      "checkers": ["GasperBeaconChain.Executable.qIntersectionWitnessB"],
+      "correctness": ["GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"],
+      "witness": "GasperBeaconChain.Executable.k_accountable_safety_witnessB",
+      "role": "constructs the slashable quorum-intersection witness for a k-finalization fork"
+    },
+    "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness": {
+      "checkers": ["GasperBeaconChain.Executable.qIntersectionWitnessB"],
+      "correctness": ["GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"],
+      "witness": null,
+      "role": "the explicit witness-search decider for q_intersection_slashed; the mapped theorem IS its correctness statement"
+    },
+    "GasperBeaconChain.Executable.justified_iff_bounded": {
+      "checkers": ["GasperBeaconChain.Executable.justifiedB"],
+      "correctness": ["GasperBeaconChain.Executable.justifiedB_iff", "GasperBeaconChain.Executable.justified_iff_bounded"],
+      "witness": null,
+      "role": "the bounded justification checker; the mapped theorem is its bounded characterization"
+    },
+    "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum": {
+      "checkers": ["GasperBeaconChain.Executable.goodQuorumAtB"],
+      "correctness": ["GasperBeaconChain.Executable.goodQuorumAtB_iff", "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum"],
+      "witness": null,
+      "role": "the per-target good-quorum decider; the mapped theorem characterizes two_thirds_good through it"
+    }
+  }
+}
