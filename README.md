@@ -7,16 +7,20 @@ formally-verified Casper FFG theorems in
 [`NyxFoundation/gasper-lean4`](https://github.com/NyxFoundation/gasper-lean4)
 into SPECA `01e` security properties.
 
-> Status: **M2 baseline, Core-retargeted** (see the impl plan). Per the
-> gasper-lean4 maintainer, ~70-80% of the proved substance lives in
-> `GasperBeaconChain.Core.*` (Theories + Lemmas), not the thin, still-growing
-> `Executable` application layer, so the target set is Core-centric (18 Core
-> theorems + 7 Executable decidable-checker counterparts = 25 properties). CI
-> imports both `Core.All` and `Executable.All`, runs the exporter end-to-end,
-> and certifies every target `lean_status: proved` (sorry-free, choice-free,
-> native-free) from real `collectAxioms` output. The precision harness
-> (`verify-precision`) measures granularity against `bench-rq2a-20260508-speca`
-> and recall against `ethereum-vuln-dataset`; closing the gaps it reports is M3.
+> Status: **M-lean-provenance workstreams A + B** (issues #3, #4; epic #2), on
+> top of the M0-M3 Core-retargeted baseline. Per the gasper-lean4 maintainer,
+> ~70-80% of the proved substance lives in `GasperBeaconChain.Core.*`
+> (Theories + Lemmas), not the thin, still-growing `Executable` application
+> layer, so the target set is Core-centric (18 Core theorems + 7 Executable
+> decidable-checker counterparts = 25 theorems). The Lean->plugin boundary now
+> carries the real proof content (statement, hypothesis telescope, conclusion,
+> referenced constants, gasper-local axioms, proof provenance, verbatim proof
+> source), and each theorem lowers to one `01e` property **per must-establish
+> precondition** (54 properties from the 25 theorems on the sample fixture;
+> the real count comes from CI's live export). CI imports both `Core.All` and
+> `Executable.All`, runs the exporter end-to-end, and certifies every target
+> `lean_status: proved` (sorry-free, choice-free, native-free) from real
+> `collectAxioms` output.
 
 ## Why a plugin (not vendored into speca)
 
@@ -40,12 +44,16 @@ speca  (02c → 03 → 04 audit)  ──►  #92 Kurtosis reproduction
 ```
 
 - **Lean side (`lean/`)** does only the part that needs Lean: resolve each target
-  theorem and collect the axioms its proof depends on (the same mechanism as
-  gasper-lean4's `#mr_audit_json`), classifying it `proved` (no `sorry`) or
-  `unknown`. Emits a small health JSON. Nothing about `01e` lives here.
-- **Python driver (`src/speca_lean4/`)** owns the theorem → `01e` mapping, scope
-  resolution, and `covers` matching. This is where granularity is tuned to the
-  fusaka benchmark — **editable without recompiling Lean** (`theorem_map.json`).
+  theorem, collect the axioms its proof depends on (the same mechanism as
+  gasper-lean4's `#mr_audit_json`), classify it `proved` (no `sorry`) or
+  `unknown`, and extract the proof content (statement, hypothesis telescope
+  with depend-allowed/must-establish tags, conclusion, referenced constants,
+  proof term + verbatim source). Nothing about `01e` lives here.
+- **Python driver (`src/speca_lean4/`)** owns the lowering semantics (B1-B5
+  below), scope resolution, and `covers` matching. `theorem_map.json` is the
+  **tuning overlay** — severity calibration, covers hints, scope, labels,
+  shards — **editable without recompiling Lean**; the statement/hypothesis
+  content itself comes from the Lean export, not from the map.
 
 ## CLI contract (what speca's `lean` provider calls)
 
@@ -66,8 +74,70 @@ Proof-health source (Stage B) is one of:
   useful for a dry mapping check without Lean.
 
 Output is exactly the `01e` property schema. Lean-specific data is **additive
-only** (`lean_status`, `lean_artifact`, `kurtosis_test`), never mutating a core
-field — per speca#88's contract.
+only**, never mutating a core field — per speca#88's contract: `lean_status`,
+`lean_artifact`, `kurtosis_test`, `label`, `lean_statement`,
+`lean_hypotheses`, `lean_must_establish`, `lean_referenced_defs`,
+`lean_axioms`, `lean_proof_provenance`, `lean_proof_code`,
+`lean_precondition`, `lean_conclusion`, `lean_type_consistency`,
+`lean_proof_source`.
+
+## The enriched Lean -> plugin boundary (issue #3, workstream A)
+
+`lake exe speca-export` emits one record per target theorem. Beyond the proof
+health flags (`lean_status`, `sorry_free`, `choice_free`, `native_free`), each
+record carries:
+
+| field | source | item |
+|---|---|---|
+| `statement` | `Meta.ppExpr` of `ConstantInfo.type` | A1 |
+| `hypotheses` | `Meta.forallTelescope`; per binder: `name`, `type` (pp), `head` (head constant), `class` | A2 |
+| `conclusion` | pp of the telescope body — the Q the theorem guarantees | A2/B2 |
+| `referenced_constants` | `Expr.getUsedConstants` on the type, filtered to `GasperBeaconChain.*` | A3 |
+| `gasper_axioms` | `collectAxioms` minus Lean builtins (`sorryAx`, `Classical.choice`, `propext`, `Quot.sound`, `trustCompiler`, native compute) | A4 |
+| `proof_provenance` | `"automated"` if the proof term references decision-procedure markers (`Decidable.decide`, `ofReduceBool/Nat`, `of_decide_eq_true`, `Aesop.*`, `Omega.*`), else `"hand-written"`; `"unknown"` if no value | A5 |
+| `proof_code` | pp of `ConstantInfo.value?` (`pp.proofs true`) | A7 fallback |
+| `proof_constants` | gasper-local `getUsedConstants` of the proof term — the proof-DAG edges | B3 feed |
+| `proof_source` | **verbatim declaration source** (term/tactic code + comments), sliced from the lake package checkout via `findDeclarationRanges?`; `""` if unavailable | A7 |
+
+### The depend-allowed vs must-establish heuristic (A2)
+
+Documented in `lean/SpecaExport/Basic.lean`; provisional and expected to be
+tuned with the gasper maintainers:
+
+1. instance-implicit binders -> **depend-allowed** (typeclass plumbing);
+2. non-`Prop` binders -> **depend-allowed** (model parameters: `τ`, `stake`,
+   `vset`, `parent`, `genesis`, `st`, ...);
+3. `Prop` hypotheses whose head predicate is a fixed world/model assumption
+   (`two_thirds_good`, `good_votes`, `blocks_exist_*`, `target_height_bound`)
+   -> **depend-allowed**;
+4. every other `Prop` hypothesis -> **must-establish**: a computed/structural
+   fact (`k_finalized ...`, `justified ...`, `quorum_2 ...`, height
+   inequalities, ...) the implementation must preserve for the theorem's
+   guarantee to transfer.
+
+## Lowering semantics (issue #4, workstream B)
+
+- **B1 — decomposition.** A theorem lowers to N properties, one per
+  must-establish hypothesis (`<base-id>-me<i>`), NOT one per theorem.
+  Depend-allowed hypotheses are context, never invariants. Theorems with no
+  must-establish hypothesis (the Iff-shaped decidable checkers) lower 1:1.
+  Per the MTG principle the must-establish set grows with implementation
+  sophistication — 54 properties from 25 theorems on the sample fixture.
+- **B2 — neutral audit result.** Each assertion reads: `implementation must
+  preserve [P]; if so, <theorem> guarantees [Q]` with P and Q pretty-printed
+  from Lean — an investigation result, not a good/bad verdict.
+- **B3 — proof-DAG severity.** Top-level conclusions keep the theorem_map
+  severity; a lemma inherits the maximum severity of the target theorems whose
+  proofs (transitively) depend on it, via `proof_constants`. Upward-only —
+  nothing is downgraded, and map severities were not relabeled.
+- **B5 — type-consistency gate.** Each lowered precondition's head constant
+  must be among the theorem's referenced constants; verdict `ok`/`mismatch`/
+  `unchecked` in `lean_type_consistency`. Mismatches are warned at emit time
+  and fail the CI end-to-end step.
+
+Honesty invariants are unchanged: `sorry` -> `unknown`, unresolved target ->
+`unknown` + CI failure, severities never tuned against the benchmark
+distribution.
 
 ## Precision harness (M2, impl plan section 4)
 
@@ -95,8 +165,15 @@ is the curated, reviewable judgment table [`data/findings_map.json`](data/findin
 flag and a full/partial/none coverage judgment, so the denominator is
 transparent.
 
-Baseline, Core retarget (2026-07-08, 25 properties) vs the prior 7-property
-Executable-only baseline (2026-07-07):
+Post-decomposition (fixture-calibrated): the six protocol-area shards carry
+9 / 10 / 8 / 10 / 8 / 9 properties (safety-accountable, safety-cases,
+safety-bound-witness, finality-justification, finality-quorum,
+finality-liveness) — all within the benchmark 1-sigma props/file band
+(11.62 +/- 3.72). Real CI counts come from the live export (the `lean` job
+uploads `health.json` + the emitted `01e` as an artifact); shards are
+re-tunable in `theorem_map.json` without touching Lean or Python. The
+historical M0-M3 table below predates the B1 decomposition (25 x 1:1
+properties):
 
 | metric | Core sharded (M3) | Core single-file | prior (7 props) | benchmark |
 |---|---|---|---|---|

@@ -66,14 +66,27 @@ jobs:
           m = json.load(open("../theorem_map.json"))
           print("\n".join(e["theorem"] for e in m["properties"]))
           PY
-          lake exe speca-export --targets targets.txt | tee health.json
+          lake exe speca-export --targets targets.txt > health.json
           python3 - <<'PY'
           import json
           h = json.load(open("health.json"))
           bad = [t["name"] for t in h["theorems"] if not t["resolved"]]
           assert not bad, f"unresolved target theorems: {bad}"
+          # enriched-boundary contract (issue #3): every record carries A1-A7
+          for t in h["theorems"]:
+              for key in ("statement", "conclusion", "hypotheses",
+                          "referenced_constants", "gasper_axioms",
+                          "proof_provenance", "proof_code", "proof_constants",
+                          "proof_source"):
+                  assert key in t, f"{t['name']} missing {key}"
+              assert t["statement"], f"{t['name']} has empty statement"
+          n_me = sum(1 for t in h["theorems"] for hy in t["hypotheses"]
+                     if hy.get("class") == "must-establish")
+          n_src = sum(1 for t in h["theorems"] if t["proof_source"])
           print(f"all {len(h['theorems'])} targets resolved;",
-                sum(1 for t in h["theorems"] if t["lean_status"] == "proved"), "proved")
+                sum(1 for t in h["theorems"] if t["lean_status"] == "proved"),
+                f"proved; {n_me} must-establish hypotheses; "
+                f"{n_src} with verbatim proof source")
           PY
       - name: end-to-end — emit 01e from real Lean health
         run: |
@@ -81,5 +94,34 @@ jobs:
           speca-lean4 emit-01e \
             --scope tests/fixtures/bug_bounty_scope.sample.json \
             --health-json lean/health.json \
-            --out 01e_lean.json
-          python3 -c "import json,sys; d=json.load(open('01e_lean.json')); assert d['properties'], 'no properties'; print(len(d['properties']),'properties emitted from real Lean health')"
+            --out 01e_lean.json \
+            --out-dir 01e_lean_shards
+          python3 - <<'PY'
+          import json
+          d = json.load(open("01e_lean.json"))
+          props = d["properties"]
+          assert props, "no properties"
+          entries = json.load(open("theorem_map.json"))["properties"]
+          # B1: >= one property per theorem; every entry represented
+          assert len(props) >= len(entries), (len(props), len(entries))
+          ids = {p["property_id"] for p in props}
+          for e in entries:
+              b = e["property_id"]
+              assert b in ids or any(i.startswith(b + "-me") for i in ids), b
+          # B5: the type-consistency gate must not flag real Lean output
+          bad = [p["property_id"] for p in props
+                 if p.get("lean_type_consistency") == "mismatch"]
+          assert not bad, f"type-consistency mismatches: {bad}"
+          n_me = sum(1 for p in props if p.get("lean_precondition"))
+          print(f"{len(props)} properties emitted from real Lean health "
+                f"({n_me} must-establish-decomposed, from {len(entries)} theorems)")
+          PY
+      - name: upload real Lean health + 01e output
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-health-and-01e
+          path: |
+            lean/health.json
+            01e_lean.json
+            01e_lean_shards/
+          retention-days: 30
