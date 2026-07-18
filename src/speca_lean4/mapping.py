@@ -1,21 +1,50 @@
-"""Stage C — map gasper-lean4 theorems onto `01e` properties.
+"""Stage C — lower gasper-lean4 theorems onto `01e` properties.
 
 `build_properties` is a pure function (theorem_map + health + scope + subgraphs)
 -> list of `01e` property dicts, so it is fully unit-testable without Lean.
 
-The theorem -> implementation-invariant "lowering" is data-driven: every field
-except `covers`/`reachability`/`lean_*` comes verbatim from `theorem_map.json`.
-That is where the granularity is tuned to match the fusaka `01e` benchmark
-(see the impl plan §3/§4) without recompiling Lean.
+Lowering semantics (issue #4, workstream B):
+
+B1  A theorem lowers to N properties, one per **must-establish** hypothesis of
+    its Lean statement (from the A2 telescope classification) — NOT one per
+    theorem. Depend-allowed hypotheses (typeclass plumbing, model parameters,
+    world/model assumptions) are context, never invariants. When the health
+    data is unenriched, or the theorem has no must-establish hypothesis (e.g.
+    the Iff-shaped decidable-checker theorems), it lowers 1:1 as before.
+B2  Each property is a neutral audit result: "implementation must preserve
+    [P]; if so, <theorem> guarantees [Q]" — where P is the pretty-printed
+    must-establish hypothesis and Q the pretty-printed conclusion, both
+    extracted from Lean, not hand-written.
+B3  Severity derives from proof-DAG position: a top-level conclusion keeps the
+    severity calibrated in theorem_map.json; a lemma inherits the maximum
+    severity of the target theorems whose proofs depend on it (edges from the
+    exporter's gasper-local `proof_constants`). Inheritance is upward-only —
+    nothing is ever downgraded, and theorem_map severities are never edited to
+    game a distribution.
+B5  Type-consistency gate: the head constant of each lowered precondition
+    (exported per-hypothesis by Lean) must be among the theorem's gasper-local
+    referenced constants (A3). Verdict per property: "ok" | "mismatch" |
+    "unchecked" (non-gasper heads such as `Ne`/`Nat.lt`, or unenriched data,
+    are unchecked). Mismatches are flagged, not silently dropped.
+
+`theorem_map.json` stays the *tuning overlay* — severity calibration, covers
+hints, scope/reachability, labels, shards — layered on top of the
+Lean-extracted statement/hypotheses. It no longer carries the decomposition
+semantics themselves.
 """
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any
 
 from .health import TheoremHealth, status_for, health_for
 
 from .schema import Property, Reachability
+
+_GASPER_PREFIX = "GasperBeaconChain."
+
+_SEVERITY_RANK = {"INFORMATIONAL": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
 
 
 def _flatten_strings(obj: Any) -> list[str]:
@@ -73,35 +102,56 @@ def _resolve_covers(covers_hint: list[str], subgraphs: list[dict] | None) -> str
     return covers_hint[0] if covers_hint else "UNRESOLVED"
 
 
-def _audit_assertion(
-    original_assertion: str,
-    theorem_statement: str,
-    must_establish_list: list[str],
-) -> str:
-    """B2: Reframe assertion as a neutral audit result when must-establish data is available.
+def _cap(s: str, n: int = 220) -> str:
+    """Cap a pretty-printed Lean expression for use inside an assertion string.
 
-    Returns the original assertion unchanged if must_establish_list is empty.
+    The full, uncapped text always travels in the dedicated lean_* field."""
+    return s if len(s) <= n else s[: n - 3] + "..."
+
+
+def _short(theorem: str) -> str:
+    return theorem.rsplit(".", 1)[-1]
+
+
+def derive_severities(
+    entries: list[dict[str, Any]], health: dict[str, TheoremHealth]
+) -> dict[str, str]:
+    """B3: proof-DAG severity. theorem -> derived severity (upper-cased).
+
+    Edges run dependent -> dependency: target theorem T depends on target
+    lemma L when L appears among T's gasper-local proof constants. A lemma
+    inherits the maximum severity of its (transitive) dependents; top-level
+    conclusions (no dependents in the target set) keep their theorem_map
+    severity. Upward-only: never downgrades a theorem_map severity.
     """
-    if not must_establish_list:
-        return original_assertion
-    preconditions = "; ".join(must_establish_list)
-    return (
-        f"If the implementation preserves [{preconditions}], "
-        f"then [{theorem_statement}]. "
-        f"Investigation result: {original_assertion}"
-    )
+    sev = {e["theorem"]: str(e["severity"]).upper() for e in entries}
+    targets = set(sev)
+    # fixpoint over max-severity propagation (DAG-safe; bounded by rank domain)
+    changed = True
+    while changed:
+        changed = False
+        for e in entries:
+            t = e["theorem"]
+            th = health.get(t)
+            if th is None:
+                continue
+            for dep in th.proof_constants:
+                if dep in targets and dep != t:
+                    if _SEVERITY_RANK.get(sev[t], 0) > _SEVERITY_RANK.get(sev[dep], 0):
+                        sev[dep] = sev[t]
+                        changed = True
+    return sev
 
 
-def _type_consistent(property_type: str, lean_type: str) -> bool:
-    """B5: Check if the property's claimed type is consistent with the Lean declaration type.
-
-    Always returns True; actual type-analysis check is future work.
-    """
-    return True
-
-
-# TODO: B3 (DAG severity) — requires proof DAG data from Lean; not implementable yet.
-# TODO: B4 (DAG dedup) — requires proof DAG data from Lean; not implementable yet.
+def _type_consistency(hyp: dict[str, Any], th: TheoremHealth) -> str:
+    """B5: the precondition's head constant must be among the theorem's
+    gasper-local referenced constants (A3). Non-gasper heads (Ne, Nat.lt, ...)
+    carry no gasper subject claim and are "unchecked"."""
+    head = str(hyp.get("head") or "")
+    refs = set(th.referenced_constants)
+    if not head or not head.startswith(_GASPER_PREFIX) or not refs:
+        return "unchecked"
+    return "ok" if head in refs else "mismatch"
 
 
 def _lean_artifact(gasper_source: str, gasper_ref: str, module: str, theorem: str) -> str:
@@ -119,11 +169,15 @@ def build_property(
     subgraphs: list[dict] | None,
     gasper_source: str,
     gasper_ref: str,
+    severity: str | None = None,
 ) -> Property:
+    """Build the base (1:1, undecomposed) property for a theorem_map entry.
+
+    `lower_entry` uses this as the template for the per-precondition
+    decomposition; on unenriched health it is also the emitted fallback."""
     theorem = entry["theorem"]
     lean_status, module = status_for(health, theorem)
 
-    # Enriched health data (B1 must-establish decomposition, B2 neutral framing)
     th = health_for(health, theorem)
     lean_statement = None
     lean_hypotheses = None
@@ -132,6 +186,8 @@ def build_property(
     lean_axioms = None
     lean_proof_provenance = None
     lean_proof_code = None
+    lean_conclusion = None
+    lean_proof_source = None
 
     if th.statement:
         lean_statement = th.statement
@@ -141,11 +197,17 @@ def build_property(
         lean_axioms = th.gasper_axioms or None
         lean_proof_provenance = th.proof_provenance or None
         lean_proof_code = th.proof_code or None
+        lean_conclusion = th.conclusion or None
+        lean_proof_source = th.proof_source or None
 
-    # B2: reframe assertion when enriched must-establish data is available
+    # B2 (no-precondition shape): a theorem with an enriched statement but no
+    # must-establish hypothesis guarantees its conclusion unconditionally.
     assertion = entry["assertion"]
-    if lean_must_establish:
-        assertion = _audit_assertion(assertion, lean_statement, lean_must_establish)
+    if th.statement and not th.must_establish and th.conclusion:
+        assertion = (
+            f"{_short(theorem)} guarantees [{_cap(th.conclusion)}] with no "
+            f"must-establish preconditions; audit context: {entry['assertion']}"
+        )
 
     area = entry.get("bug_bounty_area", "")
     in_scope = _area_in_scope(scope, area)
@@ -171,7 +233,7 @@ def build_property(
         text=entry["text"],
         type=entry.get("type", "invariant"),
         assertion=assertion,
-        severity=str(entry["severity"]).upper(),
+        severity=(severity or str(entry["severity"])).upper(),
         covers=_resolve_covers(entry.get("covers_hint", []), subgraphs),
         reachability=reach,
         bug_bounty_eligible=(in_scope and not liveness_only),
@@ -187,7 +249,53 @@ def build_property(
         lean_axioms=lean_axioms,
         lean_proof_provenance=lean_proof_provenance,
         lean_proof_code=lean_proof_code,
+        lean_conclusion=lean_conclusion,
+        lean_proof_source=lean_proof_source,
     )
+
+
+def lower_entry(
+    entry: dict[str, Any],
+    health: dict[str, TheoremHealth],
+    scope: dict[str, Any],
+    subgraphs: list[dict] | None,
+    gasper_source: str,
+    gasper_ref: str,
+    severity: str | None = None,
+) -> list[Property]:
+    """B1: lower one theorem_map entry into its `01e` properties.
+
+    One property per must-establish hypothesis; the base 1:1 property when the
+    theorem has none (or health is unenriched). The theorem-level property is
+    never emitted alongside its decomposition (no lemma/theorem double-count).
+    """
+    base = build_property(entry, health, scope, subgraphs, gasper_source, gasper_ref, severity)
+    th = health_for(health, entry["theorem"])
+    mes = th.must_establish
+    if not th.statement or not mes:
+        return [base]
+
+    short = _short(entry["theorem"])
+    conclusion = th.conclusion or th.statement
+    n = len(mes)
+    props: list[Property] = []
+    for i, hyp in enumerate(mes, 1):
+        precondition = str(hyp.get("type", ""))
+        assertion = (
+            f"implementation must preserve [{_cap(precondition)}]; "
+            f"if so, {short} guarantees [{_cap(conclusion)}]"
+        )
+        text = f"{entry['text']} [must-establish {i}/{n}: {hyp.get('name', '?')}]"
+        props.append(replace(
+            base,
+            property_id=f"{base.property_id}-me{i}",
+            text=text,
+            assertion=assertion,
+            lean_precondition=precondition,
+            lean_conclusion=conclusion,
+            lean_type_consistency=_type_consistency(hyp, th),
+        ))
+    return props
 
 
 def build_properties(
@@ -199,10 +307,13 @@ def build_properties(
 ) -> list[dict[str, Any]]:
     source = theorem_map.get("gasper_source", "NyxFoundation/gasper-lean4")
     ref = gasper_ref or theorem_map.get("gasper_ref", "main")
+    entries = theorem_map.get("properties", [])
+    severities = derive_severities(entries, health)
     props: list[dict[str, Any]] = []
-    for entry in theorem_map.get("properties", []):
-        prop = build_property(entry, health, scope, subgraphs, source, ref)
-        props.append(prop.to_dict())
+    for entry in entries:
+        for prop in lower_entry(entry, health, scope, subgraphs, source, ref,
+                                severities.get(entry["theorem"])):
+            props.append(prop.to_dict())
     return props
 
 
@@ -226,9 +337,12 @@ def build_properties_by_shard(
     """
     source = theorem_map.get("gasper_source", "NyxFoundation/gasper-lean4")
     ref = gasper_ref or theorem_map.get("gasper_ref", "main")
+    entries = theorem_map.get("properties", [])
+    severities = derive_severities(entries, health)
     groups: dict[str, list[dict[str, Any]]] = {}
-    for entry in theorem_map.get("properties", []):
+    for entry in entries:
         shard = str(entry.get("shard", _DEFAULT_SHARD))
-        prop = build_property(entry, health, scope, subgraphs, source, ref)
-        groups.setdefault(shard, []).append(prop.to_dict())
+        for prop in lower_entry(entry, health, scope, subgraphs, source, ref,
+                                severities.get(entry["theorem"])):
+            groups.setdefault(shard, []).append(prop.to_dict())
     return groups

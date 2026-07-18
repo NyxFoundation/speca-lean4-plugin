@@ -46,6 +46,11 @@ class TheoremHealth(dict):
         return self.get("statement", "")
 
     @property
+    def conclusion(self) -> str:
+        """Pretty-printed telescope body — the Q the theorem guarantees."""
+        return self.get("conclusion", "")
+
+    @property
     def hypotheses(self) -> list[dict]:
         return self.get("hypotheses", [])
 
@@ -72,6 +77,16 @@ class TheoremHealth(dict):
     @property
     def proof_code(self) -> str:
         return self.get("proof_code", "")
+
+    @property
+    def proof_constants(self) -> list[str]:
+        """Gasper-local constants used by the proof term (proof-DAG edges, B3)."""
+        return self.get("proof_constants", [])
+
+    @property
+    def proof_source(self) -> str:
+        """Verbatim declaration source slice (A7); "" when unavailable."""
+        return self.get("proof_source", "")
 
 
 def load_health(path: str | Path) -> dict[str, TheoremHealth]:

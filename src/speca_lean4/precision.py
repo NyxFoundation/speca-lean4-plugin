@@ -150,6 +150,12 @@ def granularity_report(our_props: list[dict], bench: dict[str, Any]) -> dict[str
     }
 
 
+def _id_emitted(pid: str, our_ids: set[str]) -> bool:
+    """A findings_map judgment names a theorem-level base id; the B1 lowering
+    may refine it into per-precondition ids (`<base>-me<i>`). Either counts."""
+    return pid in our_ids or any(oid.startswith(pid + "-me") for oid in our_ids if oid)
+
+
 def recall_report(our_props: list[dict], findings_map: dict[str, Any]) -> dict[str, Any]:
     """Recall against the curated consensus-domain findings table."""
     our_ids = {p.get("property_id") for p in our_props}
@@ -158,7 +164,7 @@ def recall_report(our_props: list[dict], findings_map: dict[str, Any]) -> dict[s
     rows = []
     strict = lenient = 0
     for f in in_domain:
-        mapped = [pid for pid in f.get("covered_by", []) if pid in our_ids]
+        mapped = [pid for pid in f.get("covered_by", []) if _id_emitted(pid, our_ids)]
         cov = f.get("coverage", "none") if mapped else "none"
         if cov == "full":
             strict += 1

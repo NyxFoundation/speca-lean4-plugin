@@ -78,7 +78,7 @@ def test_granularity_report_on_real_output(bench_dir, our_01e):
     assert g["schema_validity"] == 1.0, g["schema_problems"]
     assert g["vocabulary_conformance"] == 1.0, g["vocabulary_nonconforming"]
     n_map = len(json.loads((_ROOT / "theorem_map.json").read_text(encoding="utf-8"))["properties"])
-    assert g["n_properties"] == n_map
+    assert g["n_properties"] >= n_map  # B1 decomposition: >= one property per theorem
     assert g["severity_kl_divergence_nats"] >= 0
 
 
@@ -89,9 +89,13 @@ def test_recall_report_uses_curated_judgments(our_01e):
     assert r["findings_in_domain"] > 0
     assert r["findings_total"] >= r["findings_in_domain"]
     # every coverage judgment must reference property ids that actually exist
+    # (base theorem-level id, possibly refined into -me<i> ids by B1)
     for row in r["rows"]:
         for pid in row["covered_by"]:
-            assert any(p["property_id"] == pid for p in props), pid
+            assert any(
+                p["property_id"] == pid or p["property_id"].startswith(pid + "-me")
+                for p in props
+            ), pid
     # strict recall can never exceed lenient
     assert r["recall_strict"] <= r["recall_lenient"]
 

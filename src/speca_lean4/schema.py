@@ -36,6 +36,7 @@ SCOPE_VALUES = {"in-scope", "out-of-scope", "conditional"}
 ENTRY_POINTS = {"CallbackHandler", "FunctionCall", "ProgramEntry", "Initialization"}
 LEAN_STATUSES = {"proved", "unknown", "counterexample"}
 PROOF_PROVENANCES = {"automated", "hand-written", "unknown"}
+TYPE_CONSISTENCY = {"ok", "mismatch", "unchecked"}
 
 
 @dataclass
@@ -69,12 +70,21 @@ class Property:
     lean_axioms: list[str] | None = None
     lean_proof_provenance: str | None = None
     lean_proof_code: str | None = None
+    # B1/B2: the one must-establish precondition this property audits, and the
+    # conclusion the theorem guarantees once every precondition is preserved.
+    lean_precondition: str | None = None
+    lean_conclusion: str | None = None
+    # B5: type-consistency gate verdict ("ok" | "mismatch" | "unchecked")
+    lean_type_consistency: str | None = None
+    # A7: verbatim declaration source (term/tactic code and comments)
+    lean_proof_source: str | None = None
 
     _ADDITIVE_FIELDS = (
         "lean_status", "lean_artifact", "kurtosis_test", "label",
         "lean_statement", "lean_hypotheses", "lean_must_establish",
         "lean_referenced_defs", "lean_axioms", "lean_proof_provenance",
-        "lean_proof_code",
+        "lean_proof_code", "lean_precondition", "lean_conclusion",
+        "lean_type_consistency", "lean_proof_source",
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -172,5 +182,14 @@ def validate_property(d: dict[str, Any]) -> list[str]:
     lme = d.get("lean_must_establish")
     if lme is not None and not isinstance(lme, list):
         problems.append("lean_must_establish must be a list")
+
+    for key in ("lean_precondition", "lean_conclusion", "lean_proof_source"):
+        v = d.get(key)
+        if v is not None and not isinstance(v, str):
+            problems.append(f"{key} must be a string")
+
+    ltc = d.get("lean_type_consistency")
+    if ltc is not None and ltc not in TYPE_CONSISTENCY:
+        problems.append(f"lean_type_consistency {ltc!r} not in {sorted(TYPE_CONSISTENCY)}")
 
     return problems

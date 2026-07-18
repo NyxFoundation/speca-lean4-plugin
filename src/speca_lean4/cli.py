@@ -117,7 +117,21 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
     def _summary(props: list) -> str:
         n_proved = sum(1 for p in props if p.get("lean_status") == "proved")
         n_scope = sum(1 for p in props if p.get("bug_bounty_eligible"))
-        return f"{len(props)} properties ({n_proved} proved, {n_scope} bug-bounty-eligible)"
+        n_me = sum(1 for p in props if p.get("lean_precondition"))
+        return (
+            f"{len(props)} properties ({n_proved} proved, {n_scope} bug-bounty-eligible, "
+            f"{n_me} must-establish-decomposed)"
+        )
+
+    def _flag_mismatches(props: list) -> None:
+        """B5: surface (never silently drop) type-consistency mismatches."""
+        bad = [p["property_id"] for p in props if p.get("lean_type_consistency") == "mismatch"]
+        if bad:
+            print(
+                f"warning: type-consistency gate flagged {len(bad)} propert"
+                f"{'y' if len(bad) == 1 else 'ies'}: {', '.join(bad)}",
+                file=sys.stderr,
+            )
 
     # Sharded output: one 01e_PARTIAL_<shard>.json per protocol-area group, so
     # per-file property count matches the benchmark granularity (M3).
@@ -130,6 +144,7 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
             fp = out_dir / f"01e_PARTIAL_{shard}.json"
             fp.write_text(json.dumps(_doc(props, shard), indent=2, ensure_ascii=False), encoding="utf-8")
             total += len(props)
+            _flag_mismatches(props)
             print(f"wrote {fp}: {_summary(props)}")
         print(f"total: {total} properties across {len(groups)} shard(s)")
 
@@ -139,6 +154,7 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
         Path(args.out).write_text(
             json.dumps(_doc(properties), indent=2, ensure_ascii=False), encoding="utf-8"
         )
+        _flag_mismatches(properties)
         print(f"wrote {args.out}: {_summary(properties)}")
     return 0
 

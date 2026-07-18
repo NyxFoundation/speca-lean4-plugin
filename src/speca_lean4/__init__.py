@@ -7,13 +7,21 @@ External, version-pinned plugin resolved by speca's `lean` property provider
 """
 
 from .health import index_health, load_health, status_for, health_for
-from .mapping import build_properties, build_properties_by_shard, build_property
+from .mapping import (
+    build_properties,
+    build_properties_by_shard,
+    build_property,
+    derive_severities,
+    lower_entry,
+)
 from .schema import Property, Reachability, validate_property
 
 __all__ = [
     "build_properties",
     "build_properties_by_shard",
     "build_property",
+    "derive_severities",
+    "lower_entry",
     "index_health",
     "load_health",
     "status_for",
