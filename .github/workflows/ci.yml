@@ -49,6 +49,37 @@ jobs:
               assert s['files_changed'] and s['pre_fix_code_excerpt'].strip(), s['dataset_id']
           print(f'OK: {len(cm)} checker-linked theorems, {len(seeds)} evidence seeds')
           "
+      - name: honesty check — recall data files integrity (D6/D2)
+        run: |
+          python3 -c "
+          import csv, json
+          m = json.load(open('theorem_map.json'))
+          map_ids = {e['property_id']: e.get('label') for e in m['properties']}
+          rules = json.load(open('data/label_match_rules.json'))
+          rows = list(csv.DictReader(open('data/ethereum_vulns.csv', encoding='utf-8-sig')))
+          csv_ids = {r['id'] for r in rows}
+          domain_labels = set(rules['domain']['labels'])
+          assert {r['label'] for r in rows} <= domain_labels, 'slice row outside domain labels'
+          for rule in rules['rules']:
+              assert rule['rationale'].strip(), rule
+              for b in rule.get('covered_by', []):
+                  assert b in map_ids, f'rule names unknown property {b}'
+                  assert map_ids[b] == rule['label'], f'{b} label != rule label'
+          gaps = json.load(open('data/recall_gaps.json'))['gaps']
+          for g in gaps:
+              assert g['finding_id'] in csv_ids, f'gap for unknown finding {g[\"finding_id\"]}'
+              assert g['disposition'] in ('new_target', 'out_of_model'), g
+              if g['disposition'] == 'new_target':
+                  assert (g.get('candidate_target') or '').strip(), f'new_target without candidate: {g[\"finding_id\"]}'
+          print(f'OK: {len(rows)} slice rows, {len(rules[\"rules\"])} match rules, {len(gaps)} triaged gaps')
+          "
+      - name: label-grounded recall from fixture-emitted 01e (strict D2 loop)
+        run: |
+          speca-lean4 emit-01e \
+            --scope tests/fixtures/bug_bounty_scope.sample.json \
+            --health-json tests/fixtures/theorem_health.sample.json \
+            --out 01e_fixture.json
+          speca-lean4 verify-recall --ours 01e_fixture.json --strict
 
   lean:
     name: lean exporter build
@@ -135,6 +166,10 @@ jobs:
           print(f"{len(props)} properties emitted from real Lean health "
                 f"({n_me} must-establish-decomposed, from {len(entries)} theorems)")
           PY
+      - name: label-grounded recall from the REAL emitted 01e (D3/D6, strict)
+        run: |
+          speca-lean4 verify-recall --ours 01e_lean.json --strict \
+            --out recall_report.json
       - name: upload real Lean health + 01e output
         uses: actions/upload-artifact@v4
         with:
@@ -143,4 +178,5 @@ jobs:
             lean/health.json
             01e_lean.json
             01e_lean_shards/
+            recall_report.json
           retention-days: 30

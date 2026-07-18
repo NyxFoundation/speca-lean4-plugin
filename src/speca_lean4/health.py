@@ -31,6 +31,12 @@ class TheoremHealth(dict):
 
     @property
     def lean_status(self) -> str:
+        # Honesty guard (H1, issue #10): an unresolved record can never certify
+        # "proved", whatever its lean_status field claims. The Lean exporter
+        # only emits proved for resolved theorems; this guards doctored or
+        # hand-edited health inputs on the Python side too.
+        if not self.resolved:
+            return "unknown"
         return self.get("lean_status", "unknown")
 
     @property
@@ -109,6 +115,25 @@ def status_for(health: dict[str, TheoremHealth], theorem: str) -> tuple[str, str
     if rec is None:
         return "unknown", ""
     return rec.lean_status, rec.module
+
+
+def unresolved_targets(
+    health: dict[str, TheoremHealth], theorems: list[str]
+) -> list[str]:
+    """H1/CI gate: target names with no resolved health record.
+
+    A non-empty result means at least one theorem_map target did not resolve in
+    Lean (typo, rename, or removed declaration). The CI lean job fails on this
+    (ci.yml smoke step asserts every target resolved); on the Python side the
+    corresponding properties are emitted lean_status=unknown, never dropped and
+    never upgraded.
+    """
+    out: list[str] = []
+    for t in theorems:
+        rec = health.get(t)
+        if rec is None or not rec.resolved:
+            out.append(t)
+    return out
 
 
 def health_for(health: dict[str, TheoremHealth], theorem: str) -> TheoremHealth:

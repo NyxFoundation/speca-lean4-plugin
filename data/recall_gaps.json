@@ -1,0 +1,38 @@
+{
+  "version": "0.1.0",
+  "note": "D2 gap-driven recall loop: every UNCOVERED in-domain finding (per data/label_match_rules.json against the real emitted 01e) is triaged here — either `new_target` (which precondition/theorem WOULD catch it; a concrete growth target for the must-establish set) or `out_of_model` (honestly outside the FFG formal remit, with the reason). The harness fails --strict verification if an uncovered in-domain finding is missing here, or if an entry goes stale (finding now covered, or no longer in-domain).",
+  "gaps": [
+    {
+      "finding_id": "lighthouse:networking:PR#1009",
+      "label": "beacon-chain:slashing",
+      "root_cause": "integer_overflow_underflow",
+      "disposition": "new_target",
+      "candidate_target": "Exact-arithmetic must-establish preconditions over epoch-processing slashing/weight arithmetic: extend the Core SlashableBound family (slashable_bound, validator_intersection_lower_bound, quorum_intersection_weight_lower) with an explicit side condition that the implementation's process_slashings penalty and weight sums equal the unbounded-natural model values (checked/exact arithmetic). A differential checker recomputing wt() and penalty sums would then flag the unchecked-arithmetic divergences this fix hardened.",
+      "reason": "The fix introduces checked arithmetic across state processing incl. process_slashings; gasper currently assumes exact arithmetic instead of surfacing it as a must-establish precondition."
+    },
+    {
+      "finding_id": "bc36f78358adeec5",
+      "label": "beacon-chain:slashing",
+      "root_cause": "integer_overflow_underflow",
+      "disposition": "new_target",
+      "candidate_target": "Bounded-representation soundness as a must-establish precondition of the accountable-safety chain (k_safety', slashable_bound): a gasper-lean4 lemma that the attester-slashing intersection count/weight fits uint64 (no rounding under the implementation's numeric type) would turn CVE-2022-29219-class representation bugs (uint64 stored as JS number, values above 2^53 rounded) into a checkable precondition violation.",
+      "reason": "AttesterSlashing number overflow (Lodestar, CVE-2022-29219) — same finding the deprecated findings_map judged coverage=none (lodestar-slashing-uint64-as-js-number). The theorems characterize WHICH pairs are slashable, not the numeric representation of the values."
+    },
+    {
+      "finding_id": "nimbus:consensus:PR#2392",
+      "label": "beacon-chain:slashing",
+      "root_cause": "integer_overflow_underflow",
+      "disposition": "out_of_model",
+      "candidate_target": null,
+      "reason": "Slashing-protection DB v2 (validator-client local protection bookkeeping, slashing_protection_v2.nim) is not consensus state-transition semantics; gasper formalizes the slashable predicates over votes/checkpoints, not a client's local protection database."
+    },
+    {
+      "finding_id": "7c9dca6ca3831090",
+      "label": "beacon-chain:slashing",
+      "root_cause": "missing_bounds_check",
+      "disposition": "out_of_model",
+      "candidate_target": null,
+      "reason": "Validator index out-of-bounds crash on a REST API request path (files: slashing_protection_common/v2); API request surface and protection-DB lookup, not FFG state semantics."
+    }
+  ]
+}

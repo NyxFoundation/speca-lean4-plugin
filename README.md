@@ -7,7 +7,7 @@ formally-verified Casper FFG theorems in
 [`NyxFoundation/gasper-lean4`](https://github.com/NyxFoundation/gasper-lean4)
 into SPECA `01e` security properties.
 
-> Status: **M-lean-provenance workstreams A + B** (issues #3, #4; epic #2), on
+> Status: **M-lean-provenance workstreams A + B + D** (issues #3, #4, #6; epic #2), on
 > top of the M0-M3 Core-retargeted baseline. Per the gasper-lean4 maintainer,
 > ~70-80% of the proved substance lives in `GasperBeaconChain.Core.*`
 > (Theories + Lemmas), not the thin, still-growing `Executable` application
@@ -88,6 +88,20 @@ only**, never mutating a core field — per speca#88's contract: `lean_status`,
 + the `covers` fallback derive mechanically from it (C5): each label maps to
 its consensus-specs doc anchor and primary pyspec `process_*` symbol — no
 prose judgment.
+
+Spec/code anchoring (issue #5, workstream C) is table-driven:
+[`data/anchor_map.json`](data/anchor_map.json) is the def -> spec-symbol ->
+client-code-symbol alignment table (C3) that `spec_reference`/`covers` are
+derived from (C4, via `src/speca_lean4/anchors.py`). The client-code column is
+best-effort and honest: rows are `verified-<date>` (confirmed by code search)
+or explicitly `todo`, never fabricated. Declaration-site annotations
+(`@[speca_spec]`, C1/C2) are blocked on gasper-lean4 maintainer coordination
+(issue #9 G2); the proposed convention is documented in
+[`docs/spec-annotation.md`](docs/spec-annotation.md). Hygiene (issue #10): the
+honesty invariants are pinned by explicit tests (`tests/test_honesty.py`, H1),
+and the local-Lean-toolchain question is evaluated in
+[`docs/lean-toolchain.md`](docs/lean-toolchain.md) (H2 — staying CI-only until
+`lean/` churn justifies local elan/lake).
 
 ## The enriched Lean -> plugin boundary (issue #3, workstream A)
 
@@ -201,12 +215,46 @@ speca-lean4 verify-precision \
 ```
 
 Measures granularity vs the benchmark corpus (props/file and assertion-length
-z-scores, severity KL divergence, vocabulary conformance) and recall vs the
-consensus-domain findings in `critical_high_findings.md`. The recall reference
-is the curated, reviewable judgment table [`data/findings_map.json`](data/findings_map.json)
-— every consensus-layer finding is listed with an explicit in/out-of-domain
-flag and a full/partial/none coverage judgment, so the denominator is
-transparent.
+z-scores, severity KL divergence, vocabulary conformance) and **label-grounded
+recall** vs the dataset's structured `label` vocabulary (workstream D, issue
+#6). The prose judgment table `data/findings_map.json` is **deprecated** (its
+strict/lenient numbers are still reported as `recall_prose_deprecated` for
+continuity); recall is now computed from three reviewable data files:
+
+- [`data/ethereum_vulns.csv`](data/ethereum_vulns.csv) — vendored
+  consensus-domain slice of `ethereum-vuln-dataset` (revision pinned in
+  [`data/ethereum_vulns.meta.json`](data/ethereum_vulns.meta.json)): all 37
+  rows whose `label` is one of the three consensus-specs areas the FFG target
+  set maps to. Vendored unfiltered beyond the label so the denominator
+  derivation stays reproducible.
+- [`data/label_match_rules.json`](data/label_match_rules.json) — (a) the
+  STRUCTURAL in-domain filter (D1, `v1-narrow`, grown gradually): label +
+  root_cause + attack_path + severity, no per-finding prose. Current
+  denominator: **9 in-domain findings** of the 37 slice rows. (b) coverage
+  rules per `(label, root_cause)` cell, each naming the base property ids
+  that catch the class and a rationale; unlisted cells count uncovered.
+- [`data/recall_gaps.json`](data/recall_gaps.json) — the D2 gap loop: every
+  uncovered in-domain finding triaged `new_target` (which
+  precondition/theorem WOULD catch it — a concrete growth target) or
+  `out_of_model` (honestly outside the FFG remit).
+
+```bash
+# label recall alone needs no benchmark corpus — CI runs it against the real
+# emitted 01e right after emit-01e:
+speca-lean4 verify-recall --ours outputs/01e_PARTIAL_lean.json --strict
+```
+
+Honesty guards, all evaluated against the REAL emitted 01e: a rule's
+`covered_by` id must actually be emitted (base id or a B1 `-me<i>`
+refinement) with the same label, else the finding counts uncovered;
+`--strict` fails CI on untriaged uncovered findings, stale gap entries, or
+rules naming non-emitted properties. Current numbers (domain `v1-narrow`):
+label recall **0.556** (5 of 9 covered; gaps: 2 `new_target` — the
+exact-arithmetic / bounded-representation preconditions the slashing-overflow
+class needs — and 2 honestly `out_of_model`: slashing-protection DB and REST
+API surfaces). The deprecated prose table's strict recall was 0.333 on a
+denominator of 3; the numbers are not directly comparable — the label-grounded
+denominator is structural, larger, and grows deliberately.
 
 Post-decomposition, from the live CI export (2026-07-18, 61 properties): the
 six protocol-area shards carry 9 / 10 / 13 / 10 / 8 / 11 properties

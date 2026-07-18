@@ -38,6 +38,8 @@ from __future__ import annotations
 from dataclasses import replace
 from typing import Any
 
+from .anchors import spec_reference as _anchor_spec_reference
+from .anchors import spec_symbol as _anchor_spec_symbol
 from .health import TheoremHealth, status_for, health_for
 
 from .schema import Property, Reachability
@@ -51,6 +53,10 @@ _SEVERITY_RANK = {"INFORMATIONAL": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICA
 # anchor and the primary pyspec symbol derive mechanically from the label —
 # no prose judgment. Only the labels used by our FFG target set are mapped;
 # growing the target set means growing this table, not guessing.
+#
+# C3/C4: the authoritative table now lives in data/anchor_map.json (see
+# anchors.py) — this inline map is kept only as a fallback for installs
+# without the repo data file, and tests assert the two never drift.
 _LABEL_SPEC = {
     "beacon-chain:justification-and-finality":
         ("specs/phase0/beacon-chain.md", "process_justification_and_finalization"),
@@ -64,7 +70,13 @@ _LABEL_SPEC = {
 
 
 def _spec_reference(label: str | None) -> str | None:
-    """C5: consensus-specs anchor derived from the dataset label."""
+    """C4/C5: consensus-specs anchor derived from the dataset label.
+
+    Anchor table first (data/anchor_map.json, C3); inline C5 fallback only when
+    the data file is unavailable."""
+    ref = _anchor_spec_reference(label)
+    if ref:
+        return ref
     if not label or label not in _LABEL_SPEC:
         return None
     doc, symbol = _LABEL_SPEC[label]
@@ -72,7 +84,13 @@ def _spec_reference(label: str | None) -> str | None:
 
 
 def _label_symbol(label: str | None) -> str | None:
-    """C5: primary pyspec `process_*` symbol for a dataset label."""
+    """C4/C5: primary pyspec `process_*` symbol for a dataset label.
+
+    Anchor table first (data/anchor_map.json, C3); inline C5 fallback only when
+    the data file is unavailable."""
+    symbol = _anchor_spec_symbol(label)
+    if symbol:
+        return symbol
     if not label or label not in _LABEL_SPEC:
         return None
     return _LABEL_SPEC[label][1]

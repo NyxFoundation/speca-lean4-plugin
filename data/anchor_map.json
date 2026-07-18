@@ -1,0 +1,399 @@
+{
+  "version": 1,
+  "generated": "2026-07-18",
+  "note": "C3 (issue #5): def -> spec-symbol -> client-code-symbol alignment table. Spec symbols are the consensus-specs pyspec process_* section names, taken from the ethereum-vuln-dataset label vocabulary (docs/label_design.md) -- never prose guesses. The client-code column is best-effort: rows marked 'verified-<date>' were confirmed by GitHub code search on that date; rows marked 'todo' are honestly unmapped, not fabricated. Clients not yet mapped at all: teku, nimbus-eth2, lodestar, grandine (TODO).",
+  "spec_source": "ethereum/consensus-specs",
+  "label_vocabulary_source": "NyxFoundation/ethereum-vuln-dataset:docs/label_design.md",
+  "labels": {
+    "beacon-chain:justification-and-finality": {
+      "spec_doc": "specs/phase0/beacon-chain.md",
+      "spec_symbol": "process_justification_and_finalization",
+      "client_code": [
+        {
+          "client": "lighthouse",
+          "repo": "sigp/lighthouse",
+          "symbol": "process_justification_and_finalization",
+          "path": "consensus/state_processing/src/per_epoch_processing/base/justification_and_finalization.rs",
+          "status": "verified-2026-07-18",
+          "note": "altair+ variant lives in per_epoch_processing/altair/justification_and_finalization.rs"
+        },
+        {
+          "client": "prysm",
+          "repo": "OffchainLabs/prysm",
+          "symbol": "ProcessJustificationAndFinalizationPreCompute",
+          "path": "beacon-chain/core/epoch/precompute/justification_finalization.go",
+          "status": "verified-2026-07-18",
+          "note": null
+        }
+      ]
+    },
+    "beacon-chain:slashing": {
+      "spec_doc": "specs/phase0/beacon-chain.md",
+      "spec_symbol": "process_slashings",
+      "client_code": [
+        {
+          "client": "lighthouse",
+          "repo": "sigp/lighthouse",
+          "symbol": "process_slashings",
+          "path": "consensus/state_processing/src/per_epoch_processing/slashings.rs",
+          "status": "verified-2026-07-18",
+          "note": null
+        },
+        {
+          "client": "prysm",
+          "repo": "OffchainLabs/prysm",
+          "symbol": "ProcessSlashings",
+          "path": "beacon-chain/core/epoch/precompute/slashing.go",
+          "status": "verified-2026-07-18",
+          "note": "non-precompute variant in beacon-chain/core/epoch/epoch_processing.go"
+        }
+      ]
+    },
+    "beacon-chain:effective-balance-updates": {
+      "spec_doc": "specs/phase0/beacon-chain.md",
+      "spec_symbol": "process_effective_balance_updates",
+      "client_code": [
+        {
+          "client": "lighthouse",
+          "repo": "sigp/lighthouse",
+          "symbol": "process_effective_balance_updates",
+          "path": "consensus/state_processing/src/per_epoch_processing/effective_balance_updates.rs",
+          "status": "verified-2026-07-18",
+          "note": null
+        },
+        {
+          "client": "prysm",
+          "repo": "OffchainLabs/prysm",
+          "symbol": "ProcessEffectiveBalanceUpdates",
+          "path": "beacon-chain/core/epoch/epoch_processing.go",
+          "status": "verified-2026-07-18",
+          "note": "electra variant in beacon-chain/core/electra/effective_balance_updates.go"
+        }
+      ]
+    },
+    "beacon-chain:attestation": {
+      "spec_doc": "specs/phase0/beacon-chain.md",
+      "spec_symbol": "process_attestation",
+      "client_code": [
+        {
+          "client": "lighthouse",
+          "repo": "sigp/lighthouse",
+          "symbol": "process_attestations",
+          "path": "consensus/state_processing/src/per_block_processing/process_operations.rs",
+          "status": "verified-2026-07-18",
+          "note": "lighthouse batches the pyspec per-attestation process_attestation"
+        },
+        {
+          "client": "prysm",
+          "repo": "OffchainLabs/prysm",
+          "symbol": "TODO",
+          "path": null,
+          "status": "todo",
+          "note": "not yet verified against the prysm source tree"
+        }
+      ]
+    }
+  },
+  "defs": [
+    {
+      "lean_def": "GasperBeaconChain.Core.k_safety'",
+      "property_id": "PROP-lean-safety-core-001",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+      "property_id": "PROP-lean-safety-core-002",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+      "property_id": "PROP-lean-safety-core-003",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.k_slash_surround_case_general",
+      "property_id": "PROP-lean-safety-core-004",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.k_non_equal_height_case",
+      "property_id": "PROP-lean-safety-core-005",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.slashable_bound",
+      "property_id": "PROP-lean-bound-001",
+      "source_file": "Core/Theories/SlashableBound.lean",
+      "label": "beacon-chain:effective-balance-updates",
+      "spec_symbol": "process_effective_balance_updates",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_effective_balance_updates",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+      "property_id": "PROP-lean-bound-002",
+      "source_file": "Core/Theories/SlashableBound.lean",
+      "label": "beacon-chain:effective-balance-updates",
+      "spec_symbol": "process_effective_balance_updates",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_effective_balance_updates",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.validator_intersection_lower_bound",
+      "property_id": "PROP-lean-bound-003",
+      "source_file": "Core/Theories/SlashableBound.lean",
+      "label": "beacon-chain:effective-balance-updates",
+      "spec_symbol": "process_effective_balance_updates",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_effective_balance_updates",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.no_two_justified_same_height",
+      "property_id": "PROP-lean-justif-safety-001",
+      "source_file": "Core/Lemmas/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.two_justified_same_height_slashed",
+      "property_id": "PROP-lean-justif-safety-002",
+      "source_file": "Core/Lemmas/AccountableSafety.lean",
+      "label": "beacon-chain:slashing",
+      "spec_symbol": "process_slashings",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_slashings",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.finalized_means_justified_child",
+      "property_id": "PROP-lean-justif-001",
+      "source_file": "Core/Lemmas/Justification.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.k_finalized_means_justified",
+      "property_id": "PROP-lean-justif-002",
+      "source_file": "Core/Lemmas/Justification.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.finalized_means_one_finalized",
+      "property_id": "PROP-lean-justif-003",
+      "source_file": "Core/Lemmas/Justification.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.quorum_2_upclosed",
+      "property_id": "PROP-lean-quorum-core-001",
+      "source_file": "Core/Lemmas/Quorums.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+      "property_id": "PROP-lean-quorum-core-002",
+      "source_file": "Core/Lemmas/Quorums.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+      "property_id": "PROP-lean-liveness-core-001",
+      "source_file": "Core/Theories/PlausibleLiveness.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+      "property_id": "PROP-lean-liveness-core-002",
+      "source_file": "Core/Theories/PlausibleLiveness.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+      "property_id": "PROP-lean-liveness-core-003",
+      "source_file": "Core/Theories/PlausibleLiveness.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+      "property_id": "PROP-lean-slashing-001",
+      "source_file": "Executable/Slashing.lean (decidable checker)",
+      "label": "beacon-chain:slashing",
+      "spec_symbol": "process_slashings",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_slashings",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex",
+      "property_id": "PROP-lean-slashing-002",
+      "source_file": "Executable/Slashing.lean (decidable checker)",
+      "label": "beacon-chain:slashing",
+      "spec_symbol": "process_slashings",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_slashings",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.accountable_safety_witnessB",
+      "property_id": "PROP-lean-safety-001",
+      "source_file": "Executable/AccountableSafety.lean (decidable checker)",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.k_accountable_safety_witnessB",
+      "property_id": "PROP-lean-safety-002",
+      "source_file": "Executable/AccountableSafety.lean (decidable checker)",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness",
+      "property_id": "PROP-lean-quorum-001",
+      "source_file": "Executable/Quorums.lean (decidable checker)",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.justified_iff_bounded",
+      "property_id": "PROP-lean-justification-001",
+      "source_file": "Executable/Justification.lean (decidable checker)",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum",
+      "property_id": "PROP-lean-liveness-001",
+      "source_file": "Executable/PlausibleLiveness.lean (decidable checker)",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
+      }
+    }
+  ]
+}
