@@ -147,6 +147,41 @@ Honesty invariants are unchanged: `sorry` -> `unknown`, unresolved target ->
 `unknown` + CI failure, severities never tuned against the benchmark
 distribution.
 
+## Kurtosis bridge (issue #7, workstream E)
+
+The Executable layer is the reproduction bridge to speca#92
+([`kurtosis-harness`](https://github.com/NyxFoundation/kurtosis-harness)): its
+decidable Bool checkers (`slashedB`, `justifiedB`, `notSlashedB`,
+`goodQuorumAtB`, `qIntersectionWitnessB`) and constructive witnesses
+(`accountable_safety_witnessB`, `k_accountable_safety_witnessB`,
+`plausible_liveness_construct_extension`) turn an existence-shaped Core proof
+into something a devnet can evaluate.
+
+```bash
+speca-lean4 emit-kurtosis \
+    --scope tests/fixtures/bug_bounty_scope.sample.json \
+    --health-json lean/health.json \
+    --fixtures-dir outputs/kurtosis \        # <label>/<property_id>/{devnet,assertion}.scaffold.json
+    --out outputs/01e_kurtosis.json          # 01e with checker/witness/kurtosis_test populated
+```
+
+- **E1** [`data/checker_map.json`](data/checker_map.json) links each theorem to
+  its Executable checker(s), the proved `..._iff` correctness theorems, and its
+  witness (when one exists); the emitted property surfaces `checker` / `witness`.
+- **E3** one `kurtosis_test` fixture **SCAFFOLD** per checker-linked property
+  (devnet placeholder + assertion stub referencing the checker). Fixtures are
+  clearly scaffolds (`"scaffold": true`, verdict null) — **not** runnable.
+- **E6** [`data/evidence_seeds.json`](data/evidence_seeds.json) attaches
+  label-matched ethereum-vuln-dataset findings (`pre_fix_code` / `files_changed`
+  excerpts) as implementation-linked evidence seeding the reproduction target.
+- **E2 / E5** (devnet bring-up + `KurtosisVerificationBackend` handoff) are
+  **blocked on speca#92** and designed — not built — in
+  [`docs/kurtosis-bridge.md`](docs/kurtosis-bridge.md).
+
+Honesty: `kurtosis_test` / `checker` / `witness` are non-null **only** where a
+real Executable checker exists; the pure-arithmetic bound and definitional Core
+theorems are honestly `null`.
+
 ## Precision harness (M2, impl plan section 4)
 
 ```bash
