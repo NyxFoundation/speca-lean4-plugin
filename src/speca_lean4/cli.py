@@ -159,6 +159,72 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_emit_kurtosis(args: argparse.Namespace) -> int:
+    """Workstream E (issue #7): emit kurtosis_test fixture SCAFFOLDS.
+
+    Builds the 01e properties (same pipeline as emit-01e), links each to its
+    Executable decidable checker / witness (E1, data/checker_map.json), writes
+    one fixture scaffold per checker-linked property under
+    --fixtures-dir/<label>/<property_id>/ (E3), attaches label-matched
+    ethereum-vuln-dataset evidence seeds (E6), and — with --out — writes the
+    01e JSON with `checker`/`witness`/`kurtosis_test` populated.
+
+    Honesty: scaffolds only. Nothing here runs a devnet; kurtosis_test stays
+    null for properties without a real checker (see docs/kurtosis-bridge.md).
+    """
+    from .kurtosis import (
+        attach_checkers, emit_kurtosis, load_checker_map, load_evidence_seeds,
+    )
+
+    theorem_map = _load_json(args.map)
+    scope = _load_json(args.scope)
+    subgraphs = _load_subgraphs(args.subgraphs)
+
+    if args.health_json:
+        health = load_health(args.health_json)
+    elif args.run_lean:
+        health = index_health(_run_lean(theorem_map))
+    else:
+        print(
+            "warning: no --health-json and no --run-lean; every property will be "
+            "lean_status=unknown. Pass one to certify proofs.",
+            file=sys.stderr,
+        )
+        health = {}
+
+    checker_map = load_checker_map(args.checker_map)
+    seeds = load_evidence_seeds(args.evidence) if args.evidence else []
+
+    props = build_properties(theorem_map, health, scope, subgraphs, args.gasper_ref)
+    n_linked = attach_checkers(props, theorem_map, checker_map)
+    written = emit_kurtosis(props, theorem_map, checker_map, args.fixtures_dir, seeds)
+    n_seeded = sum(
+        1 for fp in written
+        if json.loads(fp.read_text(encoding="utf-8"))["evidence_seeds"]
+    )
+    n_null = sum(1 for p in props if not p.get("kurtosis_test"))
+    print(
+        f"{len(props)} properties: {n_linked} checker-linked (E1), "
+        f"{len(written)} fixture scaffolds written to {args.fixtures_dir} (E3), "
+        f"{n_seeded} with dataset evidence seeds (E6); "
+        f"{n_null} honestly kurtosis_test=null (no Executable checker)"
+    )
+
+    if args.out:
+        doc = {
+            "phase": "01e",
+            "provider": "lean",
+            "gasper_source": theorem_map.get("gasper_source"),
+            "gasper_ref": args.gasper_ref or theorem_map.get("gasper_ref"),
+            "properties": props,
+        }
+        Path(args.out).write_text(
+            json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        print(f"wrote {args.out}: 01e with checker/witness/kurtosis_test populated")
+    return 0
+
+
 def cmd_verify_precision(args: argparse.Namespace) -> int:
     from .precision import format_summary, verify_precision
 
@@ -189,6 +255,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="sharded output: write one 01e_PARTIAL_<shard>.json per theorem_map shard here",
     )
     e.set_defaults(func=cmd_emit_01e)
+
+    k = sub.add_parser(
+        "emit-kurtosis",
+        help="emit kurtosis_test fixture scaffolds per checker-linked property (issue #7 E1/E3/E6)",
+    )
+    k.add_argument("--scope", required=True, help="path to BUG_BOUNTY_SCOPE.json")
+    k.add_argument("--map", default=str(_DEFAULT_MAP), help="theorem_map.json (default: repo root)")
+    k.add_argument(
+        "--checker-map", default=str(_REPO_ROOT / "data" / "checker_map.json"),
+        help="E1 theorem -> Executable checker/witness map (default: data/checker_map.json)",
+    )
+    k.add_argument(
+        "--evidence", default=str(_REPO_ROOT / "data" / "evidence_seeds.json"),
+        help="E6 ethereum-vuln-dataset evidence seeds (default: data/evidence_seeds.json; '' to skip)",
+    )
+    k.add_argument("--subgraphs", nargs="*", help="01b subgraph JSON glob(s) for covers resolution")
+    k.add_argument("--gasper-ref", help="gasper-lean4 git ref to pin (overrides theorem_map)")
+    ksrc = k.add_mutually_exclusive_group()
+    ksrc.add_argument("--health-json", help="precomputed speca-export health JSON")
+    ksrc.add_argument("--run-lean", action="store_true", help="run `lake exe speca-export` now")
+    k.add_argument(
+        "--fixtures-dir", default="outputs/kurtosis",
+        help="where fixture scaffolds go: <dir>/<label>/<property_id>/ (default: outputs/kurtosis)",
+    )
+    k.add_argument("--out", help="also write the 01e JSON with checker/witness/kurtosis_test populated")
+    k.set_defaults(func=cmd_emit_kurtosis)
 
     v = sub.add_parser(
         "verify-precision",
