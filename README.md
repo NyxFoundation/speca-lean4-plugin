@@ -79,7 +79,13 @@ only**, never mutating a core field — per speca#88's contract: `lean_status`,
 `lean_hypotheses`, `lean_must_establish`, `lean_referenced_defs`,
 `lean_axioms`, `lean_proof_provenance`, `lean_proof_code`,
 `lean_precondition`, `lean_conclusion`, `lean_type_consistency`,
-`lean_proof_source`.
+`lean_proof_source`, `spec_reference`.
+
+`label` follows the ethereum-vuln-dataset controlled vocabulary
+(consensus-specs section names, `docs/label_design.md`), and `spec_reference`
++ the `covers` fallback derive mechanically from it (C5): each label maps to
+its consensus-specs doc anchor and primary pyspec `process_*` symbol — no
+prose judgment.
 
 ## The enriched Lean -> plugin boundary (issue #3, workstream A)
 
