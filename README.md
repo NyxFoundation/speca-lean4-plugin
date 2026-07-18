@@ -16,8 +16,10 @@ into SPECA `01e` security properties.
 > carries the real proof content (statement, hypothesis telescope, conclusion,
 > referenced constants, gasper-local axioms, proof provenance, verbatim proof
 > source), and each theorem lowers to one `01e` property **per must-establish
-> precondition** (54 properties from the 25 theorems on the sample fixture;
-> the real count comes from CI's live export). CI imports both `Core.All` and
+> precondition**. First live CI export (2026-07-18): 53 must-establish
+> hypotheses across the 25 theorems -> **61 properties**, verbatim proof
+> source extracted for all 25, zero gasper-local axioms, zero
+> type-consistency mismatches. CI imports both `Core.All` and
 > `Executable.All`, runs the exporter end-to-end, and certifies every target
 > `lean_status: proved` (sorry-free, choice-free, native-free) from real
 > `collectAxioms` output.
@@ -171,13 +173,17 @@ is the curated, reviewable judgment table [`data/findings_map.json`](data/findin
 flag and a full/partial/none coverage judgment, so the denominator is
 transparent.
 
-Post-decomposition (fixture-calibrated): the six protocol-area shards carry
-9 / 10 / 8 / 10 / 8 / 9 properties (safety-accountable, safety-cases,
-safety-bound-witness, finality-justification, finality-quorum,
-finality-liveness) — all within the benchmark 1-sigma props/file band
-(11.62 +/- 3.72). Real CI counts come from the live export (the `lean` job
-uploads `health.json` + the emitted `01e` as an artifact); shards are
-re-tunable in `theorem_map.json` without touching Lean or Python. The
+Post-decomposition, from the live CI export (2026-07-18, 61 properties): the
+six protocol-area shards carry 9 / 10 / 13 / 10 / 8 / 11 properties
+(safety-accountable, safety-cases, safety-bound-witness,
+finality-justification, finality-quorum, finality-liveness) — all within the
+benchmark 1-sigma props/file band (11.62 +/- 3.72). The `lean` job uploads
+`health.json` + the emitted `01e` as a CI artifact; shards are re-tunable in
+`theorem_map.json` without touching Lean or Python. Real severity
+distribution after B3 DAG derivation: CRITICAL 12 / HIGH 30 / MEDIUM 19.
+Known cosmetic limitation: conclusions/hypotheses pretty-print with default
+exporter options, so some arithmetic renders applied-instance style
+(`instLENat.le ...`) rather than infix notation; faithful, just verbose. The
 historical M0-M3 table below predates the B1 decomposition (25 x 1:1
 properties):
 
