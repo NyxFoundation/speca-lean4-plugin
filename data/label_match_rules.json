@@ -1,0 +1,91 @@
+{
+  "version": "0.1.0",
+  "note": "D6 recall reference: label-grounded coverage rules against the ethereum-vuln-dataset controlled vocabulary (docs/label_design.md). Replaces the prose coverage judgments of findings_map.json (deprecated). Two reviewable layers: (1) `domain` defines the in-domain denominator STRUCTURALLY (label + root_cause + attack_path + severity), no per-finding prose; (2) `rules` decide coverage per (label, root_cause) cell, each with the base property ids that would catch the class and a rationale. The harness (src/speca_lean4/recall.py) verifies every covered_by id is actually emitted in the real 01e with the same label; a rule pointing at a non-emitted property counts as NOT covered. Unlisted (label, root_cause) cells count as NOT covered (no_rule), so coverage growth is always a reviewed data change.",
+  "domain": {
+    "version": "v1-narrow",
+    "note": "D1: narrow start, grown gradually. v1 domain = the three consensus-specs areas the 25-theorem FFG target set maps to, restricted to root causes the FFG state-semantics model can express in principle (state-arithmetic / state-semantics divergence), attacker-triggerable paths, and rows the dataset rates as actual findings (severity != Info; the Info rows in this slice are changelog/dependency-bump crawl lines, not protocol findings). Growth path: v2 adds missing_input_validation / unhandled_error_or_nil causes and adjacent labels (beacon-chain:attestation) once matching invariants exist.",
+    "labels": [
+      "beacon-chain:justification-and-finality",
+      "beacon-chain:slashing",
+      "beacon-chain:effective-balance-updates"
+    ],
+    "in_model_root_causes": [
+      "consensus_divergence",
+      "integer_overflow_underflow",
+      "missing_bounds_check",
+      "improper_state_update"
+    ],
+    "in_model_attack_paths": [
+      "malicious_block",
+      "malicious_tx",
+      "malicious_attestation",
+      "malicious_p2p_message",
+      "malformed_input",
+      "crafted_state"
+    ],
+    "excluded_severities": ["Info"],
+    "exclusion_reasons": {
+      "root_cause": "resource_exhaustion (OOM/DoS), race_condition (concurrency implementation), crypto_misuse (crypto library) and other/unclassified are outside the FFG formal remit per impl plan section 4 — same classes the deprecated findings_map excluded by prose.",
+      "attack_path": "peer (p2p transport), large_input (resource class) and internal_only are not consensus-state-transition triggers.",
+      "severity": "Info rows in the dataset are informational crawl entries (release-note lines, dependency bumps), not vulnerability findings; counting them would corrupt the denominator in both directions."
+    }
+  },
+  "rules": [
+    {
+      "label": "beacon-chain:justification-and-finality",
+      "root_cause": "consensus_divergence",
+      "covered": true,
+      "covered_by": ["PROP-lean-justif-001", "PROP-lean-justif-002", "PROP-lean-justif-003", "PROP-lean-safety-core-001"],
+      "rationale": "Divergent justification/finalization bookkeeping violates the finalized/justified characterizations (finalized_means_justified_child, k_finalized_means_justified, finalized_means_one_finalized) and the k_safety' guarantee; a differential checker recomputing the canonical predicates flags the divergence."
+    },
+    {
+      "label": "beacon-chain:justification-and-finality",
+      "root_cause": "integer_overflow_underflow",
+      "covered": true,
+      "covered_by": ["PROP-lean-justification-001", "PROP-lean-justif-001", "PROP-lean-justif-002"],
+      "rationale": "Overflow in justification-bit / checkpoint arithmetic makes the implementation's justified/finalized predicate diverge from the bounded-chain characterization (justified_iff_bounded) and the justification bookkeeping invariants; recomputing the canonical predicate over the same state flags it (e.g. nimbus PR#461, an overflow in exactly the justification-bits processing these theorems characterize)."
+    },
+    {
+      "label": "beacon-chain:justification-and-finality",
+      "root_cause": "missing_bounds_check",
+      "covered": true,
+      "covered_by": ["PROP-lean-justification-001"],
+      "rationale": "justified_iff_bounded proves justification is decidable by a BOUNDED chain search; unbounded iteration in the justification/finality computation violates the bounded characterization (same grounds as the prior lighthouse-unbounded-slot-counter partial judgment)."
+    },
+    {
+      "label": "beacon-chain:effective-balance-updates",
+      "root_cause": "consensus_divergence",
+      "covered": true,
+      "covered_by": ["PROP-lean-bound-001", "PROP-lean-bound-002", "PROP-lean-bound-003"],
+      "rationale": "The Core SlashableBound trio pins exact validator-set weight arithmetic wt(V) and its churn-adjusted lower bounds; an effective-balance computation that diverges from the network shifts wt() and is flagged by a differential weight check (same grounds as the prior GHSA-wm9c-xvqq-5c28 full-coverage judgment)."
+    },
+    {
+      "label": "beacon-chain:effective-balance-updates",
+      "root_cause": "integer_overflow_underflow",
+      "covered": true,
+      "covered_by": ["PROP-lean-bound-001", "PROP-lean-bound-002", "PROP-lean-bound-003"],
+      "rationale": "Overflow/underflow in effective-balance arithmetic is a special case of wt() divergence pinned by the SlashableBound weight arithmetic."
+    },
+    {
+      "label": "beacon-chain:slashing",
+      "root_cause": "consensus_divergence",
+      "covered": true,
+      "covered_by": ["PROP-lean-slashing-001", "PROP-lean-slashing-002", "PROP-lean-justif-safety-002"],
+      "rationale": "The S1/S2 decidable checkers are Iff characterizations of exactly which vote pairs are slashable (double vote / surround vote); an implementation whose equivocation/slashing semantics diverge (which messages count as slashable) contradicts the characterization under a differential check."
+    },
+    {
+      "label": "beacon-chain:slashing",
+      "root_cause": "integer_overflow_underflow",
+      "covered": false,
+      "covered_by": [],
+      "rationale": "gasper models weights and counters as unbounded naturals and ASSUMES exact arithmetic; fixed-width representation overflow (uint64-as-JS-number, CVE-2022-29219) has no counterpart invariant — the theorems assume exactness rather than establish it. Consistent with the deprecated prose judgment (lodestar-slashing-uint64-as-js-number: coverage none). Growth targets recorded in recall_gaps.json (new_target)."
+    },
+    {
+      "label": "beacon-chain:slashing",
+      "root_cause": "missing_bounds_check",
+      "covered": false,
+      "covered_by": [],
+      "rationale": "The in-domain rows in this cell are bounds checks on API/request surfaces and slashing-protection-DB lookups, not consensus state-transition semantics; no mapped theorem constrains them. Per-row triage in recall_gaps.json."
+    }
+  ]
+}

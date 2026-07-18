@@ -1,0 +1,29 @@
+{
+  "source_repo": "NyxFoundation/ethereum-vuln-dataset",
+  "source_path": "data/ethereum_vulns.csv",
+  "source_revision": "3d48a9c6d2392499e0267e3e67dc709242abc503",
+  "fetched": "2026-07-18",
+  "slice_criteria": {
+    "label_in": [
+      "beacon-chain:justification-and-finality",
+      "beacon-chain:slashing",
+      "beacon-chain:effective-balance-updates"
+    ],
+    "note": "Consensus-domain slice (D1): every dataset row whose `label` is one of the three consensus-specs areas the current 25-theorem FFG target set maps to (theorem_map.json labels). The slice is unfiltered beyond the label so the in-domain denominator derivation stays reproducible from vendored data; the structural in-domain filter itself lives in src/speca_lean4/recall.py and is reported per row."
+  },
+  "columns_kept": [
+    "id",
+    "source_platform",
+    "severity",
+    "title",
+    "source_url",
+    "layer",
+    "label",
+    "root_cause",
+    "attack_path",
+    "files_changed",
+    "fix_commit"
+  ],
+  "columns_dropped_reason": "pre_fix_code/post_fix_code/description and scoring columns are dropped to keep the vendored slice small and reviewable; the full rows live in the source dataset at the pinned revision.",
+  "n_rows": 37
+}
