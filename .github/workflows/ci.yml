@@ -1,0 +1,182 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+
+jobs:
+  python:
+    name: python driver + mapping tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e '.[dev]'
+      - run: pytest -q
+      - name: honesty check — theorem_map integrity
+        run: |
+          python3 -c "
+          import json, sys
+          m = json.load(open('theorem_map.json'))
+          tnames = [e['theorem'] for e in m['properties']]
+          pids = [e['property_id'] for e in m['properties']]
+          assert len(tnames) == len(set(tnames)), 'duplicate theorem in theorem_map'
+          assert len(pids) == len(set(pids)), 'duplicate property_id in theorem_map'
+          assert all(t.strip() for t in tnames), 'empty theorem name'
+          assert all(p.strip() for p in pids), 'empty property_id'
+          assert all(e.get('label', '').strip() for e in m['properties']), 'missing label'
+          print(f'OK: {len(tnames)} unique theorems, all with property_id and label')
+          "
+      - name: honesty check — checker_map + evidence_seeds integrity (issue #7)
+        run: |
+          python3 -c "
+          import json
+          m = json.load(open('theorem_map.json'))
+          theorems = {e['theorem'] for e in m['properties']}
+          labels = {e['label'] for e in m['properties']}
+          cm = json.load(open('data/checker_map.json'))['checkers']
+          # every checker_map key is a mapped theorem; every entry cites a checker + correctness
+          for t, e in cm.items():
+              assert t in theorems, f'checker_map references unmapped theorem {t}'
+              assert e['checkers'], f'{t}: empty checkers'
+              assert e.get('correctness'), f'{t}: no correctness theorem cited'
+          seeds = json.load(open('data/evidence_seeds.json'))['seeds']
+          for s in seeds:
+              assert s['label'] in labels, f\"seed {s['dataset_id']} label not in use\"
+              assert s['files_changed'] and s['pre_fix_code_excerpt'].strip(), s['dataset_id']
+          print(f'OK: {len(cm)} checker-linked theorems, {len(seeds)} evidence seeds')
+          "
+      - name: honesty check — recall data files integrity (D6/D2)
+        run: |
+          python3 -c "
+          import csv, json
+          m = json.load(open('theorem_map.json'))
+          map_ids = {e['property_id']: e.get('label') for e in m['properties']}
+          rules = json.load(open('data/label_match_rules.json'))
+          rows = list(csv.DictReader(open('data/ethereum_vulns.csv', encoding='utf-8-sig')))
+          csv_ids = {r['id'] for r in rows}
+          domain_labels = set(rules['domain']['labels'])
+          assert {r['label'] for r in rows} <= domain_labels, 'slice row outside domain labels'
+          for rule in rules['rules']:
+              assert rule['rationale'].strip(), rule
+              for b in rule.get('covered_by', []):
+                  assert b in map_ids, f'rule names unknown property {b}'
+                  assert map_ids[b] == rule['label'], f'{b} label != rule label'
+          gaps = json.load(open('data/recall_gaps.json'))['gaps']
+          for g in gaps:
+              assert g['finding_id'] in csv_ids, f'gap for unknown finding {g[\"finding_id\"]}'
+              assert g['disposition'] in ('new_target', 'out_of_model'), g
+              if g['disposition'] == 'new_target':
+                  assert (g.get('candidate_target') or '').strip(), f'new_target without candidate: {g[\"finding_id\"]}'
+          print(f'OK: {len(rows)} slice rows, {len(rules[\"rules\"])} match rules, {len(gaps)} triaged gaps')
+          "
+      - name: label-grounded recall from fixture-emitted 01e (strict D2 loop)
+        run: |
+          speca-lean4 emit-01e \
+            --scope tests/fixtures/bug_bounty_scope.sample.json \
+            --health-json tests/fixtures/theorem_health.sample.json \
+            --out 01e_fixture.json
+          speca-lean4 verify-recall --ours 01e_fixture.json --strict
+
+  lean:
+    name: lean exporter build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install elan (Lean toolchain manager)
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+            | sh -s -- -y --default-toolchain "$(cat lean/lean-toolchain)"
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: cache lake workspace (deps + build outputs)
+        uses: actions/cache@v4
+        with:
+          path: lean/.lake
+          key: lake-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'lean/lakefile.lean') }}-${{ github.run_id }}
+          restore-keys: |
+            lake-${{ runner.os }}-${{ hashFiles('lean/lean-toolchain', 'lean/lakefile.lean') }}-
+            lake-${{ runner.os }}-
+      - name: lake update (resolve gasper-lean4 + transitive deps)
+        working-directory: lean
+        run: lake update
+      - name: fetch mathlib olean cache (gasper-lean4 depends on mathlib)
+        working-directory: lean
+        run: lake exe cache get
+      - name: lake build (gasper-lean4 + speca-export)
+        working-directory: lean
+        run: lake build
+      - name: smoke — export health for the mapped theorems
+        working-directory: lean
+        run: |
+          python3 - <<'PY' > targets.txt
+          import json
+          m = json.load(open("../theorem_map.json"))
+          print("\n".join(e["theorem"] for e in m["properties"]))
+          PY
+          lake exe speca-export --targets targets.txt > health.json
+          python3 - <<'PY'
+          import json
+          h = json.load(open("health.json"))
+          bad = [t["name"] for t in h["theorems"] if not t["resolved"]]
+          assert not bad, f"unresolved target theorems: {bad}"
+          # enriched-boundary contract (issue #3): every record carries A1-A7
+          for t in h["theorems"]:
+              for key in ("statement", "conclusion", "hypotheses",
+                          "referenced_constants", "gasper_axioms",
+                          "proof_provenance", "proof_code", "proof_constants",
+                          "proof_source"):
+                  assert key in t, f"{t['name']} missing {key}"
+              assert t["statement"], f"{t['name']} has empty statement"
+          n_me = sum(1 for t in h["theorems"] for hy in t["hypotheses"]
+                     if hy.get("class") == "must-establish")
+          n_src = sum(1 for t in h["theorems"] if t["proof_source"])
+          print(f"all {len(h['theorems'])} targets resolved;",
+                sum(1 for t in h["theorems"] if t["lean_status"] == "proved"),
+                f"proved; {n_me} must-establish hypotheses; "
+                f"{n_src} with verbatim proof source")
+          PY
+      - name: end-to-end — emit 01e from real Lean health
+        run: |
+          pip install -e '.[dev]'
+          speca-lean4 emit-01e \
+            --scope tests/fixtures/bug_bounty_scope.sample.json \
+            --health-json lean/health.json \
+            --out 01e_lean.json \
+            --out-dir 01e_lean_shards
+          python3 - <<'PY'
+          import json
+          d = json.load(open("01e_lean.json"))
+          props = d["properties"]
+          assert props, "no properties"
+          entries = json.load(open("theorem_map.json"))["properties"]
+          # B1: >= one property per theorem; every entry represented
+          assert len(props) >= len(entries), (len(props), len(entries))
+          ids = {p["property_id"] for p in props}
+          for e in entries:
+              b = e["property_id"]
+              assert b in ids or any(i.startswith(b + "-me") for i in ids), b
+          # B5: the type-consistency gate must not flag real Lean output
+          bad = [p["property_id"] for p in props
+                 if p.get("lean_type_consistency") == "mismatch"]
+          assert not bad, f"type-consistency mismatches: {bad}"
+          n_me = sum(1 for p in props if p.get("lean_precondition"))
+          print(f"{len(props)} properties emitted from real Lean health "
+                f"({n_me} must-establish-decomposed, from {len(entries)} theorems)")
+          PY
+      - name: label-grounded recall from the REAL emitted 01e (D3/D6, strict)
+        run: |
+          speca-lean4 verify-recall --ours 01e_lean.json --strict \
+            --out recall_report.json
+      - name: upload real Lean health + 01e output
+        uses: actions/upload-artifact@v4
+        with:
+          name: lean-health-and-01e
+          path: |
+            lean/health.json
+            01e_lean.json
+            01e_lean_shards/
+            recall_report.json
+          retention-days: 30

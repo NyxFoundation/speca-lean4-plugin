@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+.venv/
+dist/
+build/
+
+# Lean / lake
+lean/.lake/
+lean/lake-packages/
+*.olean
+
+# work
+*.targets
+outputs/
