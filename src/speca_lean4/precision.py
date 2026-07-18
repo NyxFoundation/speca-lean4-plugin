@@ -8,13 +8,13 @@ Two references, two measurements:
    distributions (z-scores + share within the benchmark's 1-sigma band),
    severity-distribution KL divergence, and vocabulary conformance.
 
-2. `ethereum-vuln-dataset` `docs/critical_high_findings.md` — RECALL. The
-   curated judgment table lives in `data/findings_map.json` (every
-   consensus-layer finding listed with an explicit in_domain flag and a
-   coverage judgment, so the denominator is transparent and the numbers are
-   reproducible). Recall is reported twice: strict (coverage == full) and
-   lenient (full or partial). We never count an out-of-domain finding in
-   either direction.
+2. `ethereum-vuln-dataset` — RECALL, grounded in the dataset's structured
+   `label` vocabulary (D6, issue #6): computed by `speca_lean4.recall` from
+   the vendored slice `data/ethereum_vulns.csv` + the reviewable rule table
+   `data/label_match_rules.json` + the D2 gap table `data/recall_gaps.json`.
+   The old prose judgment table `data/findings_map.json` is DEPRECATED; its
+   strict/lenient numbers are still reported (as `recall_prose_deprecated`)
+   for continuity, but the label-grounded number is the one that counts.
 
 All statistics are computed from the actual files — nothing here is hardcoded
 from a previous run.
@@ -157,7 +157,11 @@ def _id_emitted(pid: str, our_ids: set[str]) -> bool:
 
 
 def recall_report(our_props: list[dict], findings_map: dict[str, Any]) -> dict[str, Any]:
-    """Recall against the curated consensus-domain findings table."""
+    """DEPRECATED (D6): recall against the prose findings_map judgment table.
+
+    Kept for continuity/comparison only — the authoritative recall is the
+    label-grounded one from `speca_lean4.recall`. The prose in/out-of-domain
+    and full/partial judgments are no longer maintained."""
     our_ids = {p.get("property_id") for p in our_props}
     findings = findings_map.get("findings", [])
     in_domain = [f for f in findings if f.get("in_domain")]
@@ -179,6 +183,8 @@ def recall_report(our_props: list[dict], findings_map: dict[str, Any]) -> dict[s
         })
     n = len(in_domain)
     return {
+        "deprecated": True,
+        "note": "prose judgments retired by D6; see label_recall (data/label_match_rules.json)",
         "findings_total": len(findings),
         "findings_in_domain": n,
         "covered_full": strict,
@@ -224,55 +230,33 @@ def shard_granularity(ours_dir: str | Path, bench: dict[str, Any]) -> dict[str, 
     }
 
 
-def label_recall_report(our_props: list[dict], findings_map: dict[str, Any]) -> dict[str, Any]:
-    """D6: Recall computed by label correspondence against the dataset vocabulary."""
-    our_labels = {p.get("label") for p in our_props if p.get("label")}
-    label_prop_count: dict[str, int] = {}
-    for p in our_props:
-        lbl = p.get("label")
-        if lbl:
-            label_prop_count[lbl] = label_prop_count.get(lbl, 0) + 1
-
-    findings = findings_map.get("findings", [])
-    in_domain = [f for f in findings if f.get("in_domain")]
-    matched = 0
-    uncovered: list[str] = []
-    rows = []
-    for f in in_domain:
-        f_label = f.get("label") or f.get("area", "")
-        has_match = f_label in our_labels
-        if has_match:
-            matched += 1
-        else:
-            if f_label and f_label not in uncovered:
-                uncovered.append(f_label)
-        rows.append({"id": f["id"], "label": f_label, "matched": has_match})
-
-    n = len(in_domain)
-    return {
-        "findings_in_domain": n,
-        "label_matched": matched,
-        "label_recall": round(matched / n, 3) if n else None,
-        "label_coverage": label_prop_count,
-        "uncovered_labels": uncovered,
-        "rows": rows,
-    }
-
-
 def verify_precision(
     our_01e: str | Path,
     benchmark_dir: str | Path,
     findings_map_path: str | Path,
     ours_dir: str | Path | None = None,
+    vulns_csv: str | Path | None = None,
+    match_rules_path: str | Path | None = None,
+    gaps_path: str | Path | None = None,
 ) -> dict[str, Any]:
+    from . import recall as recall_mod
+
     ours = _props_of(json.loads(Path(our_01e).read_text(encoding="utf-8")))
     bench = load_benchmark(benchmark_dir)
     fmap = json.loads(Path(findings_map_path).read_text(encoding="utf-8"))
     report = {
         "benchmark": bench,
         "granularity": granularity_report(ours, bench),
-        "recall": recall_report(ours, fmap),
-        "label_recall": label_recall_report(ours, fmap),
+        # D6: the authoritative recall — label-grounded, from the vendored
+        # dataset slice + reviewable match rules + D2 gap table.
+        "label_recall": recall_mod.label_recall_report(
+            ours,
+            recall_mod.load_vulns(vulns_csv or recall_mod.DEFAULT_VULNS_CSV),
+            recall_mod.load_json(match_rules_path or recall_mod.DEFAULT_MATCH_RULES),
+            recall_mod.load_json(gaps_path or recall_mod.DEFAULT_GAPS),
+        ),
+        # deprecated prose judgments, kept for continuity/comparison
+        "recall_prose_deprecated": recall_report(ours, fmap),
     }
     if ours_dir is not None:
         report["shard_granularity"] = shard_granularity(ours_dir, bench)
@@ -280,7 +264,7 @@ def verify_precision(
 
 
 def format_summary(report: dict[str, Any]) -> str:
-    b, g, r = report["benchmark"], report["granularity"], report["recall"]
+    b, g = report["benchmark"], report["granularity"]
     lines = [
         f"benchmark corpus: {b['n_files']} files, {b['n_properties']} properties "
         f"(props/file {b['props_per_file']['mean']} +/- {b['props_per_file']['stdev']}, "
@@ -292,17 +276,22 @@ def format_summary(report: dict[str, Any]) -> str:
         f"assertion within bench 1-sigma: {g['assertion_within_bench_1sigma']:.0%}",
         f"severity: ours {g['severity_counts']} vs bench {b['severity_counts']} "
         f"| KL={g['severity_kl_divergence_nats']} nats",
-        f"recall vs critical_high_findings (in-domain n={r['findings_in_domain']} "
-        f"of {r['findings_total']} consensus-layer findings): "
-        f"strict {r['recall_strict']} | lenient {r['recall_lenient']} "
-        f"(full={r['covered_full']}, partial={r['covered_partial']})",
     ]
     lr = report.get("label_recall")
     if lr:
         lines.append(
-            f"label-grounded recall (in-domain n={lr['findings_in_domain']}): "
-            f"{lr['label_recall']} ({lr['label_matched']} label-matched)"
-            + (f" | uncovered labels: {lr['uncovered_labels']}" if lr["uncovered_labels"] else "")
+            f"label-grounded recall (D6, domain {lr['domain_version']}, "
+            f"denominator {lr['findings_in_domain']} in-domain of "
+            f"{lr['slice_rows']} vendored slice rows): {lr['label_recall']} "
+            f"({lr['covered']} covered, gaps: {lr['gap_dispositions'] or 'none'})"
+        )
+    r = report.get("recall_prose_deprecated")
+    if r:
+        lines.append(
+            f"[deprecated prose table] recall vs critical_high_findings "
+            f"(in-domain n={r['findings_in_domain']} of {r['findings_total']}): "
+            f"strict {r['recall_strict']} | lenient {r['recall_lenient']} "
+            f"(full={r['covered_full']}, partial={r['covered_partial']})"
         )
     sg = report.get("shard_granularity")
     if sg:

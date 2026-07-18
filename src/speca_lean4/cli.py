@@ -162,12 +162,34 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
 def cmd_verify_precision(args: argparse.Namespace) -> int:
     from .precision import format_summary, verify_precision
 
-    report = verify_precision(args.ours, args.benchmark_dir, args.findings_map, args.ours_dir)
+    report = verify_precision(
+        args.ours, args.benchmark_dir, args.findings_map, args.ours_dir,
+        vulns_csv=args.vulns_csv, match_rules_path=args.match_rules,
+        gaps_path=args.recall_gaps,
+    )
     if args.out:
         Path(args.out).write_text(
             json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
         )
     print(format_summary(report))
+    return 0
+
+
+def cmd_verify_recall(args: argparse.Namespace) -> int:
+    """D3/D6: label-grounded recall from the real emitted 01e — no benchmark
+    corpus needed, so it can run in CI right after emit-01e."""
+    from .recall import format_recall_summary, strict_problems, verify_recall
+
+    report = verify_recall(args.ours, args.vulns_csv, args.match_rules, args.recall_gaps)
+    if args.out:
+        Path(args.out).write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+    print(format_recall_summary(report))
+    problems = strict_problems(report)
+    if problems and args.strict:
+        print("verify-recall --strict: FAILED", file=sys.stderr)
+        return 1
     return 0
 
 
@@ -192,7 +214,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     v = sub.add_parser(
         "verify-precision",
-        help="measure granularity vs the rq2a 01e benchmark and recall vs critical_high_findings",
+        help="measure granularity vs the rq2a 01e benchmark and label-grounded "
+             "recall vs the vendored ethereum-vuln-dataset slice",
     )
     v.add_argument("--ours", required=True, help="our generated 01e JSON (single-file, for recall + vocab)")
     v.add_argument(
@@ -205,11 +228,43 @@ def build_parser() -> argparse.ArgumentParser:
     )
     v.add_argument(
         "--findings-map", default=str(_REPO_ROOT / "data" / "findings_map.json"),
-        help="curated findings judgment table (default: data/findings_map.json)",
+        help="DEPRECATED prose judgment table, reported for continuity only "
+             "(default: data/findings_map.json)",
     )
+    _add_recall_data_args(v)
     v.add_argument("--out", help="write the full JSON report here")
     v.set_defaults(func=cmd_verify_precision)
+
+    r = sub.add_parser(
+        "verify-recall",
+        help="label-grounded recall (D6) of the emitted 01e vs the vendored "
+             "ethereum-vuln-dataset slice; no benchmark corpus needed",
+    )
+    r.add_argument("--ours", required=True, help="our generated 01e JSON (single-file)")
+    _add_recall_data_args(r)
+    r.add_argument("--out", help="write the full JSON recall report here")
+    r.add_argument(
+        "--strict", action="store_true",
+        help="exit non-zero on untriaged uncovered findings, stale gap entries, "
+             "or rules claiming coverage via non-emitted properties",
+    )
+    r.set_defaults(func=cmd_verify_recall)
     return p
+
+
+def _add_recall_data_args(sp: argparse.ArgumentParser) -> None:
+    sp.add_argument(
+        "--vulns-csv", default=str(_REPO_ROOT / "data" / "ethereum_vulns.csv"),
+        help="vendored ethereum-vuln-dataset consensus slice (default: data/ethereum_vulns.csv)",
+    )
+    sp.add_argument(
+        "--match-rules", default=str(_REPO_ROOT / "data" / "label_match_rules.json"),
+        help="domain filter + (label, root_cause) coverage rules (default: data/label_match_rules.json)",
+    )
+    sp.add_argument(
+        "--recall-gaps", default=str(_REPO_ROOT / "data" / "recall_gaps.json"),
+        help="D2 gap triage table (default: data/recall_gaps.json)",
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
