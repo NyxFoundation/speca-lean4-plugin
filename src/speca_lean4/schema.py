@@ -78,13 +78,15 @@ class Property:
     lean_type_consistency: str | None = None
     # A7: verbatim declaration source (term/tactic code and comments)
     lean_proof_source: str | None = None
+    # C5: spec anchor derived from the dataset label vocabulary
+    spec_reference: str | None = None
 
     _ADDITIVE_FIELDS = (
         "lean_status", "lean_artifact", "kurtosis_test", "label",
         "lean_statement", "lean_hypotheses", "lean_must_establish",
         "lean_referenced_defs", "lean_axioms", "lean_proof_provenance",
         "lean_proof_code", "lean_precondition", "lean_conclusion",
-        "lean_type_consistency", "lean_proof_source",
+        "lean_type_consistency", "lean_proof_source", "spec_reference",
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -183,7 +185,7 @@ def validate_property(d: dict[str, Any]) -> list[str]:
     if lme is not None and not isinstance(lme, list):
         problems.append("lean_must_establish must be a list")
 
-    for key in ("lean_precondition", "lean_conclusion", "lean_proof_source"):
+    for key in ("lean_precondition", "lean_conclusion", "lean_proof_source", "spec_reference"):
         v = d.get(key)
         if v is not None and not isinstance(v, str):
             problems.append(f"{key} must be a string")

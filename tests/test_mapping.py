@@ -321,6 +321,29 @@ def test_b5_non_gasper_head_is_unchecked(theorem_map, health, scope):
     assert ne and all(p["lean_type_consistency"] == "unchecked" for p in ne)
 
 
+# ---------------------------------------------------------------------------
+# C5 — label-derived spec_reference / covers
+# ---------------------------------------------------------------------------
+
+def test_c5_spec_reference_derived_from_label(theorem_map, health, scope):
+    props = build_properties(theorem_map, health, scope)
+    for p in props:
+        assert p.get("spec_reference"), f"{p['property_id']} missing spec_reference"
+        assert p["spec_reference"].startswith("consensus-specs:specs/")
+        assert "#process_" in p["spec_reference"]
+    s1 = next(p for p in props if p["property_id"].startswith("PROP-lean-slashing-001"))
+    assert s1["spec_reference"] == "consensus-specs:specs/phase0/beacon-chain.md#process_slashings"
+
+
+def test_c5_covers_falls_back_to_label_symbol(theorem_map, health, scope):
+    """With no subgraphs, covers is the label's pyspec symbol, not prose."""
+    props = build_properties(theorem_map, health, scope)
+    s1 = next(p for p in props if p["property_id"].startswith("PROP-lean-slashing-001"))
+    assert s1["covers"] == "process_slashings"
+    k = next(p for p in props if p["property_id"].startswith("PROP-lean-safety-core-001"))
+    assert k["covers"] == "process_justification_and_finalization"
+
+
 def test_b5_mismatch_is_flagged(theorem_map, scope):
     """A precondition whose gasper-local head is NOT among the statement's
     referenced constants must be flagged 'mismatch', not dropped."""

@@ -46,6 +46,37 @@ _GASPER_PREFIX = "GasperBeaconChain."
 
 _SEVERITY_RANK = {"INFORMATIONAL": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
 
+# C5: the ethereum-vuln-dataset `label` vocabulary is grounded in the
+# consensus-specs section names (docs/label_design.md), so both the spec
+# anchor and the primary pyspec symbol derive mechanically from the label —
+# no prose judgment. Only the labels used by our FFG target set are mapped;
+# growing the target set means growing this table, not guessing.
+_LABEL_SPEC = {
+    "beacon-chain:justification-and-finality":
+        ("specs/phase0/beacon-chain.md", "process_justification_and_finalization"),
+    "beacon-chain:slashing":
+        ("specs/phase0/beacon-chain.md", "process_slashings"),
+    "beacon-chain:effective-balance-updates":
+        ("specs/phase0/beacon-chain.md", "process_effective_balance_updates"),
+    "beacon-chain:attestation":
+        ("specs/phase0/beacon-chain.md", "process_attestation"),
+}
+
+
+def _spec_reference(label: str | None) -> str | None:
+    """C5: consensus-specs anchor derived from the dataset label."""
+    if not label or label not in _LABEL_SPEC:
+        return None
+    doc, symbol = _LABEL_SPEC[label]
+    return f"consensus-specs:{doc}#{symbol}"
+
+
+def _label_symbol(label: str | None) -> str | None:
+    """C5: primary pyspec `process_*` symbol for a dataset label."""
+    if not label or label not in _LABEL_SPEC:
+        return None
+    return _LABEL_SPEC[label][1]
+
 
 def _flatten_strings(obj: Any) -> list[str]:
     """Collect all string leaves of a nested dict/list (for permissive scope search)."""
@@ -228,13 +259,20 @@ def build_property(
     # D5: label from theorem_map entry
     label = entry.get("label")
 
+    # C5: covers is label-grounded first — the label's pyspec symbol leads the
+    # hint list, so with no subgraph match `covers` is a spec symbol, not prose.
+    covers_hints = list(entry.get("covers_hint", []))
+    symbol = _label_symbol(label)
+    if symbol:
+        covers_hints = [symbol] + [h for h in covers_hints if h != symbol]
+
     return Property(
         property_id=entry["property_id"],
         text=entry["text"],
         type=entry.get("type", "invariant"),
         assertion=assertion,
         severity=(severity or str(entry["severity"])).upper(),
-        covers=_resolve_covers(entry.get("covers_hint", []), subgraphs),
+        covers=_resolve_covers(covers_hints, subgraphs),
         reachability=reach,
         bug_bounty_eligible=(in_scope and not liveness_only),
         exploitability=exploitability,
@@ -251,6 +289,7 @@ def build_property(
         lean_proof_code=lean_proof_code,
         lean_conclusion=lean_conclusion,
         lean_proof_source=lean_proof_source,
+        spec_reference=_spec_reference(label),
     )
 
 
