@@ -89,6 +89,20 @@ only**, never mutating a core field — per speca#88's contract: `lean_status`,
 its consensus-specs doc anchor and primary pyspec `process_*` symbol — no
 prose judgment.
 
+Spec/code anchoring (issue #5, workstream C) is table-driven:
+[`data/anchor_map.json`](data/anchor_map.json) is the def -> spec-symbol ->
+client-code-symbol alignment table (C3) that `spec_reference`/`covers` are
+derived from (C4, via `src/speca_lean4/anchors.py`). The client-code column is
+best-effort and honest: rows are `verified-<date>` (confirmed by code search)
+or explicitly `todo`, never fabricated. Declaration-site annotations
+(`@[speca_spec]`, C1/C2) are blocked on gasper-lean4 maintainer coordination
+(issue #9 G2); the proposed convention is documented in
+[`docs/spec-annotation.md`](docs/spec-annotation.md). Hygiene (issue #10): the
+honesty invariants are pinned by explicit tests (`tests/test_honesty.py`, H1),
+and the local-Lean-toolchain question is evaluated in
+[`docs/lean-toolchain.md`](docs/lean-toolchain.md) (H2 — staying CI-only until
+`lean/` churn justifies local elan/lake).
+
 ## The enriched Lean -> plugin boundary (issue #3, workstream A)
 
 `lake exe speca-export` emits one record per target theorem. Beyond the proof
