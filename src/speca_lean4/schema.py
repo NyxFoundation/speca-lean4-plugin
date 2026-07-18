@@ -21,6 +21,8 @@ Value vocabulary is aligned with the reference corpus
 
 Additive fields (Lean-provider only, never mutate a core field) per speca#88:
     lean_status, lean_artifact, kurtosis_test
+plus, from issue #7 (workstream E): checker, witness — the Executable
+decidable checker / constructive witness linked via data/checker_map.json.
 """
 
 from __future__ import annotations
@@ -80,6 +82,11 @@ class Property:
     lean_proof_source: str | None = None
     # C5: spec anchor derived from the dataset label vocabulary
     spec_reference: str | None = None
+    # E1 (issue #7): Executable decidable Bool checker / constructive witness
+    # for this property's theorem (from data/checker_map.json). Non-null only
+    # where a REAL Executable counterpart exists.
+    checker: str | None = None
+    witness: str | None = None
 
     _ADDITIVE_FIELDS = (
         "lean_status", "lean_artifact", "kurtosis_test", "label",
@@ -87,6 +94,7 @@ class Property:
         "lean_referenced_defs", "lean_axioms", "lean_proof_provenance",
         "lean_proof_code", "lean_precondition", "lean_conclusion",
         "lean_type_consistency", "lean_proof_source", "spec_reference",
+        "checker", "witness",
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -185,7 +193,8 @@ def validate_property(d: dict[str, Any]) -> list[str]:
     if lme is not None and not isinstance(lme, list):
         problems.append("lean_must_establish must be a list")
 
-    for key in ("lean_precondition", "lean_conclusion", "lean_proof_source", "spec_reference"):
+    for key in ("lean_precondition", "lean_conclusion", "lean_proof_source",
+                "spec_reference", "kurtosis_test", "checker", "witness"):
         v = d.get(key)
         if v is not None and not isinstance(v, str):
             problems.append(f"{key} must be a string")
