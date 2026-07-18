@@ -30,6 +30,25 @@ jobs:
           assert all(e.get('label', '').strip() for e in m['properties']), 'missing label'
           print(f'OK: {len(tnames)} unique theorems, all with property_id and label')
           "
+      - name: honesty check — checker_map + evidence_seeds integrity (issue #7)
+        run: |
+          python3 -c "
+          import json
+          m = json.load(open('theorem_map.json'))
+          theorems = {e['theorem'] for e in m['properties']}
+          labels = {e['label'] for e in m['properties']}
+          cm = json.load(open('data/checker_map.json'))['checkers']
+          # every checker_map key is a mapped theorem; every entry cites a checker + correctness
+          for t, e in cm.items():
+              assert t in theorems, f'checker_map references unmapped theorem {t}'
+              assert e['checkers'], f'{t}: empty checkers'
+              assert e.get('correctness'), f'{t}: no correctness theorem cited'
+          seeds = json.load(open('data/evidence_seeds.json'))['seeds']
+          for s in seeds:
+              assert s['label'] in labels, f\"seed {s['dataset_id']} label not in use\"
+              assert s['files_changed'] and s['pre_fix_code_excerpt'].strip(), s['dataset_id']
+          print(f'OK: {len(cm)} checker-linked theorems, {len(seeds)} evidence seeds')
+          "
 
   lean:
     name: lean exporter build
