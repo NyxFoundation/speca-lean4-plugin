@@ -214,7 +214,7 @@ def expansionPpMaxLen : Nat := 4000
 
 private def truncatePp (s : String) : String :=
   if s.length ≤ expansionPpMaxLen then s
-  else s.take expansionPpMaxLen ++ "\n-- [truncated by speca-export: pp longer than cap]"
+  else String.mk (s.toList.take expansionPpMaxLen) ++ "\n-- [truncated by speca-export: pp longer than cap]"
 
 /-- Compiler-generated auxiliary declarations we never expand: recursors and
 cases/brec machinery, noConfusion, structure constructors (`mk` — the
