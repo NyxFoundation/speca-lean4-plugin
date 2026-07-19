@@ -2,6 +2,8 @@ import Lean.Util.CollectAxioms
 import Lean.Data.Json
 import Lean.Meta
 import Lean.DeclarationRange
+import Lean.Structure
+import Lean.DocString
 -- The substantive proved results (~70-80% of gasper-lean4) live in
 -- `GasperBeaconChain.Core.*` (Theories/Lemmas): the top-level accountable
 -- safety (`k_safety'`), the slashable bound, plausible liveness, and the
@@ -45,6 +47,19 @@ Enrichment fields (workstream A):
 - `decl_start_line` / `decl_end_line` -- source range of the declaration, so
                            the driver side can slice the verbatim proof source
                            out of the gasper checkout (A7)
+- `referenced_defs_expanded` -- recursively pretty-printed *definitions* of the
+                           gasper-local constants used in the statement
+                           (structure fields, inductive constructors, def
+                           signature+body), so the LLM sees the structure a
+                           theorem operates on, not just its name (A3+,
+                           issue #16). Bounded: breadth-first to depth
+                           `expansionMaxDepth` (2), at most `expansionMaxTotal`
+                           (24) definitions, deduped; mathlib/Lean-core
+                           constants and compiler-generated auxiliaries are
+                           never expanded.
+- `doc_string`          -- the declaration's docstring (`findDocString?`);
+                           `""` when the theorem has none — empty, never
+                           fabricated (A7+, issue #17)
 
 ## The depend-allowed vs must-establish heuristic (A2)
 
@@ -93,6 +108,21 @@ private def HypothesisInfo.toJson (h : HypothesisInfo) : Json :=
     ("class", Json.str h.«class»)
   ]
 
+/-- One recursively-expanded gasper-local definition (A3+, issue #16). -/
+structure ExpandedDef where
+  name : String
+  kind : String  -- "structure" | "inductive" | "def" | "theorem" | "axiom" |
+                 -- "opaque" | "constructor" | "recursor" | "quotient"
+  pp   : String  -- pretty-printed definition (fields / constructors / body)
+  deriving Inhabited
+
+private def ExpandedDef.toJson (d : ExpandedDef) : Json :=
+  Json.mkObj [
+    ("name", Json.str d.name),
+    ("kind", Json.str d.kind),
+    ("pp",   Json.str d.pp)
+  ]
+
 /-- Per-theorem health record emitted to JSON. -/
 structure TheoremHealth where
   name                : String
@@ -113,6 +143,8 @@ structure TheoremHealth where
   proofSource         : String        -- verbatim source slice (filled in IO)
   declStartLine       : Nat           -- 0 if unknown
   declEndLine         : Nat           -- 0 if unknown
+  referencedDefsExpanded : Array ExpandedDef  -- A3+ (issue #16)
+  docString           : String        -- A7+ (issue #17); "" if absent
   deriving Inhabited
 
 private def isNativeComputeAxiom (n : Name) : Bool :=
@@ -157,6 +189,134 @@ private def isGasperLocal (n : Name) : Bool :=
 
 private def dedup (xs : Array Name) : Array Name :=
   xs.foldl (fun acc n => if acc.contains n then acc else acc.push n) #[]
+
+/-! ## A3+ (issue #16) — recursive expansion of gasper-local definitions
+
+For each gasper-local constant a theorem's statement uses, export its
+*definition* (structure fields / inductive constructors / def signature+body),
+then recurse over the gasper-local constants that definition uses. The
+recursion is honestly bounded and the bounds are stated here, in code:
+breadth-first, `expansionMaxDepth` levels from the statement's constants, at
+most `expansionMaxTotal` definitions total, deduped. Mathlib/Lean-core
+constants are never expanded (`isGasperLocal` gate), nor are
+compiler-generated auxiliaries. -/
+
+/-- Maximum recursion depth for `referenced_defs_expanded` (level 1 = the
+constants in the statement itself). -/
+def expansionMaxDepth : Nat := 2
+
+/-- Maximum total number of expanded definitions per theorem. -/
+def expansionMaxTotal : Nat := 24
+
+/-- Cap on one expanded definition's pretty-printed text; longer text is
+truncated with an explicit marker (never silently). -/
+def expansionPpMaxLen : Nat := 4000
+
+private def truncatePp (s : String) : String :=
+  if s.length ≤ expansionPpMaxLen then s
+  else s.take expansionPpMaxLen ++ "\n-- [truncated by speca-export: pp longer than cap]"
+
+/-- Compiler-generated auxiliary declarations we never expand: recursors and
+cases/brec machinery, noConfusion, structure constructors (`mk` — the
+structure itself is expanded instead), sizeOf, equation/match auxiliaries and
+internal (`_`-prefixed) names. -/
+private def isAuxiliaryDecl (n : Name) : Bool :=
+  let last := match n with
+    | .str _ s => s
+    | _        => ""
+  n.isInternal ||
+  last == "rec" || last == "recOn" || last == "casesOn" || last == "brecOn" ||
+  last == "below" || last == "ibelow" || last == "ndrec" || last == "mk" ||
+  last == "noConfusion" || last == "noConfusionType" || last == "sizeOf" ||
+  last == "eq_def" || last.startsWith "match_" || last.startsWith "proof_" ||
+  (last.startsWith "eq_" && (last.drop 3).isNat)
+
+/-- Pretty-print one definition: `(kind, pp, constants used by the definition)`.
+Structures list their fields (via the projection signatures), inductives their
+constructors, defs their signature and body. -/
+private def expandOne (env : Environment) (n : Name) :
+    Meta.MetaM (String × String × Array Name) := do
+  match env.find? n with
+  | none => return ("unknown", "", #[])
+  | some ci =>
+    match ci with
+    | .inductInfo iv => do
+      let header ← Meta.ppExpr iv.type
+      if isStructure env n then
+        let mut s := s!"structure {n} : {header}"
+        let mut used : Array Name := iv.type.getUsedConstants
+        for f in getStructureFields env n do
+          match getProjFnForField? env n f with
+          | some proj =>
+            match env.find? proj with
+            | some pci => do
+              let t ← Meta.ppExpr pci.type
+              s := s ++ s!"\n  {f} : {t}"
+              used := used ++ pci.type.getUsedConstants
+            | none => pure ()
+          | none => pure ()
+        return ("structure", truncatePp s, used)
+      else
+        let mut s := s!"inductive {n} : {header}"
+        let mut used : Array Name := iv.type.getUsedConstants
+        for c in iv.ctors do
+          match env.find? c with
+          | some cci => do
+            let t ← Meta.ppExpr cci.type
+            s := s ++ s!"\n  | {c} : {t}"
+            used := used ++ cci.type.getUsedConstants
+          | none => pure ()
+        return ("inductive", truncatePp s, used)
+    | .defnInfo dv => do
+      let t ← Meta.ppExpr dv.type
+      let v ← Meta.ppExpr dv.value
+      return ("def", truncatePp s!"def {n} : {t} :=\n  {v}",
+              dv.type.getUsedConstants ++ dv.value.getUsedConstants)
+    | .thmInfo tv => do
+      let t ← Meta.ppExpr tv.type
+      return ("theorem", truncatePp s!"theorem {n} : {t}", tv.type.getUsedConstants)
+    | .axiomInfo av => do
+      let t ← Meta.ppExpr av.type
+      return ("axiom", truncatePp s!"axiom {n} : {t}", av.type.getUsedConstants)
+    | .opaqueInfo ov => do
+      let t ← Meta.ppExpr ov.type
+      return ("opaque", truncatePp s!"opaque {n} : {t}", ov.type.getUsedConstants)
+    | .ctorInfo cv => do
+      let t ← Meta.ppExpr cv.type
+      return ("constructor", truncatePp s!"{n} : {t}", cv.type.getUsedConstants)
+    | .recInfo rv => do
+      let t ← Meta.ppExpr rv.type
+      return ("recursor", truncatePp s!"{n} : {t}", rv.type.getUsedConstants)
+    | .quotInfo qv => do
+      let t ← Meta.ppExpr qv.type
+      return ("quotient", truncatePp s!"{n} : {t}", qv.type.getUsedConstants)
+
+/-- Breadth-first expansion of the gasper-local definitions reachable from
+`roots` (the statement's referenced constants). Bounded by `expansionMaxDepth`
+levels and `expansionMaxTotal` total, deduped; only `GasperBeaconChain.*`
+non-auxiliary declarations are expanded. -/
+def expandReferencedDefs (env : Environment) (roots : Array Name) :
+    Meta.MetaM (Array ExpandedDef) := do
+  let mut out : Array ExpandedDef := #[]
+  let mut seen : Array Name := #[]
+  let mut frontier : Array Name := #[]
+  for r in roots do
+    if isGasperLocal r && !isAuxiliaryDecl r && !seen.contains r then
+      seen := seen.push r
+      frontier := frontier.push r
+  for _ in [0:expansionMaxDepth] do
+    let mut next : Array Name := #[]
+    for n in frontier do
+      if out.size < expansionMaxTotal then
+        let (kind, pp, used) ← expandOne env n
+        if !pp.isEmpty then
+          out := out.push { name := toString n, kind := kind, pp := pp }
+          for u in dedup used do
+            if isGasperLocal u && !isAuxiliaryDecl u && !seen.contains u then
+              seen := seen.push u
+              next := next.push u
+    frontier := next
+  return out
 
 /-- Head predicate of a hypothesis type: strip `∀` binders and one layer of
 `Not`, then take the application head constant. -/
@@ -210,7 +370,8 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
       statement := "", conclusion := "", hypotheses := #[],
       referencedConstants := #[], gasperAxioms := #[],
       proofProvenance := "unknown", proofCode := "", proofConstants := #[],
-      proofSource := "", declStartLine := 0, declEndLine := 0
+      proofSource := "", declStartLine := 0, declEndLine := 0,
+      referencedDefsExpanded := #[], docString := ""
     }
   let ax ← collectAxioms target
   let hasSorry  := ax.contains ``sorryAx
@@ -231,7 +392,8 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
   -- A4: gasper-local axioms (filter out Lean builtins)
   let gasperAx := (ax.filter fun a => !isBuiltinAxiom a).map toString
   -- A3: gasper-local constants referenced by the type
-  let refConsts := (dedup (type.getUsedConstants.filter isGasperLocal)).map toString
+  let refConstNames := dedup (type.getUsedConstants.filter isGasperLocal)
+  let refConsts := refConstNames.map toString
   -- B3 feed: gasper-local constants referenced by the proof term
   let proofConsts := match value? with
     | some v => (dedup (v.getUsedConstants.filter isGasperLocal)).map toString
@@ -246,8 +408,10 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
     match ← findDeclarationRanges? target with
     | some rs => pure (rs.range.pos.line, rs.range.endPos.line)
     | none    => pure (0, 0)
+  -- A7+ (issue #17): the declaration's docstring; "" (never fabricated) when absent
+  let docStr := (← findDocString? env target).getD ""
   -- A1, A2, A7: pretty-printing and telescope require MetaM
-  let (stmt, concl, hyps, proofCode) ← Meta.MetaM.run' do
+  let (stmt, concl, hyps, proofCode, expandedDefs) ← Meta.MetaM.run' do
     -- A1: pretty-print the statement (type)
     let stmtFmt ← Meta.ppExpr type
     let stmt := toString stmtFmt
@@ -276,7 +440,10 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
         let fmt ← Meta.ppExpr v
         pure (toString fmt)
       | none => pure ""
-    pure (stmt, concl, hyps, proofCode)
+    -- A3+ (issue #16): recursively expand the gasper-local definitions the
+    -- statement references (bounded; see expansionMaxDepth/expansionMaxTotal)
+    let expandedDefs ← expandReferencedDefs env refConstNames
+    pure (stmt, concl, hyps, proofCode, expandedDefs)
   return {
     name := toString target, resolved := true, leanStatus := status,
     sorryFree := !hasSorry, choiceFree := !hasChoice, nativeFree := !hasNative,
@@ -284,7 +451,8 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
     referencedConstants := refConsts, gasperAxioms := gasperAx,
     proofProvenance := provenance, proofCode := proofCode,
     proofConstants := proofConsts, proofSource := "",
-    declStartLine := startLine, declEndLine := endLine
+    declStartLine := startLine, declEndLine := endLine,
+    referencedDefsExpanded := expandedDefs, docString := docStr
   }
 
 private def TheoremHealth.toJson (h : TheoremHealth) : Json :=
@@ -300,11 +468,14 @@ private def TheoremHealth.toJson (h : TheoremHealth) : Json :=
     ("conclusion",           Json.str h.conclusion),
     ("hypotheses",           Json.arr (h.hypotheses.map HypothesisInfo.toJson)),
     ("referenced_constants", Json.arr (h.referencedConstants.map Json.str)),
+    ("referenced_defs_expanded",
+      Json.arr (h.referencedDefsExpanded.map ExpandedDef.toJson)),
     ("gasper_axioms",        Json.arr (h.gasperAxioms.map Json.str)),
     ("proof_provenance",     Json.str h.proofProvenance),
     ("proof_code",           Json.str h.proofCode),
     ("proof_constants",      Json.arr (h.proofConstants.map Json.str)),
     ("proof_source",         Json.str h.proofSource),
+    ("doc_string",           Json.str h.docString),
     ("decl_start_line",      Json.num h.declStartLine),
     ("decl_end_line",        Json.num h.declEndLine)
   ]

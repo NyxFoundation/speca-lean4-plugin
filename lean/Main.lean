@@ -23,6 +23,16 @@ the lake package checkout (`.lake/packages/<pkg>/<Module/Path>.lean`) and slice
 the declaration's lines verbatim (term/tactic code and its comments) into
 `proof_source`. Best-effort: if the file or range is unavailable the field is
 empty and `proof_code` (the pretty-printed proof term) is the fallback.
+
+A7+ (issue #17): `findDeclarationRanges?` starts the range at the declaration
+keyword, which excludes the leading `/-- ... -/` docstring and adjacent
+explanatory comments — but per the gasper maintainer the proof and its
+documentation are a pair. So the slice is widened upward over the contiguous
+leading comment block (`--` lines and `/- ... -/` blocks ending directly above
+the declaration, stopping at the first blank or code line). Purely textual and
+verbatim: nothing is fabricated, the slice is only widened. The docstring also
+travels as the structured `doc_string` field (from `findDocString?`, set in
+`classify`).
 -/
 
 open Lean SpecaExport
@@ -42,9 +52,37 @@ def sliceLines (content : String) (startLine endLine : Nat) : String :=
     let lines := (content.splitOn "\n").drop (startLine - 1)
     String.intercalate "\n" (lines.take (endLine + 1 - startLine))
 
+/-- Scan upward from `endLine` (1-based; its trimmed text ends with `-/`) for
+the line whose trimmed text opens the block comment (`/-` or `/--`). -/
+partial def findBlockCommentStart (lines : Array String) (endLine : Nat) : Option Nat :=
+  if endLine == 0 then none
+  else
+    let t := (lines.getD (endLine - 1) "").trim
+    if t.startsWith "/-" then some endLine
+    else findBlockCommentStart lines (endLine - 1)
+
+/-- A7+ (issue #17): 1-based line where the contiguous leading comment block
+above `startLine` begins. Absorbs `--` line comments and `/- ... -/` /
+`/-- ... -/` block comments that end directly above the declaration, stopping
+at the first blank or code line. Returns `startLine` unchanged when there is
+no leading comment. -/
+partial def widenToLeadingComments (lines : Array String) (startLine : Nat) : Nat :=
+  if startLine ≤ 1 then startLine
+  else
+    let above := (lines.getD (startLine - 2) "").trim
+    if above.startsWith "--" then
+      widenToLeadingComments lines (startLine - 1)
+    else if above.endsWith "-/" then
+      match findBlockCommentStart lines (startLine - 1) with
+      | some j => widenToLeadingComments lines j
+      | none   => startLine
+    else startLine
+
 /-- Attach the verbatim declaration source (A7) by reading the module's `.lean`
-file out of the lake package checkout. Best-effort; leaves the record unchanged
-when the module path or source range is unknown. -/
+file out of the lake package checkout, widened upward over the contiguous
+leading comment block so the docstring travels with the proof (A7+, issue #17).
+Best-effort; leaves the record unchanged when the module path or source range
+is unknown. -/
 def attachProofSource (h : SpecaExport.TheoremHealth) : IO SpecaExport.TheoremHealth := do
   if h.«module».isEmpty || h.declStartLine == 0 then
     return h
@@ -56,7 +94,9 @@ def attachProofSource (h : SpecaExport.TheoremHealth) : IO SpecaExport.TheoremHe
       let cand := entry.path / rel
       if src.isEmpty && (← cand.pathExists) then
         let content ← IO.FS.readFile cand
-        src := sliceLines content h.declStartLine h.declEndLine
+        let lines := (content.splitOn "\n").toArray
+        let widenedStart := widenToLeadingComments lines h.declStartLine
+        src := sliceLines content widenedStart h.declEndLine
   return { h with proofSource := src }
 
 def usage : String :=

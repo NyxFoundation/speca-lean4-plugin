@@ -122,21 +122,37 @@ jobs:
           h = json.load(open("health.json"))
           bad = [t["name"] for t in h["theorems"] if not t["resolved"]]
           assert not bad, f"unresolved target theorems: {bad}"
-          # enriched-boundary contract (issue #3): every record carries A1-A7
+          # enriched-boundary contract (issue #3 + #16/#17): every record
+          # carries A1-A7 plus the A3+/A7+ refinements
           for t in h["theorems"]:
               for key in ("statement", "conclusion", "hypotheses",
                           "referenced_constants", "gasper_axioms",
                           "proof_provenance", "proof_code", "proof_constants",
-                          "proof_source"):
+                          "proof_source", "referenced_defs_expanded",
+                          "doc_string"):
                   assert key in t, f"{t['name']} missing {key}"
               assert t["statement"], f"{t['name']} has empty statement"
+              # A3+ (#16): every expanded def is a fully-populated record,
+              # gasper-local only, within the exporter's stated total cap
+              assert len(t["referenced_defs_expanded"]) <= 24, t["name"]
+              for d in t["referenced_defs_expanded"]:
+                  assert d["name"].startswith("GasperBeaconChain."), (t["name"], d)
+                  assert d["kind"] and d["pp"], (t["name"], d["name"])
           n_me = sum(1 for t in h["theorems"] for hy in t["hypotheses"]
                      if hy.get("class") == "must-establish")
           n_src = sum(1 for t in h["theorems"] if t["proof_source"])
+          n_exp = sum(1 for t in h["theorems"] if t["referenced_defs_expanded"])
+          n_defs = sum(len(t["referenced_defs_expanded"]) for t in h["theorems"])
+          n_doc = sum(1 for t in h["theorems"] if t["doc_string"])
+          # A3+ must fire on the real export: gasper statements reference
+          # gasper-local defs, so a fully-empty expansion would be a bug
+          assert n_exp > 0, "no theorem got referenced_defs_expanded"
           print(f"all {len(h['theorems'])} targets resolved;",
                 sum(1 for t in h["theorems"] if t["lean_status"] == "proved"),
                 f"proved; {n_me} must-establish hypotheses; "
-                f"{n_src} with verbatim proof source")
+                f"{n_src} with verbatim proof source; "
+                f"{n_exp} with expanded defs ({n_defs} defs total); "
+                f"{n_doc} with docstrings")
           PY
       - name: end-to-end — emit 01e from real Lean health
         run: |

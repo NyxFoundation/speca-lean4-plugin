@@ -73,6 +73,13 @@ class TheoremHealth(dict):
         return self.get("referenced_constants", [])
 
     @property
+    def referenced_defs_expanded(self) -> list[dict]:
+        """A3+ (issue #16): recursively expanded gasper-local definitions,
+        [{name, kind, pp}]. Bounded on the Lean side (depth/total caps in
+        SpecaExport.Basic); [] on pre-#16 health data."""
+        return self.get("referenced_defs_expanded", [])
+
+    @property
     def gasper_axioms(self) -> list[str]:
         return self.get("gasper_axioms", [])
 
@@ -91,8 +98,17 @@ class TheoremHealth(dict):
 
     @property
     def proof_source(self) -> str:
-        """Verbatim declaration source slice (A7); "" when unavailable."""
+        """Verbatim declaration source slice (A7); "" when unavailable.
+
+        Since A7+ (issue #17) the slice includes the contiguous leading
+        comment block (docstring + adjacent comments) above the declaration."""
         return self.get("proof_source", "")
+
+    @property
+    def doc_string(self) -> str:
+        """A7+ (issue #17): the declaration's docstring; "" when the theorem
+        has none (honest — never fabricated) or on pre-#17 health data."""
+        return self.get("doc_string", "")
 
 
 def load_health(path: str | Path) -> dict[str, TheoremHealth]:

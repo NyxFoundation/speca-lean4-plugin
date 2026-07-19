@@ -198,6 +198,65 @@ def test_must_establish_extracted(theorem_map, health, scope):
 
 
 # ---------------------------------------------------------------------------
+# A3+ (#16) — recursively expanded referenced defs
+# ---------------------------------------------------------------------------
+
+def test_a3plus_referenced_defs_expanded_threaded(theorem_map, health, scope):
+    """The [{name, kind, pp}] expansion travels from health into every property
+    lowered from the theorem, additively next to the names-only field."""
+    props = build_properties(theorem_map, health, scope)
+    ks = _by_base(props, "PROP-lean-safety-core-001")
+    assert ks
+    for k in ks:
+        exp = k.get("lean_referenced_defs_expanded")
+        assert exp, f"{k['property_id']} missing lean_referenced_defs_expanded"
+        for d in exp:
+            assert {"name", "kind", "pp"} <= set(d)
+            assert d["name"].startswith("GasperBeaconChain.")
+            assert d["kind"] and d["pp"]
+        # additive: the names-only A3 field is still present, not replaced
+        assert k.get("lean_referenced_defs")
+
+
+def test_a3plus_absent_expansion_stays_absent(theorem_map, health, scope):
+    """A health record without referenced_defs_expanded (pre-#16 exporter)
+    must not grow a fabricated expansion."""
+    props = build_properties(theorem_map, health, scope)
+    s1 = next(p for p in props if p["property_id"] == "PROP-lean-slashing-001")
+    assert "lean_referenced_defs_expanded" not in s1
+
+
+# ---------------------------------------------------------------------------
+# A7+ (#17) — docstring paired with the proof
+# ---------------------------------------------------------------------------
+
+def test_a7plus_doc_string_threaded(theorem_map, health, scope):
+    props = build_properties(theorem_map, health, scope)
+    ks = _by_base(props, "PROP-lean-safety-core-001")
+    assert ks
+    for k in ks:
+        assert k.get("lean_doc_string"), f"{k['property_id']} missing lean_doc_string"
+        assert "Accountable safety" in k["lean_doc_string"]
+
+
+def test_a7plus_proof_source_carries_leading_docstring(theorem_map, health, scope):
+    """A7+ widened slice: the verbatim source starts at the leading comment
+    block, so the docstring and the proof travel as one pair."""
+    props = build_properties(theorem_map, health, scope)
+    k = _by_base(props, "PROP-lean-safety-core-001")[0]
+    assert k["lean_proof_source"].startswith("/--")
+    assert "theorem k_safety'" in k["lean_proof_source"]
+
+
+def test_a7plus_absent_doc_string_stays_absent(theorem_map, health, scope):
+    """Honesty: a theorem without a docstring gets no lean_doc_string key —
+    empty is empty, never fabricated."""
+    props = build_properties(theorem_map, health, scope)
+    s1 = next(p for p in props if p["property_id"] == "PROP-lean-slashing-001")
+    assert "lean_doc_string" not in s1
+
+
+# ---------------------------------------------------------------------------
 # B1 — must-establish decomposition (1 theorem -> N invariants)
 # ---------------------------------------------------------------------------
 

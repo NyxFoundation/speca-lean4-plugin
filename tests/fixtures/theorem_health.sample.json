@@ -144,7 +144,25 @@
         "GasperBeaconChain.Core.not_ancestor",
         "GasperBeaconChain.Core.q_intersection_slashed"
       ],
-      "proof_source": "theorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
+      "referenced_defs_expanded": [
+        {
+          "name": "GasperBeaconChain.Core.k_finalized",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.k_finalized : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset parent genesis st b k => ⋯"
+        },
+        {
+          "name": "GasperBeaconChain.Core.State",
+          "kind": "structure",
+          "pp": "structure GasperBeaconChain.Core.State : Type u → Type v → Type (max u v)\n  justified : ... (field signatures elided in sample fixture) ...\n  votes : ... (field signatures elided in sample fixture) ..."
+        },
+        {
+          "name": "GasperBeaconChain.Core.q_intersection_slashed",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.q_intersection_slashed : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset st => ⋯"
+        }
+      ],
       "decl_start_line": 152,
       "decl_end_line": 197
     },
