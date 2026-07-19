@@ -25,10 +25,10 @@ the declaration's lines verbatim (term/tactic code and its comments) into
 empty and `proof_code` (the pretty-printed proof term) is the fallback.
 
 A7+ (issue #17): `findDeclarationRanges?` starts the range at the declaration
-keyword, which excludes the leading `/-- ... -/` docstring and adjacent
-explanatory comments — but per the gasper maintainer the proof and its
+keyword, which excludes the leading doc comment and adjacent
+explanatory comments, but per the gasper maintainer the proof and its
 documentation are a pair. So the slice is widened upward over the contiguous
-leading comment block (`--` lines and `/- ... -/` blocks ending directly above
+leading comment block (line comments and block comments ending directly above
 the declaration, stopping at the first blank or code line). Purely textual and
 verbatim: nothing is fabricated, the slice is only widened. The docstring also
 travels as the structured `doc_string` field (from `findDocString?`, set in
@@ -52,8 +52,8 @@ def sliceLines (content : String) (startLine endLine : Nat) : String :=
     let lines := (content.splitOn "\n").drop (startLine - 1)
     String.intercalate "\n" (lines.take (endLine + 1 - startLine))
 
-/-- Scan upward from `endLine` (1-based; its trimmed text ends with `-/`) for
-the line whose trimmed text opens the block comment (`/-` or `/--`). -/
+/-- Scan upward from `endLine` (1-based; its trimmed text closes a block comment)
+for the line whose trimmed text opens that block comment. -/
 partial def findBlockCommentStart (lines : Array String) (endLine : Nat) : Option Nat :=
   if endLine == 0 then none
   else
@@ -62,8 +62,8 @@ partial def findBlockCommentStart (lines : Array String) (endLine : Nat) : Optio
     else findBlockCommentStart lines (endLine - 1)
 
 /-- A7+ (issue #17): 1-based line where the contiguous leading comment block
-above `startLine` begins. Absorbs `--` line comments and `/- ... -/` /
-`/-- ... -/` block comments that end directly above the declaration, stopping
+above `startLine` begins. Absorbs line comments and block comments that end
+directly above the declaration, stopping
 at the first blank or code line. Returns `startLine` unchanged when there is
 no leading comment. -/
 partial def widenToLeadingComments (lines : Array String) (startLine : Nat) : Nat :=
