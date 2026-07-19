@@ -69,6 +69,11 @@ class Property:
     lean_hypotheses: list[dict] | None = None
     lean_must_establish: list[str] | None = None
     lean_referenced_defs: list[str] | None = None
+    # A3+ (issue #16): recursively expanded gasper-local definitions the
+    # statement references — [{name, kind, pp}], bounded on the Lean side
+    # (depth 2 / 24 defs; see lean/SpecaExport/Basic.lean). Additive next to
+    # the names-only lean_referenced_defs.
+    lean_referenced_defs_expanded: list[dict] | None = None
     lean_axioms: list[str] | None = None
     lean_proof_provenance: str | None = None
     lean_proof_code: str | None = None
@@ -78,8 +83,12 @@ class Property:
     lean_conclusion: str | None = None
     # B5: type-consistency gate verdict ("ok" | "mismatch" | "unchecked")
     lean_type_consistency: str | None = None
-    # A7: verbatim declaration source (term/tactic code and comments)
+    # A7: verbatim declaration source (term/tactic code and comments; since
+    # A7+/issue #17 including the contiguous leading comment block)
     lean_proof_source: str | None = None
+    # A7+ (issue #17): the declaration's docstring; None (key dropped) when
+    # the theorem has none — absent stays absent, never fabricated
+    lean_doc_string: str | None = None
     # C5: spec anchor derived from the dataset label vocabulary
     spec_reference: str | None = None
     # E1 (issue #7): Executable decidable Bool checker / constructive witness
@@ -91,10 +100,11 @@ class Property:
     _ADDITIVE_FIELDS = (
         "lean_status", "lean_artifact", "kurtosis_test", "label",
         "lean_statement", "lean_hypotheses", "lean_must_establish",
-        "lean_referenced_defs", "lean_axioms", "lean_proof_provenance",
+        "lean_referenced_defs", "lean_referenced_defs_expanded",
+        "lean_axioms", "lean_proof_provenance",
         "lean_proof_code", "lean_precondition", "lean_conclusion",
-        "lean_type_consistency", "lean_proof_source", "spec_reference",
-        "checker", "witness",
+        "lean_type_consistency", "lean_proof_source", "lean_doc_string",
+        "spec_reference", "checker", "witness",
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -194,10 +204,24 @@ def validate_property(d: dict[str, Any]) -> list[str]:
         problems.append("lean_must_establish must be a list")
 
     for key in ("lean_precondition", "lean_conclusion", "lean_proof_source",
-                "spec_reference", "kurtosis_test", "checker", "witness"):
+                "lean_doc_string", "spec_reference", "kurtosis_test",
+                "checker", "witness"):
         v = d.get(key)
         if v is not None and not isinstance(v, str):
             problems.append(f"{key} must be a string")
+
+    lrde = d.get("lean_referenced_defs_expanded")
+    if lrde is not None:
+        if not isinstance(lrde, list):
+            problems.append("lean_referenced_defs_expanded must be a list")
+        else:
+            for item in lrde:
+                if not isinstance(item, dict) or not {"name", "kind", "pp"} <= set(item):
+                    problems.append(
+                        "lean_referenced_defs_expanded items must be "
+                        "{name, kind, pp} objects"
+                    )
+                    break
 
     ltc = d.get("lean_type_consistency")
     if ltc is not None and ltc not in TYPE_CONSISTENCY:

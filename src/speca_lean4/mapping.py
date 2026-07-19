@@ -232,22 +232,29 @@ def build_property(
     lean_hypotheses = None
     lean_must_establish: list[str] | None = None
     lean_referenced_defs = None
+    lean_referenced_defs_expanded = None
     lean_axioms = None
     lean_proof_provenance = None
     lean_proof_code = None
     lean_conclusion = None
     lean_proof_source = None
+    lean_doc_string = None
 
     if th.statement:
         lean_statement = th.statement
         lean_hypotheses = th.hypotheses or None
         lean_must_establish = [h["type"] for h in th.must_establish] if th.must_establish else None
         lean_referenced_defs = th.referenced_constants or None
+        # A3+ (issue #16): additive — the names-only field above stays as-is,
+        # the expanded [{name, kind, pp}] records ride alongside it.
+        lean_referenced_defs_expanded = th.referenced_defs_expanded or None
         lean_axioms = th.gasper_axioms or None
         lean_proof_provenance = th.proof_provenance or None
         lean_proof_code = th.proof_code or None
         lean_conclusion = th.conclusion or None
         lean_proof_source = th.proof_source or None
+        # A7+ (issue #17): absent docstring stays absent (None -> key dropped)
+        lean_doc_string = th.doc_string or None
 
     # B2 (no-precondition shape): a theorem with an enriched statement but no
     # must-establish hypothesis guarantees its conclusion unconditionally.
@@ -302,11 +309,13 @@ def build_property(
         lean_hypotheses=lean_hypotheses,
         lean_must_establish=lean_must_establish,
         lean_referenced_defs=lean_referenced_defs,
+        lean_referenced_defs_expanded=lean_referenced_defs_expanded,
         lean_axioms=lean_axioms,
         lean_proof_provenance=lean_proof_provenance,
         lean_proof_code=lean_proof_code,
         lean_conclusion=lean_conclusion,
         lean_proof_source=lean_proof_source,
+        lean_doc_string=lean_doc_string,
         spec_reference=_spec_reference(label),
     )
 
