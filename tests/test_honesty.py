@@ -97,14 +97,20 @@ def test_unresolved_record_can_never_claim_proved():
 # ---------------------------------------------------------------------------
 
 def test_unresolved_target_is_unknown_not_dropped(theorem_map, health, scope):
-    """Remove one target from health: its properties are still emitted, marked
-    unknown; every other property is untouched."""
+    """Remove one target from health: every property of that theorem (the base
+    entry AND the stage-2 checklist entries descending from it) is still
+    emitted, marked unknown; every property of another theorem is untouched."""
     del health[_K_SAFETY]
     props = build_properties(theorem_map, health, scope)
     ks = _props_for(props, "PROP-lean-safety-core-001")
     assert len(ks) == 1  # unenriched -> 1:1 fallback, still present
     assert ks[0]["lean_status"] == "unknown"
-    others = [p for p in props if not p["property_id"].startswith("PROP-lean-safety-core-001")]
+    k_bases = {e["property_id"] for e in theorem_map["properties"]
+               if e["theorem"] == _K_SAFETY}
+    assert len(k_bases) > 1  # base entry + CHK-AS-* checklist entries
+    of_theorem = [p for p in props if p["property_id"].split("-me")[0] in k_bases]
+    others = [p for p in props if p["property_id"].split("-me")[0] not in k_bases]
+    assert of_theorem and all(p["lean_status"] == "unknown" for p in of_theorem)
     assert others and all(p["lean_status"] == "proved" for p in others)
 
 
@@ -112,7 +118,9 @@ def test_unresolved_target_fails_the_ci_gate(theorem_map, health, scope):
     """The gate CI enforces (ci.yml lean job asserts every target resolved):
     `unresolved_targets` must name a missing/unresolved target, and the gate
     assertion must fail on it."""
-    targets = [e["theorem"] for e in theorem_map["properties"]]
+    # deduped, matching the ci.yml targets.txt generation (several checklist
+    # entries may share one theorem)
+    targets = list(dict.fromkeys(e["theorem"] for e in theorem_map["properties"]))
     assert unresolved_targets(health, targets) == []  # green on real health
 
     del health[_K_SAFETY]

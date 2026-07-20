@@ -31,6 +31,17 @@ B5  Type-consistency gate: the head constant of each lowered precondition
 hints, scope/reachability, labels, shards — layered on top of the
 Lean-extracted statement/hypotheses. It no longer carries the decomposition
 semantics themselves.
+
+Stage-2 checklist entries (speca#88 stage 2, docs/high-angle-checklist.md) opt
+out of the B1/B2 machinery with `"lowering": "verbatim"`: they are hand-written
+implementation invariants *descending from* a theorem, not restatements of its
+Lean statement, so decomposing them per must-establish hypothesis (or rewriting
+their assertion into the B2 shape) would misattribute the audit content. They
+emit exactly one property with the hand-written text/assertion; the lean_*
+enrichment fields still attach. Since one theorem may back several such
+entries, B3 severity is applied per entry: an entry keeps its own calibrated
+severity, raised only by severity pushed from *dependent* theorems in the
+proof DAG — never by a sibling property of the same theorem.
 """
 
 from __future__ import annotations
@@ -172,15 +183,21 @@ def derive_severities(
     inherits the maximum severity of its (transitive) dependents; top-level
     conclusions (no dependents in the target set) keep their theorem_map
     severity. Upward-only: never downgrades a theorem_map severity.
+
+    Since the stage-2 checklist a theorem may back several entries; the seed
+    for a theorem is the rank-max over its entries' calibrated severities.
     """
-    sev = {e["theorem"]: str(e["severity"]).upper() for e in entries}
+    sev: dict[str, str] = {}
+    for e in entries:
+        t, s = e["theorem"], str(e["severity"]).upper()
+        if t not in sev or _SEVERITY_RANK.get(s, 0) > _SEVERITY_RANK.get(sev[t], 0):
+            sev[t] = s
     targets = set(sev)
     # fixpoint over max-severity propagation (DAG-safe; bounded by rank domain)
     changed = True
     while changed:
         changed = False
-        for e in entries:
-            t = e["theorem"]
+        for t in targets:
             th = health.get(t)
             if th is None:
                 continue
@@ -190,6 +207,36 @@ def derive_severities(
                         sev[dep] = sev[t]
                         changed = True
     return sev
+
+
+def _dependent_push(
+    health: dict[str, TheoremHealth], sev: dict[str, str]
+) -> dict[str, str]:
+    """B3, per-entry form: severity pushed onto each theorem from its
+    *dependents only* — the max derived severity among target theorems whose
+    proofs reference it. Unlike `derive_severities`' combined map, this
+    excludes the theorem's own seed, so a checklist entry's calibrated
+    severity is never raised by a sibling property of the same theorem."""
+    push: dict[str, str] = {}
+    for t, s in sev.items():
+        th = health.get(t)
+        if th is None:
+            continue
+        for dep in th.proof_constants:
+            if dep in sev and dep != t:
+                if _SEVERITY_RANK.get(s, 0) > _SEVERITY_RANK.get(push.get(dep, ""), -1):
+                    push[dep] = s
+    return push
+
+
+def _effective_severity(entry: dict[str, Any], push: dict[str, str]) -> str:
+    """The severity a property is emitted with: the entry's own calibration,
+    raised (never lowered) by severity pushed from dependent theorems."""
+    own = str(entry["severity"]).upper()
+    pushed = push.get(entry["theorem"])
+    if pushed and _SEVERITY_RANK.get(pushed, 0) > _SEVERITY_RANK.get(own, 0):
+        return pushed
+    return own
 
 
 def _type_consistency(hyp: dict[str, Any], th: TheoremHealth) -> str:
@@ -258,8 +305,11 @@ def build_property(
 
     # B2 (no-precondition shape): a theorem with an enriched statement but no
     # must-establish hypothesis guarantees its conclusion unconditionally.
+    # Verbatim (stage-2 checklist) entries keep their hand-written assertion:
+    # it is an implementation invariant, not a restatement of the theorem.
     assertion = entry["assertion"]
-    if th.statement and not th.must_establish and th.conclusion:
+    if entry.get("lowering") != "verbatim" \
+            and th.statement and not th.must_establish and th.conclusion:
         assertion = (
             f"{_short(theorem)} guarantees [{_cap(th.conclusion)}] with no "
             f"must-establish preconditions; audit context: {entry['assertion']}"
@@ -334,8 +384,14 @@ def lower_entry(
     One property per must-establish hypothesis; the base 1:1 property when the
     theorem has none (or health is unenriched). The theorem-level property is
     never emitted alongside its decomposition (no lemma/theorem double-count).
+
+    `"lowering": "verbatim"` entries (stage-2 checklist) always lower 1:1: the
+    hand-written invariant is the property; the must-establish decomposition
+    describes the theorem's Lean statement, not the audit item.
     """
     base = build_property(entry, health, scope, subgraphs, gasper_source, gasper_ref, severity)
+    if entry.get("lowering") == "verbatim":
+        return [base]
     th = health_for(health, entry["theorem"])
     mes = th.must_establish
     if not th.statement or not mes:
@@ -374,11 +430,11 @@ def build_properties(
     source = theorem_map.get("gasper_source", "NyxFoundation/gasper-lean4")
     ref = gasper_ref or theorem_map.get("gasper_ref", "main")
     entries = theorem_map.get("properties", [])
-    severities = derive_severities(entries, health)
+    push = _dependent_push(health, derive_severities(entries, health))
     props: list[dict[str, Any]] = []
     for entry in entries:
         for prop in lower_entry(entry, health, scope, subgraphs, source, ref,
-                                severities.get(entry["theorem"])):
+                                _effective_severity(entry, push)):
             props.append(prop.to_dict())
     return props
 
@@ -404,11 +460,11 @@ def build_properties_by_shard(
     source = theorem_map.get("gasper_source", "NyxFoundation/gasper-lean4")
     ref = gasper_ref or theorem_map.get("gasper_ref", "main")
     entries = theorem_map.get("properties", [])
-    severities = derive_severities(entries, health)
+    push = _dependent_push(health, derive_severities(entries, health))
     groups: dict[str, list[dict[str, Any]]] = {}
     for entry in entries:
         shard = str(entry.get("shard", _DEFAULT_SHARD))
         for prop in lower_entry(entry, health, scope, subgraphs, source, ref,
-                                severities.get(entry["theorem"])):
+                                _effective_severity(entry, push)):
             groups.setdefault(shard, []).append(prop.to_dict())
     return groups

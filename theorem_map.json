@@ -1,8 +1,8 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "gasper_source": "NyxFoundation/gasper-lean4",
   "gasper_ref": "main",
-  "note": "Core-centric theorem -> 01e-property mapping (Stage C). Per the gasper-lean4 maintainer (fab/banri): ~70-80% of the proved substance lives in GasperBeaconChain.Core.* (Theories + Lemmas), NOT the thin, still-growing Executable application layer. So the primary targets are the Core Theories/Lemmas (top-level accountable safety k_safety', the slashable bound, plausible liveness, and the justification/quorum lemmas). The Executable.* entries are retained but reframed as the DECIDABLE/COMPUTABLE Bool-checker versions of the corresponding Core theorem -- that is their real role. NOTE on names: every Core declaration lives in the flat `GasperBeaconChain.Core` namespace regardless of its source subdirectory (Theories/ and Lemmas/ are file paths, not namespace segments), so the fully-qualified `theorem` is `GasperBeaconChain.Core.<name>`; the source path is recorded in x_layer. Fields prefixed x_ are documentation (incl. x_stride, the STRIDE class fab requested) and are NOT emitted; the emitted `type` follows the benchmark vocabulary (invariant). `shard` groups properties into coherent protocol-area subsets for `emit-01e --out-dir`, which writes one 01e_PARTIAL_<shard>.json per shard so per-file property count matches the benchmark granularity (bench 11.62 +/- 3.72 props/file). Since the B1 must-establish decomposition (issue #4) each theorem lowers to N properties (one per must-establish precondition of its Lean statement; 1:1 when it has none), so the shard partition was re-tuned into six protocol-area groups sized for the decomposed counts (fixture-calibrated: safety-accountable 9, safety-cases 10, safety-bound-witness 8, finality-justification 10, finality-quorum 8, finality-liveness 9 -- all within the 1-sigma band; real CI counts may shift and the shards are re-tunable here without touching Lean or Python). `shard` is a grouping key only and is NOT emitted into properties. This file is the TUNING OVERLAY: severity calibration, covers hints, scope/reachability, labels, shards. Statement, hypotheses, must-establish decomposition, conclusion, and proof provenance now come from the Lean exporter, not from this file.",
+  "note": "Core-centric theorem -> 01e-property mapping (Stage C). Per the gasper-lean4 maintainer (fab/banri): ~70-80% of the proved substance lives in GasperBeaconChain.Core.* (Theories + Lemmas), NOT the thin, still-growing Executable application layer. So the primary targets are the Core Theories/Lemmas (top-level accountable safety k_safety', the slashable bound, plausible liveness, and the justification/quorum lemmas). The Executable.* entries are retained but reframed as the DECIDABLE/COMPUTABLE Bool-checker versions of the corresponding Core theorem -- that is their real role. NOTE on names: every Core declaration lives in the flat `GasperBeaconChain.Core` namespace regardless of its source subdirectory (Theories/ and Lemmas/ are file paths, not namespace segments), so the fully-qualified `theorem` is `GasperBeaconChain.Core.<name>`; the source path is recorded in x_layer. Fields prefixed x_ are documentation (incl. x_stride, the STRIDE class fab requested) and are NOT emitted; the emitted `type` follows the benchmark vocabulary (invariant). `shard` groups properties into coherent protocol-area subsets for `emit-01e --out-dir`, which writes one 01e_PARTIAL_<shard>.json per shard so per-file property count matches the benchmark granularity (bench 11.62 +/- 3.72 props/file). Since the B1 must-establish decomposition (issue #4) each theorem lowers to N properties (one per must-establish precondition of its Lean statement; 1:1 when it has none), so the shard partition was re-tuned into six protocol-area groups sized for the decomposed counts (fixture-calibrated: safety-accountable 9, safety-cases 10, safety-bound-witness 8, finality-justification 10, finality-quorum 8, finality-liveness 9 -- all within the 1-sigma band; real CI counts may shift and the shards are re-tunable here without touching Lean or Python). `shard` is a grouping key only and is NOT emitted into properties. This file is the TUNING OVERLAY: severity calibration, covers hints, scope/reachability, labels, shards. Statement, hypotheses, must-establish decomposition, conclusion, and proof provenance now come from the Lean exporter, not from this file. STAGE-2 CHECKLIST OVERLAY (speca#88 stage 2, docs/high-angle-checklist.md): the CHK-* entries are LLM-synthesized implementation invariants that descend from the same proved theorems but target the arithmetic/type-width/bounds/termination/resource failure surface documented by real client bugs in ethereum-vuln-dataset (cited per entry in x_dataset_evidence). They carry lowering='verbatim': emitted 1:1 with the hand-written text/assertion, never decomposed per must-establish hypothesis (the decomposition describes the theorem's statement, not these audit items). A theorem may therefore back several properties; theorem-name uniqueness holds among the non-checklist entries only. All CHK-* entries live in the checklist-high-angle shard (15 props, within the benchmark 1-sigma band).",
   "properties": [
     {
       "property_id": "PROP-lean-safety-core-001",
@@ -664,6 +664,450 @@
       "x_exploitability_note": "Decidable form of the two-thirds-honest hypothesis that plausible liveness needs. Liveness; out of safety scope.",
       "liveness_only": true,
       "shard": "finality-quorum"
+    },
+    {
+      "property_id": "CHK-AS-01",
+      "theorem": "GasperBeaconChain.Core.k_safety'",
+      "label": "fork-choice",
+      "x_layer": "Core/Theories/AccountableSafety.lean",
+      "x_stride": "Tampering",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Fork-choice head selection must not depend on attestation arrival timing relative to slot boundaries beyond spec-defined slot and epoch eligibility",
+      "type": "invariant",
+      "assertion": "att in fc_weight(st) -> eligible(att.slot, att.epoch, st) and not depends_on(wallclock_arrival(att))",
+      "severity": "HIGH",
+      "covers_hint": [
+        "on_attestation",
+        "fork choice",
+        "attestation timing",
+        "proposer boost",
+        "get_head"
+      ],
+      "bug_bounty_area": "consensus/fork-choice",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lighthouse LMD-GHOST fork-choice attestation-timing attack (consensus-specs#2101 / ISSUE#1773)",
+      "x_exploitability_note": "If arrival timing can steer fork-choice toward a second justifiable head, the two-conflicting-checkpoints antecedent of k_safety' becomes reachable without the quorum intersection being attributable. Audit: is fork-choice weight eligibility gated only by slot/epoch validity, or also by wall-clock arrival?",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-AS-02",
+      "theorem": "GasperBeaconChain.Core.k_safety'",
+      "label": "beacon-chain:attestation",
+      "x_layer": "Core/Theories/AccountableSafety.lean",
+      "x_stride": "Spoofing",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Every attestation entering fork-choice weight must have passed BLS signature verification, and a verification failure must reject the attestation, never default-accept",
+      "type": "invariant",
+      "assertion": "att in fc_weight(st) -> bls_verify(att) = ok; verify_error(att) -> rejected(att)",
+      "severity": "CRITICAL",
+      "covers_hint": [
+        "process_attestation",
+        "signature verification",
+        "bls",
+        "attestation validation"
+      ],
+      "bug_bounty_area": "consensus/attestation",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: blst signature-verification bug reachable through network-supplied signed consensus data (Finalized #25)",
+      "x_exploitability_note": "A default-accept on a BLS library failure lets unverified network-supplied attestations carry fork-choice weight, voiding the attribution k_safety' guarantees. Audit: the error path of every verify call on the attestation ingest pipeline.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-AS-03",
+      "theorem": "GasperBeaconChain.Core.k_safety'",
+      "label": "fork-choice",
+      "x_layer": "Core/Theories/AccountableSafety.lean",
+      "x_stride": "DenialOfService",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Fork-choice block-tree and candidate-filter traversal must be bounded, with no per-block unbounded recursion reachable from network input",
+      "type": "invariant",
+      "assertion": "forall b: filter_block_tree(b) terminates in bounded steps and bounded stack depth",
+      "severity": "HIGH",
+      "covers_hint": [
+        "filter_block_tree",
+        "fork choice",
+        "recursion",
+        "block tree",
+        "get_head"
+      ],
+      "bug_bounty_area": "consensus/fork-choice",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lighthouse fork-choice block-tree filter recursion DoS",
+      "x_exploitability_note": "An attacker who can stall the fork-choice traversal stalls the node through the window in which the slashable intersection of k_safety' must be detected. Audit: recursion/iteration bounds on the candidate-filter walk.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-QW-01",
+      "theorem": "GasperBeaconChain.Core.slashable_bound",
+      "label": "beacon-chain:effective-balance-updates",
+      "x_layer": "Core/Theories/SlashableBound.lean",
+      "x_stride": "Tampering",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Every term in the two-thirds threshold and the slashable-weight bound must be computed in exact uint64 with explicit overflow and underflow handling",
+      "type": "invariant",
+      "assertion": "wt terms (attesting, effective, total_active, churn) computed in uint64 with checked over/underflow",
+      "severity": "HIGH",
+      "covers_hint": [
+        "process_effective_balance_updates",
+        "effective balance",
+        "attesting balance",
+        "overflow",
+        "deposit count"
+      ],
+      "bug_bounty_area": "consensus/finality",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lighthouse Eth1 deposit-count underflow during block processing (crafted deposit count); Electra effective/attesting-balance arithmetic class",
+      "x_exploitability_note": "A miscomputed weight makes the node disagree on whether the two-thirds threshold was met, so it justifies/finalizes on a different quorum than the spec, breaking the bookkeeping under slashable_bound. Audit: the balance-accumulation loops and the deposit-count delta.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-QW-02",
+      "theorem": "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+      "label": "beacon-chain:attestation",
+      "x_layer": "Core/Theories/SlashableBound.lean",
+      "x_stride": "Tampering",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Validator indices read from network messages must be bounds-checked against the active set before indexing balances or committees; out-of-range must reject the message, never wrap",
+      "type": "invariant",
+      "assertion": "att.validator_index >= len(active_set(st)) -> reject(att); index arithmetic never wraps",
+      "severity": "HIGH",
+      "covers_hint": [
+        "process_attestation",
+        "validator index",
+        "bounds check",
+        "committee",
+        "overflow"
+      ],
+      "bug_bounty_area": "consensus/attestation",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lighthouse attestation validator_index not capped before use (integer overflow)",
+      "x_exploitability_note": "An overflowing or wrapping index corrupts the per-validator weights that the quorum-intersection lower bound quantifies over. Audit: every network-read index on the balance/committee lookup path.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-QW-03",
+      "theorem": "GasperBeaconChain.Core.validator_intersection_lower_bound",
+      "label": "beacon-chain:registry-updates",
+      "x_layer": "Core/Theories/SlashableBound.lean",
+      "x_stride": "Tampering",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Per-epoch activation and exit churn accounting must match the spec churn-limit formula exactly, with no off-by-one or wrong cap",
+      "type": "invariant",
+      "assertion": "activations/exits per epoch bounded by get_validator_churn_limit(st) semantics exactly",
+      "severity": "MEDIUM",
+      "covers_hint": [
+        "process_registry_updates",
+        "churn",
+        "activation",
+        "exit",
+        "registry"
+      ],
+      "bug_bounty_area": "consensus/finality",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Electra activation/exit churn arithmetic (effective-balance / attesting-balance class)",
+      "x_exploitability_note": "The churn terms a (activations) and e (exits) appear literally in the validator-intersection lower bound; an off-by-one or wrong cap shifts the slashable-weight floor the theorem relies on.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-SL-01",
+      "theorem": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+      "label": "beacon-chain:slashing",
+      "x_layer": "Executable/Slashing.lean (decidable checker)",
+      "x_stride": "Repudiation",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "All attestation-data fields compared by the S1/S2 slashing checks must be exact uint64 or 32-byte roots end-to-end; values above 2^53 must be represented and compared exactly, never in a lossy numeric type",
+      "type": "invariant",
+      "assertion": "typeof(source_epoch, target_epoch, target_root, validator_index) exact uint64/bytes32 decode-to-compare",
+      "severity": "CRITICAL",
+      "covers_hint": [
+        "process_slashings",
+        "attester slashing",
+        "uint64",
+        "type width",
+        "decode"
+      ],
+      "bug_bounty_area": "consensus/slashing",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lodestar uint64 slashing values as JS number (CWE-190) — AttesterSlashing/ProposerSlashing above 2^53 accepted by some clients, rejected by others, consensus split (fixed v0.36.0)",
+      "x_exploitability_note": "A lossy numeric type silently fails to detect a slashing that slashed_double_vote_iff_bex says exists, and splits validity between clients. Audit: the type of every field on the attester/proposer-slashing path from decode to comparison.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-SL-02",
+      "theorem": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+      "label": "beacon-chain:slashing",
+      "x_layer": "Executable/Slashing.lean (decidable checker)",
+      "x_stride": "Repudiation",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "The double-vote check must flag exactly two distinct targets at the same target epoch, neither weakened to same-slot nor strengthened beyond the S1 iff",
+      "type": "invariant",
+      "assertion": "S1(a1,a2) <-> a1.target_epoch = a2.target_epoch and a1.target_root != a2.target_root",
+      "severity": "HIGH",
+      "covers_hint": [
+        "process_slashings",
+        "double vote",
+        "equivocation",
+        "is_slashable_attestation_data"
+      ],
+      "bug_bounty_area": "consensus/slashing",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lodestar slashing-value class (S1 comparison path)",
+      "x_exploitability_note": "The theorem's iff is precise: a weaker predicate misses real equivocations, a stronger one falsely slashes honest validators. Audit: the exact equality/inequality set used in the double-vote predicate.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-SL-03",
+      "theorem": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex",
+      "label": "beacon-chain:slashing",
+      "x_layer": "Executable/Slashing.lean (decidable checker)",
+      "x_stride": "Repudiation",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "The surround-vote check must implement strict containment of source-target spans in both directions; equal endpoints must not count as surround",
+      "type": "invariant",
+      "assertion": "surround(a1,a2) <-> a1.source < a2.source and a2.target < a1.target (strict inequalities)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "process_slashings",
+        "surround vote",
+        "is_slashable_attestation_data",
+        "boundary"
+      ],
+      "bug_bounty_area": "consensus/slashing",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lodestar slashing-value class (S2 comparison path, boundary conditions)",
+      "x_exploitability_note": "slashed_surround_vote_iff_bex is an iff over strict span containment; an equal-endpoint acceptance either misses surrounds or slashes honest validators. Audit: the boundary conditions of the surround predicate.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-SL-04",
+      "theorem": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex",
+      "label": "beacon-chain:slashing",
+      "x_layer": "Executable/Slashing.lean (decidable checker)",
+      "x_stride": "Tampering",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "The slashing-detection datastore must return owned or copied values, never references into a cursor buffer that a later delete can invalidate",
+      "type": "invariant",
+      "assertion": "slasher_db.read(k) returns owned value whose validity survives subsequent cursor deletes",
+      "severity": "HIGH",
+      "covers_hint": [
+        "process_slashings",
+        "slasher",
+        "database",
+        "cursor",
+        "memory safety"
+      ],
+      "bug_bounty_area": "consensus/slashing",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lighthouse slasher LMDB cursor-reuse memory corruption",
+      "x_exploitability_note": "The S1/S2 detection store itself: a corrupted read means a missed or fabricated slashing, so the decidable checker the theorem certifies no longer decides the ledger's real contents.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-JF-01",
+      "theorem": "GasperBeaconChain.Executable.justified_iff_bounded",
+      "label": "beacon-chain:justification-and-finality",
+      "x_layer": "Executable/Justification.lean (decidable checker)",
+      "x_stride": "Tampering",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Justification-status computation must terminate and must enforce the bounded supermajority-link height gap, with no unbounded recursion over checkpoint ancestry",
+      "type": "invariant",
+      "assertion": "justified(c) decided by a bounded ancestor walk with the height gap enforced exactly (no off-by-one)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "process_justification_and_finalization",
+        "supermajority link",
+        "ancestor",
+        "justification bits"
+      ],
+      "bug_bounty_area": "consensus/finality",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lighthouse Eth1 deposit / block-processing underflow class (justification bookkeeping)",
+      "x_exploitability_note": "justified_iff_bounded characterizes justification by a bounded chain of supermajority links; an off-by-one on the height gap lets a non-supermajority-linked checkpoint be treated as justified. Audit: the ancestor walk and the supermajority-link count.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-JF-02",
+      "theorem": "GasperBeaconChain.Core.finalized_means_justified_child",
+      "label": "beacon-chain:epoch-processing",
+      "x_layer": "Core/Lemmas/Justification.lean",
+      "x_stride": "DenialOfService",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Per-epoch processing of participation flags, justification bits and finality updates must complete within the slot budget under maximal churn",
+      "type": "invariant",
+      "assertion": "process_epoch(st) work bounded per validator; no step can stall past the slot budget at max churn",
+      "severity": "MEDIUM",
+      "covers_hint": [
+        "process_epoch",
+        "participation flags",
+        "sync committee",
+        "epoch processing"
+      ],
+      "bug_bounty_area": "consensus/finality",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Electra sync-committee / epoch-processing path could stall finality",
+      "x_exploitability_note": "A stalling epoch-processing step breaks the finalize-then-justify chain (finalized_means_justified_child) in practice even with an honest supermajority. Audit: unbounded per-validator work in epoch processing.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-JF-03",
+      "theorem": "GasperBeaconChain.Core.k_finalized_means_justified",
+      "label": "beacon-chain:justification-and-finality",
+      "x_layer": "Core/Lemmas/Justification.lean",
+      "x_stride": "Tampering",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Justification-bitfield, deposit-count and epoch arithmetic feeding checkpoint selection must not overflow or underflow",
+      "type": "invariant",
+      "assertion": "deposit_count/epoch/justification_bits arithmetic checked; a wrong count never shifts the justified checkpoint",
+      "severity": "HIGH",
+      "covers_hint": [
+        "process_justification_and_finalization",
+        "justification bits",
+        "deposit count",
+        "underflow"
+      ],
+      "bug_bounty_area": "consensus/finality",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lighthouse Eth1 deposit-count underflow during block processing (crafted deposit count)",
+      "x_exploitability_note": "k_finalized_means_justified pins finalization to justification; an under/overflowed count silently changes which checkpoint is justified, so the client finalizes something it never justified per spec.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-JF-04",
+      "theorem": "GasperBeaconChain.Executable.justified_iff_bounded",
+      "label": "p2p-interface",
+      "x_layer": "Executable/Justification.lean (decidable checker)",
+      "x_stride": "DenialOfService",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "The attestation reprocess queue feeding justification must evict entries deterministically, not only when the last queued attestation times out",
+      "type": "invariant",
+      "assertion": "reprocess_queue eviction deterministic and bounded; participation input cannot be starved",
+      "severity": "MEDIUM",
+      "covers_hint": [
+        "gossip",
+        "reprocess queue",
+        "attestation",
+        "eviction",
+        "memory"
+      ],
+      "bug_bounty_area": "consensus/p2p",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: Lighthouse attestation reprocess-queue memory leak / re-propagation loop",
+      "x_exploitability_note": "The queue is the participation input to the bounded justification chain; an attacker who starves it stalls justification while consuming memory. Audit: the eviction policy and cap of the reprocess queue.",
+      "liveness_only": false,
+      "shard": "checklist-high-angle"
+    },
+    {
+      "property_id": "CHK-LV-01",
+      "theorem": "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+      "label": "p2p-interface",
+      "x_layer": "Core/Theories/PlausibleLiveness.lean",
+      "x_stride": "DenialOfService",
+      "x_origin": "high-angle-checklist (stage-2, docs/high-angle-checklist.md)",
+      "lowering": "verbatim",
+      "text": "Every network-reachable resource (libp2p streams, queues, decompression output, per-block recursion) must have an explicit cap, since exhausting it stalls block production",
+      "type": "invariant",
+      "assertion": "forall network-facing allocation r: an explicit cap(r) is enforced before r grows",
+      "severity": "MEDIUM",
+      "covers_hint": [
+        "gossip",
+        "libp2p",
+        "decompression",
+        "resource cap",
+        "stream limit"
+      ],
+      "bug_bounty_area": "consensus/liveness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "x_dataset_evidence": "ethereum-vuln-dataset: consensus-layer DoS class — unbounded libp2p streams / OOM, decompression bombs, unbounded recursion",
+      "x_exploitability_note": "Plausible liveness assumes the chain keeps producing blocks; unbounded network-facing resources void that precondition. Out of bug-bounty safety scope, in scope for liveness.",
+      "liveness_only": true,
+      "shard": "checklist-high-angle"
     }
   ]
 }

@@ -23,6 +23,16 @@ into SPECA `01e` security properties.
 > `Executable.All`, runs the exporter end-to-end, and certifies every target
 > `lean_status: proved` (sorry-free, choice-free, native-free) from real
 > `collectAxioms` output.
+>
+> **Stage ② checklist overlay** (speca#88 stage 2): on top of the mechanical
+> lowering, `theorem_map.json` carries 15 `CHK-*` entries — LLM-synthesized
+> implementation invariants (first draft, under review) that descend from the
+> same proved theorems but target the arithmetic / type-width / bounds /
+> termination / resource failure surface documented by real client bugs in
+> [`ethereum-vuln-dataset`](https://github.com/NyxFoundation/ethereum-vuln-dataset)
+> (cited per entry). They lower `verbatim` (never decomposed per
+> must-establish hypothesis) into their own `checklist-high-angle` shard.
+> Design: [`docs/high-angle-checklist.md`](docs/high-angle-checklist.md).
 
 ## Why a plugin (not vendored into speca)
 

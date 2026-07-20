@@ -350,10 +350,24 @@ def test_b3_never_downgrades(theorem_map, health, scope):
 
 
 def test_b3_unenriched_health_keeps_map_severity(theorem_map, scope):
-    from speca_lean4.mapping import derive_severities
+    """No health -> no DAG edges: the derived per-theorem severity is exactly
+    the rank-max of that theorem's calibrated entries (a theorem may back
+    several stage-2 checklist entries), and every emitted property keeps its
+    own entry's calibrated severity untouched."""
+    from speca_lean4.mapping import derive_severities, _SEVERITY_RANK
     sev = derive_severities(theorem_map["properties"], {})
+    expected: dict[str, str] = {}
     for e in theorem_map["properties"]:
-        assert sev[e["theorem"]] == str(e["severity"]).upper()
+        t, s = e["theorem"], str(e["severity"]).upper()
+        if t not in expected or _SEVERITY_RANK[s] > _SEVERITY_RANK[expected[t]]:
+            expected[t] = s
+    assert sev == expected
+    # per-entry: without DAG edges nothing is pushed, so emitted == calibrated
+    props = build_properties(theorem_map, {}, scope)
+    map_sev = {e["property_id"]: str(e["severity"]).upper()
+               for e in theorem_map["properties"]}
+    for p in props:
+        assert p["severity"] == map_sev[p["property_id"]], p["property_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -389,7 +403,12 @@ def test_c5_spec_reference_derived_from_label(theorem_map, health, scope):
     for p in props:
         assert p.get("spec_reference"), f"{p['property_id']} missing spec_reference"
         assert p["spec_reference"].startswith("consensus-specs:specs/")
-        assert "#process_" in p["spec_reference"]
+        assert "#" in p["spec_reference"]
+        # beacon-chain:* labels anchor to a pyspec process_* symbol; the
+        # checklist's fork-choice / p2p-interface labels anchor to the
+        # fork-choice handlers / the p2p doc section (see test_anchors)
+        if str(p["label"]).startswith("beacon-chain:"):
+            assert "#process_" in p["spec_reference"], p["property_id"]
     s1 = next(p for p in props if p["property_id"].startswith("PROP-lean-slashing-001"))
     assert s1["spec_reference"] == "consensus-specs:specs/phase0/beacon-chain.md#process_slashings"
 
@@ -426,3 +445,77 @@ def test_b5_mismatch_is_flagged(theorem_map, scope):
     props = build_properties(theorem_map, doctored, scope)
     k = next(p for p in props if p["property_id"] == "PROP-lean-safety-core-001-me1")
     assert k["lean_type_consistency"] == "mismatch"
+
+
+# ---------------------------------------------------------------------------
+# Stage-2 checklist (speca#88 stage 2) — CHK-* verbatim overlay entries
+# ---------------------------------------------------------------------------
+
+def _chk_entries(theorem_map: dict) -> list[dict]:
+    return [e for e in theorem_map["properties"]
+            if e["property_id"].startswith("CHK-")]
+
+
+def test_chk_entries_present_and_verbatim(theorem_map):
+    chks = _chk_entries(theorem_map)
+    assert len(chks) == 15
+    for e in chks:
+        assert e.get("lowering") == "verbatim", e["property_id"]
+        assert e.get("x_dataset_evidence", "").strip(), e["property_id"]
+        assert e["shard"] == "checklist-high-angle"
+        # each descends from a theorem already in the non-checklist target set
+        base_theorems = {x["theorem"] for x in theorem_map["properties"]
+                         if not x["property_id"].startswith("CHK-")}
+        assert e["theorem"] in base_theorems, e["property_id"]
+
+
+def test_chk_lowered_verbatim_one_to_one(theorem_map, health, scope):
+    """A verbatim entry emits exactly one property carrying the hand-written
+    text/assertion — no -me decomposition, no B2 assertion rewrite — even
+    though its theorem is enriched (and may itself decompose elsewhere)."""
+    props = build_properties(theorem_map, health, scope)
+    by_id = {p["property_id"]: p for p in props}
+    for e in _chk_entries(theorem_map):
+        pid = e["property_id"]
+        assert pid in by_id, pid
+        assert not [p for p in props if p["property_id"].startswith(pid + "-me")]
+        p = by_id[pid]
+        assert p["text"] == e["text"]
+        assert p["assertion"] == e["assertion"]
+        assert "guarantees [" not in p["assertion"]
+        assert p["lean_status"] == "proved"  # descends from a proved theorem
+        assert p["label"] == e["label"]
+
+
+def test_chk_severity_is_own_calibration_not_sibling_max(theorem_map, health, scope):
+    """Sibling isolation: slashed_double_vote_iff_bex has no dependents in the
+    target set, so its checklist siblings keep their own calibration — SL-01
+    (CRITICAL) must not drag SL-02 (HIGH) up. B3 dependent-push still applies:
+    CHK-AS-03 (HIGH on k_safety') is raised to CRITICAL by the CRITICAL
+    witness theorem whose proof depends on k_safety' — dependent-driven,
+    never sibling-driven."""
+    props = build_properties(theorem_map, health, scope)
+    by_id = {p["property_id"]: p for p in props}
+    assert by_id["CHK-SL-01"]["severity"] == "CRITICAL"
+    assert by_id["CHK-SL-02"]["severity"] == "HIGH"      # sibling not raised
+    assert by_id["CHK-AS-03"]["severity"] == "CRITICAL"  # dependent push (B3)
+    assert by_id["CHK-LV-01"]["severity"] == "MEDIUM"    # no raise anywhere
+
+
+def test_chk_liveness_item_not_bug_bounty_eligible(theorem_map, health, scope):
+    props = build_properties(theorem_map, health, scope)
+    lv = next(p for p in props if p["property_id"] == "CHK-LV-01")
+    assert lv["bug_bounty_eligible"] is False
+    slh = next(p for p in props if p["property_id"] == "CHK-SL-01")
+    assert slh["bug_bounty_eligible"] is True
+    assert slh["reachability"]["attacker_controlled"] is True
+
+
+def test_chk_base_entries_unaffected(theorem_map, health, scope):
+    """Adding the checklist overlay must not change how the pre-existing
+    entries lower: k_safety' still decomposes to its 4 -me properties with
+    CRITICAL severity."""
+    props = build_properties(theorem_map, health, scope)
+    ks = _by_base(props, "PROP-lean-safety-core-001")
+    assert len(ks) == 4
+    assert all(p["severity"] == "CRITICAL" for p in ks)
