@@ -35,10 +35,16 @@ def test_emit_01e_end_to_end(tmp_path):
     for e in entries:
         base = e["property_id"]
         assert base in emitted or any(pid.startswith(base + "-me") for pid in emitted), base
+    # fixture marks every target proved; hand-written (verbatim) checklist
+    # entries surface that as descends-from-proved, never plain proved
+    verbatim = {e["property_id"] for e in entries
+                if e.get("lowering") == "verbatim"}
     for p in props:
         assert not validate_property(p), p["property_id"]
         assert "@deadbeef:" in p["lean_artifact"]
-        assert p["lean_status"] == "proved"  # fixture marks every target proved
+        expected = ("descends-from-proved"
+                    if p["property_id"].split("-me")[0] in verbatim else "proved")
+        assert p["lean_status"] == expected, p["property_id"]
         assert "label" in p, f"{p['property_id']} missing label"
 
 
@@ -100,4 +106,12 @@ def test_emit_01e_no_health_is_honest_unknown(tmp_path, capsys):
     ])
     assert rc == 0
     doc = json.loads(out.read_text(encoding="utf-8"))
-    assert all(p["lean_status"] == "unknown" for p in doc["properties"])
+    # nothing is claimed proved: mechanical entries are unknown, hand-written
+    # checklist entries descends-from-unknown (parent unresolved too)
+    verbatim = {e["property_id"]
+                for e in json.loads((_ROOT / "theorem_map.json").read_text(encoding="utf-8"))["properties"]
+                if e.get("lowering") == "verbatim"}
+    for p in doc["properties"]:
+        expected = ("descends-from-unknown"
+                    if p["property_id"] in verbatim else "unknown")
+        assert p["lean_status"] == expected, p["property_id"]

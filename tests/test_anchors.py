@@ -73,12 +73,16 @@ def test_every_theorem_map_label_is_anchored(anchor_map, theorem_map):
 
 
 def test_one_defs_row_per_theorem_map_entry(anchor_map, theorem_map):
-    by_def = {r["lean_def"]: r for r in anchor_map["defs"]}
-    assert len(by_def) == len(anchor_map["defs"]), "duplicate lean_def rows"
+    """Rows are keyed by property_id: since the stage-2 checklist (CHK-*), one
+    theorem may back several theorem_map entries, so lean_def is no longer a
+    unique key — but each entry still has exactly one defs row."""
+    by_pid = {r["property_id"]: r for r in anchor_map["defs"]}
+    assert len(by_pid) == len(anchor_map["defs"]), "duplicate property_id rows"
+    assert len(by_pid) == len(theorem_map["properties"]), "defs rows != entries"
     for e in theorem_map["properties"]:
-        row = by_def.get(e["theorem"])
-        assert row, f"no defs row for {e['theorem']}"
-        assert row["property_id"] == e["property_id"]
+        row = by_pid.get(e["property_id"])
+        assert row, f"no defs row for {e['property_id']}"
+        assert row["lean_def"] == e["theorem"]
         assert row["label"] == e["label"]
 
 
@@ -94,10 +98,19 @@ def test_defs_rows_are_internally_consistent(anchor_map):
 
 
 def test_spec_symbols_are_pyspec_section_names(anchor_map):
-    """Spec symbols come from the label vocabulary: pyspec process_* names."""
+    """Spec symbols come from the label vocabulary. beacon-chain:* labels use
+    pyspec process_* names; fork-choice uses its pyspec handler names (on_*,
+    get_head); the p2p-interface doc defines no pyspec functions, so its
+    symbol is the document's section anchor."""
     for label, row in anchor_map["labels"].items():
-        assert row["spec_symbol"].startswith("process_"), (label, row["spec_symbol"])
+        sym = row["spec_symbol"]
         assert row["spec_doc"].startswith("specs/"), (label, row["spec_doc"])
+        if label.startswith("beacon-chain:"):
+            assert sym.startswith("process_"), (label, sym)
+        elif label == "fork-choice":
+            assert sym.startswith(("on_", "get_")), (label, sym)
+        else:
+            assert sym and " " not in sym, (label, sym)
 
 
 def test_client_code_rows_are_honest(anchor_map):

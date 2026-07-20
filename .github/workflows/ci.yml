@@ -23,12 +23,18 @@ jobs:
           m = json.load(open('theorem_map.json'))
           tnames = [e['theorem'] for e in m['properties']]
           pids = [e['property_id'] for e in m['properties']]
-          assert len(tnames) == len(set(tnames)), 'duplicate theorem in theorem_map'
+          # a theorem may back several stage-2 checklist entries (lowering:
+          # verbatim); among the exporter-decomposed base entries it is unique
+          base = [e['theorem'] for e in m['properties'] if e.get('lowering') != 'verbatim']
+          assert len(base) == len(set(base)), 'duplicate theorem among base (non-checklist) entries'
+          chk = [e for e in m['properties'] if e.get('lowering') == 'verbatim']
+          assert all(e['theorem'] in set(base) for e in chk), 'checklist entry cites an unmapped theorem'
+          assert all(e.get('x_dataset_evidence', '').strip() for e in chk), 'checklist entry without dataset evidence'
           assert len(pids) == len(set(pids)), 'duplicate property_id in theorem_map'
           assert all(t.strip() for t in tnames), 'empty theorem name'
           assert all(p.strip() for p in pids), 'empty property_id'
           assert all(e.get('label', '').strip() for e in m['properties']), 'missing label'
-          print(f'OK: {len(tnames)} unique theorems, all with property_id and label')
+          print(f'OK: {len(set(tnames))} unique theorems across {len(pids)} entries ({len(chk)} checklist), all with property_id and label')
           "
       - name: honesty check — checker_map + evidence_seeds integrity (issue #7)
         run: |
@@ -114,7 +120,8 @@ jobs:
           python3 - <<'PY' > targets.txt
           import json
           m = json.load(open("../theorem_map.json"))
-          print("\n".join(e["theorem"] for e in m["properties"]))
+          # dedupe: several checklist entries may share one theorem
+          print("\n".join(dict.fromkeys(e["theorem"] for e in m["properties"])))
           PY
           lake exe speca-export --targets targets.txt > health.json
           python3 - <<'PY'

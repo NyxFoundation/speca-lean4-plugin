@@ -1,6 +1,6 @@
 """H1 (issue #10) — explicit honesty-invariant tests.
 
-The four invariants the plugin must never violate:
+The five invariants the plugin must never violate:
 
 1. a `sorry`-dependent theorem is `lean_status=unknown`, never `proved`;
 2. an unresolved target name is `unknown` on the Python side AND fails CI
@@ -8,7 +8,13 @@ The four invariants the plugin must never violate:
 3. the B3 proof-DAG severity propagation never downgrades or relabels a
    theorem_map severity;
 4. a type mismatch fails the type-consistency gate (the ci.yml end-to-end
-   step asserts zero `lean_type_consistency == "mismatch"`).
+   step asserts zero `lean_type_consistency == "mismatch"`);
+5. a hand-written (`lowering: "verbatim"`) checklist property never emits
+   `lean_status=proved` — its own text is not Lean-verified. It emits the
+   derived `descends-from-<parent status>` instead, which (a) never claims
+   the proof, (b) keeps the parent theorem's status readable, and (c) makes
+   verbatim vs mechanically-lowered decidable from the structured field
+   alone (the two value vocabularies are disjoint).
 """
 
 from __future__ import annotations
@@ -96,23 +102,45 @@ def test_unresolved_record_can_never_claim_proved():
 # 2. unresolved target -> unknown AND CI failure
 # ---------------------------------------------------------------------------
 
+def _verbatim_ids(theorem_map: dict) -> set[str]:
+    return {e["property_id"] for e in theorem_map["properties"]
+            if e.get("lowering") == "verbatim"}
+
+
 def test_unresolved_target_is_unknown_not_dropped(theorem_map, health, scope):
-    """Remove one target from health: its properties are still emitted, marked
-    unknown; every other property is untouched."""
+    """Remove one target from health: every property of that theorem (the base
+    entry AND the stage-2 checklist entries descending from it) is still
+    emitted, marked unknown (descends-from-unknown for the hand-written
+    checklist entries); every property of another theorem is untouched."""
     del health[_K_SAFETY]
     props = build_properties(theorem_map, health, scope)
     ks = _props_for(props, "PROP-lean-safety-core-001")
     assert len(ks) == 1  # unenriched -> 1:1 fallback, still present
     assert ks[0]["lean_status"] == "unknown"
-    others = [p for p in props if not p["property_id"].startswith("PROP-lean-safety-core-001")]
-    assert others and all(p["lean_status"] == "proved" for p in others)
+    k_bases = {e["property_id"] for e in theorem_map["properties"]
+               if e["theorem"] == _K_SAFETY}
+    assert len(k_bases) > 1  # base entry + CHK-AS-* checklist entries
+    verbatim = _verbatim_ids(theorem_map)
+    of_theorem = [p for p in props if p["property_id"].split("-me")[0] in k_bases]
+    others = [p for p in props if p["property_id"].split("-me")[0] not in k_bases]
+    assert of_theorem and others
+    for p in of_theorem:
+        expected = ("descends-from-unknown"
+                    if p["property_id"] in verbatim else "unknown")
+        assert p["lean_status"] == expected, p["property_id"]
+    for p in others:
+        expected = ("descends-from-proved"
+                    if p["property_id"] in verbatim else "proved")
+        assert p["lean_status"] == expected, p["property_id"]
 
 
 def test_unresolved_target_fails_the_ci_gate(theorem_map, health, scope):
     """The gate CI enforces (ci.yml lean job asserts every target resolved):
     `unresolved_targets` must name a missing/unresolved target, and the gate
     assertion must fail on it."""
-    targets = [e["theorem"] for e in theorem_map["properties"]]
+    # deduped, matching the ci.yml targets.txt generation (several checklist
+    # entries may share one theorem)
+    targets = list(dict.fromkeys(e["theorem"] for e in theorem_map["properties"]))
     assert unresolved_targets(health, targets) == []  # green on real health
 
     del health[_K_SAFETY]
@@ -212,3 +240,49 @@ def test_type_mismatch_fails_the_ci_gate(theorem_map, scope):
 def test_no_mismatch_on_real_health(theorem_map, health, scope):
     props = build_properties(theorem_map, health, scope)
     assert not [p for p in props if p.get("lean_type_consistency") == "mismatch"]
+
+
+# ---------------------------------------------------------------------------
+# 5. hand-written (verbatim) checklist properties never claim `proved`
+# ---------------------------------------------------------------------------
+
+def test_verbatim_never_claims_proved(theorem_map, health, scope):
+    """The regression this pins: a `lowering: "verbatim"` entry descends from
+    a proved theorem, but its hand-written text is NOT Lean-verified, so it
+    must never emit plain `lean_status=proved`. It emits the derived
+    `descends-from-proved` — and the direct/derived vocabularies are disjoint,
+    so verbatim vs mechanical is decidable from `lean_status` alone."""
+    from speca_lean4.schema import DESCENDED_LEAN_STATUSES, DIRECT_LEAN_STATUSES
+
+    assert not (DIRECT_LEAN_STATUSES & DESCENDED_LEAN_STATUSES)
+    verbatim = _verbatim_ids(theorem_map)
+    assert verbatim  # the stage-2 checklist is present
+    props = build_properties(theorem_map, health, scope)
+    for p in props:
+        if p["property_id"].split("-me")[0] in verbatim:
+            assert p["lean_status"] == "descends-from-proved", p["property_id"]
+            assert p["lean_status"] in DESCENDED_LEAN_STATUSES
+        else:
+            assert p["lean_status"] in DIRECT_LEAN_STATUSES, p["property_id"]
+
+
+def test_verbatim_descended_status_tracks_parent_never_upgrades(theorem_map, scope):
+    """The derived value must track the parent's REAL status: with the parent
+    theorem sorry-dependent (unknown), its checklist descendants must say
+    descends-from-unknown — a fabricated descends-from-proved would smuggle
+    the proof claim back in through the provenance value."""
+    doctored = {_K_SAFETY: TheoremHealth({
+        "name": _K_SAFETY,
+        "resolved": True, "lean_status": "unknown",
+        "sorry_free": False, "choice_free": True, "native_free": True,
+        "module": "GasperBeaconChain.Core.Theories.AccountableSafety",
+    })}
+    verbatim = _verbatim_ids(theorem_map)
+    k_chks = {e["property_id"] for e in theorem_map["properties"]
+              if e["theorem"] == _K_SAFETY and e["property_id"] in verbatim}
+    assert k_chks  # CHK-AS-* descend from k_safety'
+    props = build_properties(theorem_map, doctored, scope)
+    emitted = [p for p in props if p["property_id"] in k_chks]
+    assert len(emitted) == len(k_chks)
+    for p in emitted:
+        assert p["lean_status"] == "descends-from-unknown", p["property_id"]
