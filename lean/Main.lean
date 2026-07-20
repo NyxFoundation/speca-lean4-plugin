@@ -3,12 +3,16 @@ import SpecaExport.Basic
 /-!
 `speca-export` executable entry point.
 
-    lake exe speca-export --targets <file>
+    lake exe speca-export --targets <file> [--output <file>]
 
-`<file>` is a newline-delimited list of fully-qualified theorem names (blank
-lines and `#` comments ignored). Emits the proof-health JSON (see
-`SpecaExport.render`) to stdout. The Python driver (`src/speca_lean4/`) writes
-the targets file from `theorem_map.json`, runs this exe, and maps the health
+`--targets` is a newline-delimited list of fully-qualified theorem names
+(blank lines and `#` comments ignored). Emits the proof-health JSON (see
+`SpecaExport.render`) to the `--output` file, or to stdout when `--output` is
+omitted. Machine consumers must use `--output`: a cold `lake exe` interleaves
+toolchain-download / dependency-fetch / build progress into stdout before this
+executable runs, so stdout is a log channel, not a data channel (speca run
+29749878252). The Python driver (`src/speca_lean4/`) writes the targets file
+from `theorem_map.json`, runs this exe with `--output`, and maps the health
 records onto the `01e` property schema.
 
 The environment is loaded at runtime via `importModules` of both
@@ -100,13 +104,26 @@ def attachProofSource (h : SpecaExport.TheoremHealth) : IO SpecaExport.TheoremHe
   return { h with proofSource := src }
 
 def usage : String :=
-  "usage: speca-export --targets <file>\n" ++
-  "Emits proof-health JSON for the listed theorem names to stdout."
+  "usage: speca-export --targets <file> [--output <file>]\n" ++
+  "Emits proof-health JSON for the listed theorem names to --output\n" ++
+  "(default: stdout). Machine consumers must pass --output: a cold\n" ++
+  "`lake exe` prints toolchain/dependency/build progress to stdout before\n" ++
+  "this executable runs, so stdout is not a clean JSON channel."
+
+/-- Parse the CLI: `--targets <file>` with optional `--output <file>` (either
+order). Returns `(targetsPath, outputPath?)`; anything else prints usage and
+exits 2. -/
+def parseCli : List String → IO (System.FilePath × Option System.FilePath)
+  | ["--targets", p] =>
+      pure (System.FilePath.mk p, none)
+  | ["--targets", p, "--output", o] =>
+      pure (System.FilePath.mk p, some (System.FilePath.mk o))
+  | ["--output", o, "--targets", p] =>
+      pure (System.FilePath.mk p, some (System.FilePath.mk o))
+  | _ => do IO.eprintln usage; IO.Process.exit 2
 
 unsafe def main (args : List String) : IO Unit := do
-  let targetPath ← match args with
-    | ["--targets", p] => pure (System.FilePath.mk p)
-    | _ => do IO.eprintln usage; IO.Process.exit 2
+  let (targetPath, outputPath?) ← parseCli args
   let targets ← parseTargets targetPath
   initSearchPath (← findSysroot)
   enableInitializersExecution
@@ -123,4 +140,7 @@ unsafe def main (args : List String) : IO Unit := do
   let coreState : Core.State := { env := env }
   let (records, _) ← (SpecaExport.classifyAll env targets).toIO coreCtx coreState
   let records ← records.mapM attachProofSource
-  IO.println (SpecaExport.render records).compress
+  let out := (SpecaExport.render records).compress
+  match outputPath? with
+  | some path => IO.FS.writeFile path (out ++ "\n")
+  | none => IO.println out
