@@ -79,9 +79,13 @@ Output is exactly the `01e` property schema. Lean-specific data is **additive
 only**, never mutating a core field — per speca#88's contract: `lean_status`,
 `lean_artifact`, `kurtosis_test`, `label`, `lean_statement`,
 `lean_hypotheses`, `lean_must_establish`, `lean_referenced_defs`,
-`lean_axioms`, `lean_proof_provenance`, `lean_proof_code`,
-`lean_precondition`, `lean_conclusion`, `lean_type_consistency`,
-`lean_proof_source`, `spec_reference`.
+`lean_referenced_defs_expanded`, `lean_axioms`, `lean_proof_provenance`,
+`lean_proof_code`, `lean_precondition`, `lean_conclusion`,
+`lean_type_consistency`, `lean_proof_source`, `lean_doc_string`,
+`spec_reference`.
+
+The end-to-end execution flow and every artifact location are consolidated in
+[`docs/pipeline.md`](docs/pipeline.md).
 
 `label` follows the ethereum-vuln-dataset controlled vocabulary
 (consensus-specs section names, `docs/label_design.md`), and `spec_reference`
@@ -119,7 +123,9 @@ record carries:
 | `proof_provenance` | `"automated"` if the proof term references decision-procedure markers (`Decidable.decide`, `ofReduceBool/Nat`, `of_decide_eq_true`, `Aesop.*`, `Omega.*`), else `"hand-written"`; `"unknown"` if no value | A5 |
 | `proof_code` | pp of `ConstantInfo.value?` (`pp.proofs true`) | A7 fallback |
 | `proof_constants` | gasper-local `getUsedConstants` of the proof term — the proof-DAG edges | B3 feed |
-| `proof_source` | **verbatim declaration source** (term/tactic code + comments), sliced from the lake package checkout via `findDeclarationRanges?`; `""` if unavailable | A7 |
+| `proof_source` | **verbatim declaration source** (term/tactic code + comments), sliced from the lake package checkout via `findDeclarationRanges?`; since A7+ the slice is widened upward over the **contiguous leading comment block** (docstring + adjacent `--` comments), so the proof and its documentation travel as one pair; `""` if unavailable | A7 / A7+ (#17) |
+| `referenced_defs_expanded` | recursively pretty-printed **definitions** of the gasper-local constants the statement references — structure fields (projection signatures), inductive constructors, def signature+body — as `[{name, kind, pp}]`. Honestly bounded, with the caps stated in code (`lean/SpecaExport/Basic.lean`): breadth-first to **depth 2**, at most **24 definitions** per theorem, 4000-char pp cap with an explicit truncation marker, deduped; mathlib/Lean-core constants and compiler-generated auxiliaries are never expanded | A3+ (#16) |
+| `doc_string` | the declaration's docstring via `findDocString?`; `""` when the theorem has none — empty, never fabricated | A7+ (#17) |
 
 ### The depend-allowed vs must-establish heuristic (A2)
 
