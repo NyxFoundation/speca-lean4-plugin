@@ -62,21 +62,65 @@ def _load_subgraphs(patterns: list[str] | None) -> list[dict] | None:
     return out or None
 
 
+def _tail(text: str, n: int = 2000) -> str:
+    """Last `n` chars of a stream, for diagnosable error messages."""
+    if not text:
+        return "<empty>"
+    return ("..." if len(text) > n else "") + text[-n:]
+
+
 def _run_lean(theorem_map: dict[str, Any]) -> dict[str, Any]:
-    """Write the target list and invoke `lake exe speca-export`, returning parsed health."""
+    """Write the target list and invoke `lake exe speca-export`, returning parsed health.
+
+    The exporter writes its health JSON to a file (`--output`), NOT to stdout:
+    on a cold lake workspace, `lake exe` emits toolchain-download, dependency-
+    fetch and build progress on stdout before the executable even runs
+    (observed in speca run 29749878252, where the leading noise broke
+    `json.loads(proc.stdout)`). stdout/stderr are treated as log channels only
+    and are forwarded to stderr so CI logs keep the build evidence.
+    """
     targets = [e["theorem"] for e in theorem_map.get("properties", [])]
-    with tempfile.NamedTemporaryFile("w", suffix=".targets", delete=False, encoding="utf-8") as fh:
-        fh.write("\n".join(targets) + "\n")
-        targets_path = fh.name
-    proc = subprocess.run(
-        ["lake", "exe", "speca-export", "--targets", targets_path],
-        cwd=str(_LEAN_DIR), capture_output=True, text=True,
+    # mkdtemp (not auto-cleaned) on purpose: on failure the targets file and
+    # any partial output stay on disk for post-mortem.
+    workdir = Path(tempfile.mkdtemp(prefix="speca-lean4-run-"))
+    targets_path = workdir / "speca_export.targets"
+    targets_path.write_text("\n".join(targets) + "\n", encoding="utf-8")
+    out_path = workdir / "health.json"
+    cmd = [
+        "lake", "exe", "speca-export",
+        "--targets", str(targets_path),
+        "--output", str(out_path),
+    ]
+    proc = subprocess.run(cmd, cwd=str(_LEAN_DIR), capture_output=True, text=True)
+    # Forward build/toolchain noise so it is never silently discarded.
+    if proc.stdout:
+        print(proc.stdout, file=sys.stderr, end="")
+    if proc.stderr:
+        print(proc.stderr, file=sys.stderr, end="")
+    diagnostics = (
+        f"--- stdout (tail) ---\n{_tail(proc.stdout)}\n"
+        f"--- stderr (tail) ---\n{_tail(proc.stderr)}"
     )
     if proc.returncode != 0:
         raise RuntimeError(
-            f"lake exe speca-export failed (rc={proc.returncode}):\n{proc.stderr}"
+            f"`{' '.join(cmd)}` (cwd={_LEAN_DIR}) failed (rc={proc.returncode})\n"
+            f"{diagnostics}"
         )
-    return json.loads(proc.stdout)
+    if not out_path.is_file():
+        raise RuntimeError(
+            f"`{' '.join(cmd)}` returned rc=0 but wrote no {out_path} — the "
+            "lake invocation succeeded without running the exporter (or the "
+            "exporter predates --output support)\n" + diagnostics
+        )
+    health_text = out_path.read_text(encoding="utf-8")
+    try:
+        return json.loads(health_text)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"{out_path} (from `{' '.join(cmd)}`) is not valid JSON: {exc}\n"
+            f"--- {out_path.name} (head) ---\n{health_text[:2000] or '<empty>'}\n"
+            f"{diagnostics}"
+        ) from exc
 
 
 def cmd_emit_01e(args: argparse.Namespace) -> int:
