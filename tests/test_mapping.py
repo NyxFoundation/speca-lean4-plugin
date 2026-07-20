@@ -43,18 +43,35 @@ def test_property_ids_unique(theorem_map, health, scope):
     assert len(ids) == len(set(ids))
 
 
+def _verbatim_ids(theorem_map: dict) -> set[str]:
+    return {e["property_id"] for e in theorem_map["properties"]
+            if e.get("lowering") == "verbatim"}
+
+
 def test_lean_status_copied_from_health(theorem_map, health, scope):
+    """Mechanically lowered properties carry the exporter's status verbatim;
+    hand-written (verbatim) checklist entries carry the derived
+    descends-from-<status> instead — never the parent's plain status."""
+    verbatim = _verbatim_ids(theorem_map)
     props = build_properties(theorem_map, health, scope)
     for p in props:
-        assert p["lean_status"] == "proved"
+        if p["property_id"].split("-me")[0] in verbatim:
+            assert p["lean_status"] == "descends-from-proved", p["property_id"]
+        else:
+            assert p["lean_status"] == "proved", p["property_id"]
 
 
 def test_unresolved_theorem_is_unknown_not_dropped(theorem_map, scope):
     # empty health -> every entry must still appear (1:1, undecomposed), marked
-    # unknown (honest)
+    # unknown (honest); verbatim entries track the unresolved parent as
+    # descends-from-unknown, never descends-from-proved
+    verbatim = _verbatim_ids(theorem_map)
     props = build_properties(theorem_map, {}, scope)
     assert len(props) == len(theorem_map["properties"])
-    assert all(p["lean_status"] == "unknown" for p in props)
+    for p in props:
+        expected = ("descends-from-unknown"
+                    if p["property_id"] in verbatim else "unknown")
+        assert p["lean_status"] == expected, p["property_id"]
 
 
 def _by_base(props: list[dict], base_id: str) -> list[dict]:
@@ -472,7 +489,10 @@ def test_chk_entries_present_and_verbatim(theorem_map):
 def test_chk_lowered_verbatim_one_to_one(theorem_map, health, scope):
     """A verbatim entry emits exactly one property carrying the hand-written
     text/assertion — no -me decomposition, no B2 assertion rewrite — even
-    though its theorem is enriched (and may itself decompose elsewhere)."""
+    though its theorem is enriched (and may itself decompose elsewhere).
+    Its lean_status is the derived descends-from-proved: the parent theorem's
+    proved status stays readable, but the hand-written text never claims plain
+    `proved` (it is not Lean-verified — honesty invariant 5)."""
     props = build_properties(theorem_map, health, scope)
     by_id = {p["property_id"]: p for p in props}
     for e in _chk_entries(theorem_map):
@@ -483,7 +503,10 @@ def test_chk_lowered_verbatim_one_to_one(theorem_map, health, scope):
         assert p["text"] == e["text"]
         assert p["assertion"] == e["assertion"]
         assert "guarantees [" not in p["assertion"]
-        assert p["lean_status"] == "proved"  # descends from a proved theorem
+        # descends from a proved theorem, but is itself hand-written: the
+        # derived status keeps the provenance without claiming the proof
+        assert p["lean_status"] == "descends-from-proved"
+        assert p["lean_status"] != "proved"
         assert p["label"] == e["label"]
 
 

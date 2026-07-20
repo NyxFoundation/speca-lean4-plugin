@@ -36,7 +36,16 @@ CLASSIFICATIONS = {"external-reachable", "internal"}
 EXPLOITABILITIES = {"external-attack", "local-attack"}
 SCOPE_VALUES = {"in-scope", "out-of-scope", "conditional"}
 ENTRY_POINTS = {"CallbackHandler", "FunctionCall", "ProgramEntry", "Initialization"}
-LEAN_STATUSES = {"proved", "unknown", "counterexample"}
+# Direct statuses come from the Lean exporter for mechanically lowered
+# properties. A hand-written (`lowering: "verbatim"`) stage-2 checklist
+# property never claims a proof status of its own text: it emits the derived
+# `descends-from-<parent status>` instead (honesty invariant 5,
+# tests/test_honesty.py) — the parent theorem's status stays readable, the
+# unverified text never says plain "proved". The two vocabularies are
+# disjoint, so verbatim vs mechanical is decidable from `lean_status` alone.
+DIRECT_LEAN_STATUSES = {"proved", "unknown", "counterexample"}
+DESCENDED_LEAN_STATUSES = {f"descends-from-{s}" for s in DIRECT_LEAN_STATUSES}
+LEAN_STATUSES = DIRECT_LEAN_STATUSES | DESCENDED_LEAN_STATUSES
 PROOF_PROVENANCES = {"automated", "hand-written", "unknown"}
 TYPE_CONSISTENCY = {"ok", "mismatch", "unchecked"}
 

@@ -6,7 +6,12 @@ below are LLM-synthesized: the coordinating session wrote them by folding the
 They are not mechanically derived from Lean and carry no proof-level guarantee
 of their own — each *descends from* a proved theorem (recorded per item and in
 `theorem_map.json` as `lowering: "verbatim"` entries) and is anchored to a real
-client bug from the dataset (`x_dataset_evidence`).
+client bug from the dataset (`x_dataset_evidence`). This distinction is
+structural, not just prose: a CHK-* property emits
+`lean_status: descends-from-proved` (in general `descends-from-<parent
+status>`), never plain `proved` — downstream consumers can tell a Lean-verified
+mechanical lowering from a hand-written checklist item by the structured field
+alone.
 
 How this is built: **Lean gives the invariant that must hold; the dataset gives
 how real clients actually broke that class; the checklist item is the
@@ -195,6 +200,12 @@ Each CHK-* item is a `theorem_map.json` entry with:
   never decomposed per must-establish hypothesis (the decomposition describes
   the theorem's statement, not the audit item) and never rewritten into the B2
   shape;
+- `lean_status` = `descends-from-<parent status>` (normally
+  `descends-from-proved`; `descends-from-unknown` if the parent is
+  unresolved) — the hand-written text is not Lean-verified, so it never
+  claims plain `proved`; the parent theorem's status stays readable in the
+  same passthrough-surviving field (honesty invariant 5,
+  `tests/test_honesty.py`);
 - `label` / `covers` = the consensus-specs area from the dataset label
   vocabulary (`docs/label_design.md`), anchored in `data/anchor_map.json`;
 - `severity` = the cited bug's real impact, per entry (a sibling property of

@@ -31,8 +31,10 @@ into SPECA `01e` security properties.
 > termination / resource failure surface documented by real client bugs in
 > [`ethereum-vuln-dataset`](https://github.com/NyxFoundation/ethereum-vuln-dataset)
 > (cited per entry). They lower `verbatim` (never decomposed per
-> must-establish hypothesis) into their own `checklist-high-angle` shard.
-> Design: [`docs/high-angle-checklist.md`](docs/high-angle-checklist.md).
+> must-establish hypothesis) into their own `checklist-high-angle` shard, and
+> emit `lean_status: descends-from-proved` — never plain `proved`: the
+> hand-written text is not Lean-verified, only the theorem it descends from
+> is. Design: [`docs/high-angle-checklist.md`](docs/high-angle-checklist.md).
 
 ## Why a plugin (not vendored into speca)
 

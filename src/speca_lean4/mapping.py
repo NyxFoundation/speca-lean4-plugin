@@ -38,7 +38,11 @@ implementation invariants *descending from* a theorem, not restatements of its
 Lean statement, so decomposing them per must-establish hypothesis (or rewriting
 their assertion into the B2 shape) would misattribute the audit content. They
 emit exactly one property with the hand-written text/assertion; the lean_*
-enrichment fields still attach. Since one theorem may back several such
+enrichment fields still attach — except `lean_status`, which is derived as
+`descends-from-<parent status>` (e.g. `descends-from-proved`): the hand-written
+text itself is not Lean-verified, so it never claims plain `proved` (honesty
+invariant 5, tests/test_honesty.py), while the parent theorem's status stays
+readable from the structured field alone. Since one theorem may back several such
 entries, B3 severity is applied per entry: an entry keeps its own calibrated
 severity, raised only by severity pushed from *dependent* theorems in the
 proof DAG — never by a sibling property of the same theorem.
@@ -273,6 +277,15 @@ def build_property(
     decomposition; on unenriched health it is also the emitted fallback."""
     theorem = entry["theorem"]
     lean_status, module = status_for(health, theorem)
+    # Verbatim (stage-2 checklist) entries are hand-written text descending
+    # from the theorem, not the theorem's Lean statement: their own text is
+    # never Lean-verified, so they must not inherit `proved` (honesty
+    # invariant 5). The parent's status is preserved inside the derived value
+    # (`descends-from-proved` / `descends-from-unknown` / ...), never dropped
+    # — and never upgraded: an unresolved parent yields
+    # `descends-from-unknown`, not `descends-from-proved`.
+    if entry.get("lowering") == "verbatim":
+        lean_status = f"descends-from-{lean_status}"
 
     th = health_for(health, theorem)
     lean_statement = None
