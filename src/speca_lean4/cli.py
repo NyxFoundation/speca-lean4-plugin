@@ -303,7 +303,7 @@ def cmd_verify_recall(args: argparse.Namespace) -> int:
     return 0
 
 
-def _make_llm(cmd: str | None, what: str):
+def _make_llm(cmd: str | None, what: str, timeout: int = 600):
     from .judge import split_cmd, subprocess_llm
 
     if not cmd:
@@ -315,7 +315,7 @@ def _make_llm(cmd: str | None, what: str):
             file=sys.stderr,
         )
         return None
-    return subprocess_llm(split_cmd(cmd))
+    return subprocess_llm(split_cmd(cmd), timeout)
 
 
 def _reference_distribution(args: argparse.Namespace, judge_fn) -> tuple[dict, list, str]:
@@ -341,7 +341,7 @@ def cmd_judge(args: argparse.Namespace) -> int:
         meets_reference_bar, score_distribution,
     )
 
-    judge_fn = _make_llm(args.llm_cmd, "judge")
+    judge_fn = _make_llm(args.llm_cmd, "judge", args.llm_timeout)
     if judge_fn is None:
         return 2
     ours_items = checklist_items_from_01e(_load_json(args.ours), args.id_prefix)
@@ -384,10 +384,13 @@ def cmd_improve(args: argparse.Namespace) -> int:
         load_vulns,
     )
 
-    judge_fn = _make_llm(args.llm_cmd, "improve")
+    judge_fn = _make_llm(args.llm_cmd, "improve", args.llm_timeout)
     if judge_fn is None:
         return 2
-    improve_fn = _make_llm(args.improve_cmd, "improve") if args.improve_cmd else judge_fn
+    improve_fn = (
+        _make_llm(args.improve_cmd, "improve", args.llm_timeout)
+        if args.improve_cmd else judge_fn
+    )
 
     doc = _load_json(args.ours)
     all_props = list(doc.get("properties", []))
@@ -600,6 +603,11 @@ def _add_judge_common_args(sp: argparse.ArgumentParser) -> None:
     sp.add_argument(
         "--retry-wait", type=float, default=5.0,
         help="seconds between attempts, letting rate-limit blips pass (default 5)",
+    )
+    sp.add_argument(
+        "--llm-timeout", type=int, default=600,
+        help="per-call adapter timeout in seconds; a hung adapter process is "
+             "killed and the call retried like any transient failure (default 600)",
     )
 
 

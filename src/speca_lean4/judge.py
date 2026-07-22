@@ -546,10 +546,17 @@ def subprocess_llm(cmd: list[str], timeout: int = 600) -> LLMFn:
     already authenticated. No API key is read or forwarded here.
     """
     def call(prompt: str) -> str:
-        proc = subprocess.run(
-            cmd, input=prompt, capture_output=True, text=True,
-            encoding="utf-8", timeout=timeout,
-        )
+        try:
+            proc = subprocess.run(
+                cmd, input=prompt, capture_output=True, text=True,
+                encoding="utf-8", timeout=timeout,
+            )
+        except subprocess.TimeoutExpired as exc:
+            # surface as JudgeError so judge_item's retries cover a hung
+            # adapter process the same as a non-zero exit
+            raise JudgeError(
+                f"llm command {' '.join(cmd)!r} hit the {timeout}s timeout"
+            ) from exc
         if proc.returncode != 0:
             raise JudgeError(
                 f"llm command {' '.join(cmd)!r} failed (rc={proc.returncode}); "

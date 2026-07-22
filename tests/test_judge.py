@@ -451,6 +451,15 @@ def _mock_cmd() -> str:
     return f'"{sys.executable}" "{_FIX / "mock_llm.py"}"'
 
 
+def test_subprocess_llm_timeout_is_a_retryable_judge_error():
+    from speca_lean4.judge import subprocess_llm
+
+    fn = subprocess_llm([sys.executable, "-c", "import time; time.sleep(30)"],
+                        timeout=1)
+    with pytest.raises(JudgeError, match="timeout"):
+        fn("prompt")
+
+
 def test_split_cmd():
     parts = split_cmd(_mock_cmd())
     assert parts[0] == sys.executable
