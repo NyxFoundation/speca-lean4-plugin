@@ -272,7 +272,9 @@ def test_select_evidence_label_match_then_fallback():
     # label with no rows: falls back to Critical/High rows of any label
     ev = select_evidence("fork-choice", vulns, n=3)
     assert [e["id"] for e in ev] == ["V1", "V2", "V3"]
-    assert set(ev[0]) == {"id", "severity", "title", "label", "root_cause", "attack_path"}
+    # class-level fields only; concrete-incident fields (title/attack_path) are
+    # deliberately dropped so the improve prompt cannot read as offensive (#143)
+    assert set(ev[0]) == {"id", "severity", "label", "root_cause"}
 
 
 def test_evidence_selection_is_deterministic_on_real_data():
@@ -290,7 +292,11 @@ def test_improve_prompt_carries_item_critique_and_evidence():
     prompt = build_improve_prompt(_PROP, scored, ev)
     assert _PROP["text"] in prompt and _PROP["assertion"] in prompt   # (a) the item
     assert "too abstract" in prompt                                   # (b) the critique
-    assert "V1" in prompt and "u64 as float" in prompt                # (c) dataset rows
+    # (c) dataset rows are present as failure CLASS (id + severity + root_cause),
+    # NOT as concrete incident: the exploit title and attack_path must NOT leak
+    # into the prompt (the cyber-safeguard trigger fixed in #143).
+    assert "V1" in prompt and "integer_overflow_underflow" in prompt
+    assert "u64 as float" not in prompt and "malicious_block" not in prompt
     assert "NEVER name a specific client" in prompt
 
 
