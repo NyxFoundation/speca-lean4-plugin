@@ -303,6 +303,145 @@ def cmd_verify_recall(args: argparse.Namespace) -> int:
     return 0
 
 
+def _make_llm(cmd: str | None, what: str, timeout: int = 600):
+    from .judge import split_cmd, subprocess_llm
+
+    if not cmd:
+        print(
+            f"error: {what} needs an LLM. Pass --llm-cmd (a command reading the "
+            "prompt on stdin, writing the response on stdout — e.g. 'claude -p' "
+            "on a runner where the Claude CLI is authenticated). This repo "
+            "never reads an API key itself.",
+            file=sys.stderr,
+        )
+        return None
+    return subprocess_llm(split_cmd(cmd), timeout)
+
+
+def _reference_distribution(args: argparse.Namespace, judge_fn) -> tuple[dict, list, str]:
+    """Reference bar: reuse a previous report's reference scores when
+    --ref-report is given (saves ~52 LLM calls), else judge the vendored
+    solodit corpus now with the same blind rubric."""
+    from .judge import checklist_items_from_solodit, judge_items, score_distribution
+
+    if args.ref_report:
+        prev = _load_json(args.ref_report)
+        return prev["reference"], prev["reference_items"], prev["reference_source"]
+    items = checklist_items_from_solodit(args.reference)
+    scored = judge_items(items, judge_fn, args.retries, args.retry_wait)
+    return score_distribution(scored), scored, str(args.reference)
+
+
+def cmd_judge(args: argparse.Namespace) -> int:
+    """Quality judge (speca#88 stage-2 eval). NOT recall: the verdict compares
+    blind five-axis score DISTRIBUTIONS against the solodit reference bar;
+    content matching enters nowhere."""
+    from .judge import (
+        checklist_items_from_01e, format_judge_summary, judge_items,
+        meets_reference_bar, score_distribution,
+    )
+
+    judge_fn = _make_llm(args.llm_cmd, "judge", args.llm_timeout)
+    if judge_fn is None:
+        return 2
+    ours_items = checklist_items_from_01e(_load_json(args.ours), args.id_prefix)
+    if not ours_items:
+        print(f"error: no properties to judge in {args.ours} "
+              f"(id prefix: {args.id_prefix or 'none'})", file=sys.stderr)
+        return 2
+    ref_dist, ref_items, ref_source = _reference_distribution(args, judge_fn)
+    scored = judge_items(ours_items, judge_fn, args.retries, args.retry_wait)
+    ours_dist = score_distribution(scored)
+    meets, gaps = meets_reference_bar(ours_dist, ref_dist, args.axis_tolerance)
+    report = {
+        "reference_source": ref_source,
+        "reference": ref_dist,
+        "reference_items": ref_items,
+        "ours_source": str(args.ours),
+        "ours": ours_dist,
+        "items": scored,
+        "axis_tolerance": args.axis_tolerance,
+        "meets_reference_bar": meets,
+        "bar_gaps": gaps,
+    }
+    if args.out:
+        Path(args.out).write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+    print(format_judge_summary(report))
+    if args.strict and not meets:
+        print("judge --strict: below the reference bar", file=sys.stderr)
+        return 1
+    return 0
+
+
+def cmd_improve(args: argparse.Namespace) -> int:
+    """Improve loop (speca#88 stage-2): judge -> sharpen low scorers with the
+    vuln dataset as teaching material -> re-judge, until the reference bar is
+    met AND the last rounds plateau (both required)."""
+    from .judge import (
+        checklist_items_from_01e, format_improve_summary, improve_loop,
+        load_vulns,
+    )
+
+    judge_fn = _make_llm(args.llm_cmd, "improve", args.llm_timeout)
+    if judge_fn is None:
+        return 2
+    improve_fn = (
+        _make_llm(args.improve_cmd, "improve", args.llm_timeout)
+        if args.improve_cmd else judge_fn
+    )
+
+    doc = _load_json(args.ours)
+    all_props = list(doc.get("properties", []))
+    props = [
+        p for p in all_props
+        if not args.id_prefix or str(p.get("property_id", "")).startswith(args.id_prefix)
+    ]
+    if not props:
+        print(f"error: no properties to improve in {args.ours} "
+              f"(id prefix: {args.id_prefix or 'none'})", file=sys.stderr)
+        return 2
+    # sanity: the loop judges the same surface checklist_items_from_01e exposes
+    assert [p["property_id"] for p in props] == [
+        i["id"] for i in checklist_items_from_01e(doc, args.id_prefix)
+    ]
+    ref_dist, _ref_items, ref_source = _reference_distribution(args, judge_fn)
+
+    result = improve_loop(
+        props, ref_dist, load_vulns(args.vulns_csv), judge_fn, improve_fn,
+        max_rounds=args.max_rounds, low_axis=args.low_axis,
+        plateau_rounds=args.plateau_rounds, plateau_delta=args.plateau_delta,
+        axis_tolerance=args.axis_tolerance,
+        retries=args.retries, retry_wait=args.retry_wait,
+    )
+
+    out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    log = {k: v for k, v in result.items() if k != "properties"}
+    log["reference_source"] = ref_source
+    log["ours_source"] = str(args.ours)
+    (out_dir / "score_log.json").write_text(
+        json.dumps(log, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    improved_doc = {k: v for k, v in doc.items() if k != "properties"}
+    improved_doc["x_improve_note"] = (
+        "proposal output of `speca-lean4 improve` (speca#88 stage-2 loop); the "
+        "canonical checklist source stays theorem_map.json — landing these "
+        "rewrites there is a reviewed, manual step"
+    )
+    improved_doc["properties"] = result["properties"]
+    (out_dir / "improved_01e.json").write_text(
+        json.dumps(improved_doc, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    print(format_improve_summary(result))
+    print(f"wrote {out_dir / 'score_log.json'} and {out_dir / 'improved_01e.json'}")
+    if args.strict and not result["converged"]:
+        print("improve --strict: loop did not converge", file=sys.stderr)
+        return 1
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="speca-lean4", description=__doc__)
     sub = p.add_subparsers(dest="command", required=True)
@@ -385,7 +524,91 @@ def build_parser() -> argparse.ArgumentParser:
              "or rules claiming coverage via non-emitted properties",
     )
     r.set_defaults(func=cmd_verify_recall)
+
+    j = sub.add_parser(
+        "judge",
+        help="LLM-as-judge quality eval of a 01e checklist (speca#88 stage-2): "
+             "five-axis blind scoring calibrated against the vendored solodit "
+             "reference bar. NOT recall — no content matching in the verdict.",
+    )
+    j.add_argument("--ours", required=True, help="the 01e JSON to judge (e.g. 01e_PARTIAL_checklist-high-angle.json)")
+    j.add_argument("--id-prefix", help="only judge properties whose property_id starts with this (e.g. CHK-)")
+    _add_judge_common_args(j)
+    j.add_argument("--out", help="write the full JSON judge report here")
+    j.add_argument(
+        "--strict", action="store_true",
+        help="exit non-zero when the score distribution is below the reference bar",
+    )
+    j.set_defaults(func=cmd_judge)
+
+    i = sub.add_parser(
+        "improve",
+        help="judge -> sharpen low scorers (vuln dataset rows as teaching "
+             "material) -> re-judge, until reference-bar met AND plateaued "
+             "(both required); logs per-round score progression",
+    )
+    i.add_argument("--ours", required=True, help="the 01e JSON whose properties get improved")
+    i.add_argument("--id-prefix", help="only loop over properties whose property_id starts with this (e.g. CHK-)")
+    _add_judge_common_args(i)
+    i.add_argument(
+        "--improve-cmd",
+        help="separate LLM command for the improve step (default: same as --llm-cmd)",
+    )
+    i.add_argument(
+        "--vulns-csv", default=str(_REPO_ROOT / "data" / "ethereum_vulns.csv"),
+        help="vuln dataset slice used as improve teaching material, never as an "
+             "eval denominator (default: data/ethereum_vulns.csv)",
+    )
+    i.add_argument("--out-dir", required=True, help="write score_log.json + improved_01e.json here")
+    i.add_argument("--max-rounds", type=int, default=6, help="hard cap on improve rounds (default 6)")
+    i.add_argument("--low-axis", type=int, default=3, help="an item with any axis <= this is an improve candidate (default 3)")
+    i.add_argument("--plateau-rounds", type=int, default=3, help="rounds that must be flat to call 頭打ち (default 3)")
+    i.add_argument("--plateau-delta", type=float, default=0.05, help="max overall-mean gain still counted as flat (default 0.05)")
+    i.add_argument(
+        "--strict", action="store_true",
+        help="exit non-zero when the loop ends without convergence",
+    )
+    i.set_defaults(func=cmd_improve)
     return p
+
+
+def _add_judge_common_args(sp: argparse.ArgumentParser) -> None:
+    sp.add_argument(
+        "--reference", default=str(_REPO_ROOT / "data" / "solodit_checklist.csv"),
+        help="reference checklist CSV for the calibration bar "
+             "(default: data/solodit_checklist.csv, vendored from speca)",
+    )
+    sp.add_argument(
+        "--ref-report",
+        help="reuse the reference scores from a previous `judge --out` report "
+             "instead of re-judging the reference corpus",
+    )
+    sp.add_argument(
+        "--llm-cmd",
+        help="LLM adapter command: reads one prompt on stdin, writes the "
+             "response on stdout (e.g. 'claude -p'). Required; this repo holds "
+             "no API key",
+    )
+    sp.add_argument(
+        "--axis-tolerance", type=float, default=0.25,
+        help="how far one axis mean may fall below the reference axis mean "
+             "while still passing (default 0.25)",
+    )
+    sp.add_argument(
+        "--retries", type=int, default=2,
+        help="attempts per item beyond the first, covering bad responses AND "
+             "transient adapter failures (default 2); an item still failing "
+             "after that aborts the run — never silently skipped",
+    )
+    sp.add_argument(
+        "--retry-wait", type=float, default=5.0,
+        help="seconds between attempts, letting rate-limit blips pass (default 5)",
+    )
+    sp.add_argument(
+        "--llm-timeout", type=int, default=600,
+        help="per-call adapter timeout in seconds; a hung adapter process is "
+             "killed and the call retried like any transient failure (default 600)",
+    )
 
 
 def _add_recall_data_args(sp: argparse.ArgumentParser) -> None:

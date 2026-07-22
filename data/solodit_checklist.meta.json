@@ -1,0 +1,13 @@
+{
+  "source_repo": "NyxFoundation/speca",
+  "source_path": "benchmarks/knowledge/solodit_checklist.csv",
+  "source_ref": "main",
+  "source_commit": "8b7da09eaf87737c1cb3b281b520a4bf71a73b55",
+  "source_blob_sha": "17810eef5e78f0ad939906590b712013e3ee8dc4",
+  "introduced_in_source_commit": "9e50ee041352ef69536d8b283c775169d5647e72",
+  "fetched": "2026-07-22",
+  "columns": ["id", "category", "subcategory", "question", "description"],
+  "n_rows": 52,
+  "role": "Reference bar for the speca#88 stage-2 quality judge (src/speca_lean4/judge.py): the judge scores these professional audit-checklist items and the generated 01e items with the same blind five-axis rubric, and the generated score distribution must be at least as good as this corpus's distribution. Calibration is on QUALITY LEVEL only — the corpus is DeFi-domain, the generated checklist is consensus-domain, and no content matching against these rows enters the verdict.",
+  "note": "The #88 direction comment describes the file as 53 items; the file at the pinned blob has 52 data rows (speca commit 9e50ee04's own message also says 52). Vendored byte-identical (LF, UTF-8, git blob sha above); tests/test_judge.py recomputes the blob sha from the vendored bytes."
+}

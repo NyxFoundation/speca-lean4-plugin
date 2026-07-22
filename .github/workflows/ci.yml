@@ -86,6 +86,46 @@ jobs:
             --health-json tests/fixtures/theorem_health.sample.json \
             --out 01e_fixture.json
           speca-lean4 verify-recall --ours 01e_fixture.json --strict
+      - name: honesty check — vendored solodit reference provenance (speca#88 stage-2)
+        run: |
+          python3 -c "
+          import hashlib, json, csv
+          meta = json.load(open('data/solodit_checklist.meta.json', encoding='utf-8'))
+          raw = open('data/solodit_checklist.csv', 'rb').read()
+          sha = hashlib.sha1(b'blob %d\x00' % len(raw) + raw).hexdigest()
+          assert sha == meta['source_blob_sha'], f'vendored bytes drifted: {sha}'
+          assert b'\r' not in raw, 'CRLF crept into the vendored reference'
+          rows = list(csv.DictReader(open('data/solodit_checklist.csv', encoding='utf-8-sig')))
+          assert len(rows) == meta['n_rows'], (len(rows), meta['n_rows'])
+          assert list(rows[0].keys()) == meta['columns'], rows[0].keys()
+          print(f'OK: {len(rows)} reference items, blob {sha} matches {meta[\"source_repo\"]}@{meta[\"source_commit\"][:12]}')
+          "
+      - name: judge + improve harness wiring with the MOCK LLM (no API key in default CI)
+        # The real LLM run is dispatch-only (judge-dispatch.yml, self-hosted
+        # authenticated Claude CLI). Here the injected-LLM seam is exercised
+        # end to end with the deterministic mock so this stays green keyless.
+        run: |
+          speca-lean4 judge \
+            --ours 01e_fixture.json --id-prefix CHK- \
+            --llm-cmd "python3 tests/fixtures/mock_llm.py" \
+            --out judge_report_mock.json
+          speca-lean4 improve \
+            --ours 01e_fixture.json --id-prefix CHK- \
+            --llm-cmd "python3 tests/fixtures/mock_llm.py" \
+            --ref-report judge_report_mock.json \
+            --out-dir improve_run_mock --max-rounds 4
+          python3 -c "
+          import json
+          rep = json.load(open('judge_report_mock.json', encoding='utf-8'))
+          assert rep['ours']['n'] == 15 and rep['reference']['n'] == 52
+          log = json.load(open('improve_run_mock/score_log.json', encoding='utf-8'))
+          assert log['rounds'] and len(log['history_overall_mean']) == len(log['rounds'])
+          assert isinstance(log['converged'], bool) and log['stop_reason']
+          props = json.load(open('improve_run_mock/improved_01e.json', encoding='utf-8'))['properties']
+          assert len(props) == 15
+          print('OK: judge report + improve score log written with the mock adapter;',
+                f\"converged={log['converged']} ({log['stop_reason']})\")
+          "
 
   lean:
     name: lean exporter build

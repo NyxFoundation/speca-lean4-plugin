@@ -1,0 +1,107 @@
+name: "judge + improve with the real LLM (speca#88 stage-2, dispatch-only)"
+
+# The default CI exercises the judge/improve harness with a deterministic
+# mock (no API key anywhere in this repo). This workflow is the ONE place the
+# real LLM runs: dispatch-only, on a self-hosted runner where the Claude CLI
+# is already authenticated (same pattern as speca's 03/04 workflows). It
+# emits the CHK checklist from the fixture health, judges it against the
+# vendored solodit reference bar, runs the improve loop, and uploads the
+# judge report + per-round score log as artifacts.
+#
+# No pull_request trigger on purpose: it occupies a shared runner and spends
+# LLM budget. Honesty: the verification step only checks the artifacts are
+# well-formed — it never asserts the bar was met or the loop converged;
+# below-bar / unconverged are valid, reportable outcomes.
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "claude -p --model value (empty = CLI default)"
+        required: false
+        type: string
+        default: ""
+      max_rounds:
+        description: "improve loop hard cap"
+        required: false
+        type: number
+        default: 6
+      skip_improve:
+        description: "only judge (no improve loop) to bound LLM cost"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  judge-improve:
+    if: ${{ github.actor == 'grandchildrice' || github.actor == 'hirorogo' || github.actor == 'sururu-k' }}
+    runs-on: self-hosted
+    timeout-minutes: 120
+
+    env:
+      MODEL_INPUT: ${{ inputs.model }}
+      MAX_ROUNDS: ${{ inputs.max_rounds }}
+      SKIP_IMPROVE: ${{ inputs.skip_improve }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install the plugin
+        run: pip install -e '.[dev]'
+
+      - name: emit the CHK checklist 01e (fixture health; generation is CHK-15, not re-implemented)
+        run: |
+          speca-lean4 emit-01e \
+            --scope tests/fixtures/bug_bounty_scope.sample.json \
+            --health-json tests/fixtures/theorem_health.sample.json \
+            --out 01e_fixture.json
+
+      - name: judge against the solodit reference bar (real LLM)
+        run: |
+          set -euo pipefail
+          LLM_CMD="claude -p"
+          if [ -n "$MODEL_INPUT" ]; then LLM_CMD="claude -p --model $MODEL_INPUT"; fi
+          speca-lean4 judge \
+            --ours 01e_fixture.json --id-prefix CHK- \
+            --llm-cmd "$LLM_CMD" \
+            --out judge_report.json
+
+      - name: improve loop (real LLM, reference scores reused from the judge report)
+        if: ${{ inputs.skip_improve != true }}
+        run: |
+          set -euo pipefail
+          LLM_CMD="claude -p"
+          if [ -n "$MODEL_INPUT" ]; then LLM_CMD="claude -p --model $MODEL_INPUT"; fi
+          speca-lean4 improve \
+            --ours 01e_fixture.json --id-prefix CHK- \
+            --llm-cmd "$LLM_CMD" \
+            --ref-report judge_report.json \
+            --out-dir improve_run --max-rounds "$MAX_ROUNDS"
+
+      - name: verify artifacts are well-formed (NOT that the bar was met)
+        run: |
+          python3 -c "
+          import json, os
+          rep = json.load(open('judge_report.json', encoding='utf-8'))
+          assert rep['ours']['n'] > 0 and rep['reference']['n'] == 52
+          print('judge:', 'ours', rep['ours'], 'reference', rep['reference'],
+                'meets_reference_bar =', rep['meets_reference_bar'])
+          if os.path.isdir('improve_run'):
+              log = json.load(open('improve_run/score_log.json', encoding='utf-8'))
+              assert log['rounds'] and log['stop_reason']
+              print('improve:', 'converged =', log['converged'],
+                    f\"({log['stop_reason']})\", 'progression =', log['history_overall_mean'])
+          "
+
+      - name: upload judge report + score log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: judge-improve-real-llm
+          path: |
+            judge_report.json
+            improve_run/
+          retention-days: 30
