@@ -312,6 +312,39 @@ severity profile than the CRITICAL/HIGH-heavy benchmark, which we report rather
 than fake. Most consensus-layer findings (OOM/DoS, LMD-GHOST, BLS internals,
 eth1 ops) remain out of the FFG formal remit by construction.
 
+## Quality judge + improve loop (speca#88 stage-2)
+
+eval here is NOT recall (the #88 direction's 重要な訂正): the checklist is not
+scored on reproducing dataset bugs, but on reaching the QUALITY LEVEL of a
+professional audit checklist. `speca-lean4 judge` scores every item on five
+fixed axes (specificity, implementation_readiness, generality, actionability,
+granularity; blind rubric in `src/speca_lean4/judge.py`) and compares the
+score DISTRIBUTION against the same-rubric scores of the vendored solodit
+reference ([`data/solodit_checklist.csv`](data/solodit_checklist.csv), 52
+professional audit items, provenance pinned in
+[`data/solodit_checklist.meta.json`](data/solodit_checklist.meta.json)).
+`speca-lean4 improve` then loops judge -> sharpen low scorers (with the
+matching `data/ethereum_vulns.csv` rows as teaching material — improve input,
+never an eval denominator) -> re-judge, converging only when the reference
+bar is met AND the last 3 rounds plateau; an unconverged run ends honestly
+with `converged: false`. `recall.py`'s 0.556 stays a side reference number,
+outside the judge verdict. Full spec: [`docs/judge-loop.md`](docs/judge-loop.md).
+
+```bash
+# LLM access is injected — no API key in this repo. --llm-cmd reads the
+# prompt on stdin and writes the response on stdout, e.g. an authenticated
+# Claude CLI (the real run lives in .github/workflows/judge-dispatch.yml,
+# self-hosted, dispatch-only; default CI wires tests/fixtures/mock_llm.py):
+speca-lean4 judge --ours outputs/01e_PARTIAL_checklist-high-angle.json \
+    --llm-cmd "claude -p" --out judge_report.json
+
+speca-lean4 improve --ours outputs/01e_PARTIAL_checklist-high-angle.json \
+    --llm-cmd "claude -p" --ref-report judge_report.json \
+    --out-dir improve_run --max-rounds 6
+# -> improve_run/score_log.json (per-round progression, convergence verdict)
+#    improve_run/improved_01e.json (proposal; theorem_map.json stays canonical)
+```
+
 ## Lean exporter directly
 
 ```bash
