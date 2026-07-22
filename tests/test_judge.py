@@ -171,6 +171,22 @@ def test_judge_item_retries_then_fails_honestly():
                    lambda p: "garbage", retries=1)
 
 
+def test_judge_item_retries_transient_adapter_failures_too():
+    """A real adapter (e.g. `claude -p`) can exit non-zero intermittently
+    mid-run; that must be retried like a bad response, not kill the run."""
+    calls = []
+
+    def flaky_adapter(prompt):
+        calls.append(prompt)
+        if len(calls) == 1:
+            raise JudgeError("llm command failed (rc=1)")
+        return _judge_json(4)
+
+    s = judge_item({"id": "a", "check": "c", "detail": "d"}, flaky_adapter,
+                   retries=1, retry_wait=0.0)
+    assert s["overall"] == 4.0 and len(calls) == 2
+
+
 def test_judge_items_empty_is_an_error():
     with pytest.raises(JudgeError):
         judge_items([], lambda p: _judge_json(4))

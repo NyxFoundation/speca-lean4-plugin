@@ -48,6 +48,7 @@ import json
 import re
 import statistics
 import subprocess
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -217,9 +218,17 @@ def parse_judge_response(text: str) -> dict[str, Any]:
     return {"scores": scores, "critique": critique.strip()}
 
 
-def judge_item(item: dict[str, str], judge_fn: LLMFn, retries: int = 1) -> dict[str, Any]:
+def judge_item(
+    item: dict[str, str], judge_fn: LLMFn, retries: int = 1, retry_wait: float = 0.0
+) -> dict[str, Any]:
+    """`retries` covers BOTH bad responses and transient adapter failures
+    (e.g. a real CLI intermittently exiting non-zero mid-run); `retry_wait`
+    seconds between attempts lets rate-limit blips pass. After the retries
+    the error surfaces — an unscorable item is never silently skipped."""
     last: Exception | None = None
-    for _ in range(retries + 1):
+    for attempt in range(retries + 1):
+        if attempt and retry_wait > 0:
+            time.sleep(retry_wait)
         try:
             parsed = parse_judge_response(judge_fn(build_judge_prompt(item)))
             return {
@@ -233,10 +242,12 @@ def judge_item(item: dict[str, str], judge_fn: LLMFn, retries: int = 1) -> dict[
     raise JudgeError(f"item {item['id']}: {last}")
 
 
-def judge_items(items: list[dict[str, str]], judge_fn: LLMFn, retries: int = 1) -> list[dict[str, Any]]:
+def judge_items(
+    items: list[dict[str, str]], judge_fn: LLMFn, retries: int = 1, retry_wait: float = 0.0
+) -> list[dict[str, Any]]:
     if not items:
         raise JudgeError("no items to judge")
-    return [judge_item(it, judge_fn, retries) for it in items]
+    return [judge_item(it, judge_fn, retries, retry_wait) for it in items]
 
 
 # ----------------------------------------------------- distributions and bar
@@ -408,6 +419,7 @@ def improve_loop(
     axis_tolerance: float = 0.25,
     evidence_n: int = 3,
     retries: int = 1,
+    retry_wait: float = 0.0,
 ) -> dict[str, Any]:
     """Judge -> improve -> re-judge until convergence.
 
@@ -433,7 +445,7 @@ def improve_loop(
                 out[pid] = prev[pid]
                 continue
             item = {"id": pid, "check": str(p.get("text", "")), "detail": str(p.get("assertion", ""))}
-            out[pid] = judge_item(item, judge_fn, retries)
+            out[pid] = judge_item(item, judge_fn, retries, retry_wait)
         return out
 
     scored = _judge_all(None, None)
@@ -540,8 +552,9 @@ def subprocess_llm(cmd: list[str], timeout: int = 600) -> LLMFn:
         )
         if proc.returncode != 0:
             raise JudgeError(
-                f"llm command {' '.join(cmd)!r} failed (rc={proc.returncode}): "
-                f"{(proc.stderr or '')[-500:]}"
+                f"llm command {' '.join(cmd)!r} failed (rc={proc.returncode}); "
+                f"stderr tail: {(proc.stderr or '<empty>')[-500:]} "
+                f"stdout tail: {(proc.stdout or '<empty>')[-200:]}"
             )
         return proc.stdout
     return call

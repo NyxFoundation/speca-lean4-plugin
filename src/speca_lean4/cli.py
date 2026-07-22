@@ -328,7 +328,7 @@ def _reference_distribution(args: argparse.Namespace, judge_fn) -> tuple[dict, l
         prev = _load_json(args.ref_report)
         return prev["reference"], prev["reference_items"], prev["reference_source"]
     items = checklist_items_from_solodit(args.reference)
-    scored = judge_items(items, judge_fn)
+    scored = judge_items(items, judge_fn, args.retries, args.retry_wait)
     return score_distribution(scored), scored, str(args.reference)
 
 
@@ -350,7 +350,7 @@ def cmd_judge(args: argparse.Namespace) -> int:
               f"(id prefix: {args.id_prefix or 'none'})", file=sys.stderr)
         return 2
     ref_dist, ref_items, ref_source = _reference_distribution(args, judge_fn)
-    scored = judge_items(ours_items, judge_fn)
+    scored = judge_items(ours_items, judge_fn, args.retries, args.retry_wait)
     ours_dist = score_distribution(scored)
     meets, gaps = meets_reference_bar(ours_dist, ref_dist, args.axis_tolerance)
     report = {
@@ -410,6 +410,7 @@ def cmd_improve(args: argparse.Namespace) -> int:
         max_rounds=args.max_rounds, low_axis=args.low_axis,
         plateau_rounds=args.plateau_rounds, plateau_delta=args.plateau_delta,
         axis_tolerance=args.axis_tolerance,
+        retries=args.retries, retry_wait=args.retry_wait,
     )
 
     out_dir = Path(args.out_dir)
@@ -589,6 +590,16 @@ def _add_judge_common_args(sp: argparse.ArgumentParser) -> None:
         "--axis-tolerance", type=float, default=0.25,
         help="how far one axis mean may fall below the reference axis mean "
              "while still passing (default 0.25)",
+    )
+    sp.add_argument(
+        "--retries", type=int, default=2,
+        help="attempts per item beyond the first, covering bad responses AND "
+             "transient adapter failures (default 2); an item still failing "
+             "after that aborts the run — never silently skipped",
+    )
+    sp.add_argument(
+        "--retry-wait", type=float, default=5.0,
+        help="seconds between attempts, letting rate-limit blips pass (default 5)",
     )
 
 
