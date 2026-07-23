@@ -67,3 +67,11 @@ bounty-graded rows), NOT the advisory/CVSS `severity` column. (176 rows; the two
 columns' critical/high sets happened to coincide here, but the derivation is now
 unambiguous for future dataset updates.) Defensive framing verified: claude
 accepts the severity-augmented prompt with no cyber-safeguard refusal.
+
+## 2026-07-23 — run 2 (severity-aware, 6 items)
+
+First run with `EF_BOUNTY_SEVERITY` in the prompt. judge=kimi, improve=claude,
+teaching=critical/high (severity_estimated). Overall 4.63 → 4.83; 6 items
+sharpened (CHK-AS-03, CHK-QW-01, CHK-QW-02, CHK-LV-01, CHK-GEN-01, CHK-GEN-02),
+all within the granularity band. Self-preference (kimi): CHK-20 **4.59** vs
+solodit **2.96**, ranking preserved. Diff: [`9a59d02`](https://github.com/NyxFoundation/speca-lean4-plugin/commit/9a59d02b8fc9c34870c9292ad068ef94681df2b3)
