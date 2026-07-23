@@ -22,3 +22,24 @@ Run the loop with `tools/run-improve.sh`; persist with `tools/apply-improved.py`
 - **before/after diff**: [`f9de5b0`](https://github.com/NyxFoundation/speca-lean4-plugin/commit/f9de5b01d5b2960ec70e4947713065fe81d4ce08) (theorem_map.json)
 
 Example: CHK-LV-01 "every network-reachable resource must have an explicit cap" → "for every network-fed buffer/queue/decompression sink/recursive call, check size+increment against the cap and reject **before** the append/recursion; flag any path where the check runs only after" — concrete ordering condition, general, no client named.
+
+## 2026-07-23 — new-property generation (5 new critical/high proposals)
+
+First run of `tools/generate-properties.py` (gen=`claude -p`, judge=kimi, floor 3.5):
+paired proved gasper theorems with critical/high defect classes NOT covered by
+CHK-15. 6 candidates, **5 kept**, 1 rejected by the length guard (text 279>260).
+
+| id | theorem | defect class | judged |
+|---|---|---|---|
+| CHK-GEN-01 | k_safety' | consensus_divergence | 4.0 |
+| CHK-GEN-02 | k_safety' | missing_input_validation | 3.8 |
+| CHK-GEN-03 | justified_iff_bounded | missing_input_validation | 4.6 |
+| CHK-GEN-04 | plausible_liveness_construct_extension | missing_input_validation | 4.8 |
+| CHK-GEN-05 | k_safety' | race_condition | 4.2 |
+
+These are **novel** critical/high checks the theorem implies against a real
+failure class — not reproductions of a specific past bug (no client named,
+general, concrete). Saved as a **proposal** in `data/generated_properties.json`;
+they are NOT yet in `theorem_map.json` (adding them makes them live audit
+drivers and requires updating the checklist-count/shard contract tests, so it
+gates on human review).
