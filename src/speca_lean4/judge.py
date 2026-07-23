@@ -330,7 +330,13 @@ def select_evidence(
     same = [v for v in vulns if v.get("label") == label]
     pool = same or [v for v in vulns if v.get("severity") in ("Critical", "High")] or list(vulns)
     pool = sorted(pool, key=lambda v: (_SEV_RANK.get(v.get("severity", ""), 9), v.get("id", "")))
-    keep = ("id", "severity", "title", "label", "root_cause", "attack_path")
+    # Class-level fields only. The concrete-incident fields (`title`,
+    # `attack_path`) are deliberately NOT surfaced to the improve LLM: the loop
+    # sharpens a *defensive* checklist item from the failure CLASS, and feeding
+    # a specific exploit's title/attack-path reads as offensive tasking, which
+    # trips the model's cyber safeguard and aborts the loop (speca#143). `id`
+    # is a corpus hash kept only for traceability.
+    keep = ("id", "severity", "label", "root_cause")
     return [{k: v.get(k, "") for k in keep} for v in pool[:n]]
 
 
@@ -338,21 +344,24 @@ def build_improve_prompt(
     prop: dict[str, Any], scored: dict[str, Any], evidence: list[dict[str, str]]
 ) -> str:
     ev_lines = "\n".join(
-        f"- [{e['id']}] {e['severity']} {e['label']} / {e['root_cause']} "
-        f"(trigger: {e['attack_path']}): {e['title']}"
+        f"- [{e['id']}] {e['severity']} — {e['label']} / {e['root_cause']}"
         for e in evidence
     )
     return (
-        "You are sharpening ONE audit-checklist item so a security auditor can "
-        "apply it directly to implementation source code.\n\n"
+        # Defensive framing up front, and only failure-CLASS signals below (no
+        # exploit title / attack-path): a specific-incident framing tripped the
+        # model cyber safeguard and aborted the loop (speca#143).
+        "You are sharpening ONE audit-checklist item — a DEFENSIVE review "
+        "control a security auditor applies to implementation source code to "
+        "DETECT and PREVENT a class of defect.\n\n"
         "Current item:\n"
         f"TEXT: {prop.get('text', '')}\n"
         f"ASSERTION: {prop.get('assertion', '')}\n\n"
         f"Judge scores (1-5): {json.dumps(scored['scores'])}\n"
         f"Judge critique: {scored['critique']}\n\n"
-        "Real failure evidence from the vulnerability dataset — use the failure "
-        "CLASS (arithmetic width, bounds/indexing, resource caps, termination, "
-        "type fidelity), NOT the specific incident:\n"
+        "Defect CLASSES seen historically in this area (categories only, for "
+        "audit coverage — arithmetic width, bounds/indexing, resource caps, "
+        "termination, type fidelity):\n"
         f"{ev_lines}\n\n"
         "Rewrite the item to raise the weak axes. Rules:\n"
         "- Keep the same underlying invariant; sharpen it to the code-level "
