@@ -2,8 +2,9 @@
   "title": "gasper",
   "date": "20260723",
   "folder": "outputs/20260723-gasper",
+  "file": "01e_PARTIAL_gasper.json",
   "plugin_repo": "NyxFoundation/speca-lean4-plugin",
-  "plugin_commit": "bdf4712b4ffd2e68b4165e8d3e39d5415c46525e",
+  "plugin_commit": "5bdd3ea7b9ebd7772e95d62e2b33777987c168ba",
   "theorem_map": "theorem_map.json",
   "property_count": 74,
   "checklist_count": 20,
@@ -34,5 +35,5 @@
     "CHK-GEN-04",
     "CHK-GEN-05"
   ],
-  "note": "Audit source for speca-audits-2026 (a/b/c-3). Copy outputs/20260723-gasper/01e.json into the audit repo's source location; run 02c-04 per client against it."
+  "note": "Audit source for speca-audits-2026 (a/b/c-3). Validated against speca orchestrator.schemas.Phase01ePartial. File follows speca's 01e_PARTIAL_*.json convention so Phase 02c globs it. Copy outputs/20260723-gasper/01e_PARTIAL_gasper.json into the audit repo's source location; run 02c-04 per client against it."
 }

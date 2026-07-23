@@ -7,7 +7,8 @@
 # letter, so a run is identifiable at a glance. Title examples: gasper (the
 # gasper-lean4 checklist), an EL-spec title, a vuln-dataset title.
 #
-# Writes a stable single-file 01e (01e.json) plus a manifest recording the
+# Writes a single-file 01e (01e_PARTIAL_<slug>.json — speca 02c glob convention)
+# plus a manifest recording the
 # plugin commit / theorem_map / checklist ids, so the audit source is traceable.
 #
 # Usage: tools/emit-track.sh <title> [DATE] [MAP] [SCOPE] [HEALTH]
@@ -28,13 +29,14 @@ mkdir -p "$OUT"
 
 echo "[emit-track] title=$TITLE date=$DATE -> $OUT"
 uv run speca-lean4 emit-01e --map "$MAP" --scope "$SCOPE" --health-json "$HEALTH" \
-    --out "$OUT/01e.json"
+    --out "$OUT/01e_PARTIAL_${SLUG}.json"
 
 COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unknown)"
-uv run python - "$TITLE" "$DATE" "$OUT" "$MAP" "$COMMIT" <<'PY'
+uv run python - "$TITLE" "$DATE" "$OUT" "$SLUG" "$MAP" "$COMMIT" <<'PY'
 import json, sys
-title, date, out, mapf, commit = sys.argv[1:6]
-doc = json.load(open(f"{out}/01e.json", encoding="utf-8"))
+title, date, out, slug, mapf, commit = sys.argv[1:7]
+fname = f"01e_PARTIAL_{slug}.json"
+doc = json.load(open(f"{out}/{fname}", encoding="utf-8"))
 props = doc.get("properties", [])
 chk = [p for p in props if str(p.get("property_id", "")).startswith("CHK-")]
 from collections import Counter
@@ -42,6 +44,7 @@ manifest = {
     "title": title,
     "date": date,
     "folder": out,
+    "file": fname,
     "plugin_repo": "NyxFoundation/speca-lean4-plugin",
     "plugin_commit": commit,
     "theorem_map": mapf,
@@ -49,9 +52,9 @@ manifest = {
     "checklist_count": len(chk),
     "checklist_severity": dict(Counter(p.get("severity") for p in chk)),
     "checklist_ids": [p["property_id"] for p in chk],
-    "note": "Audit source for speca-audits-2026 (a/b/c-3). Copy %s/01e.json into the audit repo's source location; run 02c-04 per client against it." % out,
+    "note": "Audit source for speca-audits-2026 (a/b/c-3). Validated against speca orchestrator.schemas.Phase01ePartial. File follows speca's 01e_PARTIAL_*.json convention so Phase 02c globs it. Copy %s/%s into the audit repo's source location; run 02c-04 per client against it." % (out, fname),
 }
 json.dump(manifest, open(f"{out}/manifest.json", "w", encoding="utf-8"), indent=2, ensure_ascii=False)
-print(f"  {len(props)} properties ({len(chk)} checklist, severity {manifest['checklist_severity']}) -> {out}/")
+print(f"  {len(props)} properties ({len(chk)} checklist, severity {manifest['checklist_severity']}) -> {out}/{fname}")
 PY
 echo "[emit-track] done -> $OUT/"
