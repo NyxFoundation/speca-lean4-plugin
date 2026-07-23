@@ -52,3 +52,18 @@ tests updated 15→20). The checklist SPECA uses is now **20 items** (15 improve
 hand-authored + 5 generated). Emit: 74 properties (54 mechanical lowerings + 20
 checklist). `data/generated_properties.json` was removed as it is now superseded
 by the theorem_map entries.
+
+## 2026-07-23 — severity model aligned to EF bug-bounty
+
+The improve/generate command now surfaces the **Ethereum Foundation bug-bounty
+severity definition** (`judge.EF_BOUNTY_SEVERITY`) in the prompt, so a sharpened
+or generated critical/high item stays aimed at the bounty threat model:
+network-scale impact reachable REMOTELY by a single message/transaction
+(Critical = whole-network halt / fund-integrity break / >50% slashing; High =
+~>33%; Medium = ~>5%). The teaching corpus `data/ethereum_vulns_high.csv` is
+now built explicitly from the dataset's `severity_estimated` column — the
+bounty-aligned severity (computed against this definition and calibrated on the
+bounty-graded rows), NOT the advisory/CVSS `severity` column. (176 rows; the two
+columns' critical/high sets happened to coincide here, but the derivation is now
+unambiguous for future dataset updates.) Defensive framing verified: claude
+accepts the severity-augmented prompt with no cyber-safeguard refusal.

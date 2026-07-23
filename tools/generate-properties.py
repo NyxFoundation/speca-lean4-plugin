@@ -30,7 +30,7 @@ from collections import Counter
 from pathlib import Path
 
 from speca_lean4.judge import (
-    ASSERTION_MAX, TEXT_MAX, _CLIENT_RE, _extract_json,
+    ASSERTION_MAX, EF_BOUNTY_SEVERITY, TEXT_MAX, _CLIENT_RE, _extract_json,
     build_judge_prompt, split_cmd, subprocess_llm, statistics as _stats,
 )
 
@@ -106,7 +106,8 @@ def build_generate_prompt(c: dict) -> str:
         f"Protocol area (label): {c['label']}\n"
         f"Relevant code surface: {hints}\n"
         f"Implementation defect CLASS to guard against (category only): "
-        f"{c['root_cause']}\n\n"
+        f"{c['root_cause']} (bug-bounty severity: {c['severity']})\n\n"
+        f"{EF_BOUNTY_SEVERITY}\n\n"
         "Write ONE concrete, general, code-level checklist item: what an auditor "
         "inspects in the implementation source so this invariant holds against "
         "this defect class. Rules:\n"

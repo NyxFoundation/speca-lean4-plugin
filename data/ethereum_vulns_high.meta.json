@@ -1,9 +1,11 @@
 {
   "source": "NyxFoundation/ethereum-vuln-dataset",
   "source_file": "data/ethereum_vulns.preview.csv",
-  "filter": "severity in {Critical, High} OR severity_estimated in {Critical, High}",
+  "severity_column": "severity_estimated",
+  "severity_model": "Ethereum Foundation bug-bounty severity — network-scale impact reachable REMOTELY by a single message/transaction. Critical = whole-network halt / fund-integrity break at scale / >50% validator slashing; High = ~>33% chain split, halt, or slashing; Medium = ~>5% (>1% slashing); Low = >0.01%; not-eligible = local-only or no network impact. The dataset's `severity_estimated` is computed against this model (collection/estimate_severity.py) and calibrated on the bounty-graded rows, so it is the bounty-aligned column — NOT the advisory/CVSS `severity` column.",
+  "filter": "severity_estimated in {Critical, High}",
   "row_count": 176,
   "columns": ["id", "severity", "label", "root_cause", "attack_path", "title"],
-  "purpose": "Stage-2 improve-loop teaching material (speca#88/#143): concrete critical/high failure classes across the EL+CL surface. The vendored data/ethereum_vulns.csv is a 37-row consensus slice with only 3 critical/high rows, too thin to drive concreteness; this slice widens the critical/high signal.",
-  "note": "Improve reads only class fields (severity/label/root_cause); title/attack_path are carried for traceability but never enter the improve prompt (speca#143 safeguard fix)."
+  "purpose": "Stage-2 improve/generate teaching material (speca#88/#143): critical/high failure classes at bug-bounty severity across the EL+CL surface. The vendored data/ethereum_vulns.csv is a 37-row consensus slice with only 3 critical/high rows.",
+  "note": "improve/generate read only class fields (severity/label/root_cause); title/attack_path are carried for traceability but never enter the prompt (speca#143 safeguard fix). The EF bug-bounty severity definition is surfaced to the model via judge.EF_BOUNTY_SEVERITY so critical/high items stay aimed at network-scale, remotely-reachable impact."
 }

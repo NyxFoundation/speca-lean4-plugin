@@ -83,6 +83,24 @@ MUTABLE_FIELDS = ("text", "assertion")
 TEXT_MAX = 260
 ASSERTION_MAX = 160
 
+# Severity model. The teaching corpus (data/ethereum_vulns_high.csv) tags each
+# row with the Ethereum Foundation bug-bounty severity — network-scale impact
+# reachable REMOTELY by a single message / transaction (the dataset's
+# `severity_estimated`, calibrated against the bounty-graded rows). Surfacing
+# the definition to the model keeps a sharpened/generated critical/high item
+# aimed at that threat model, not at a locally-triggered or low-impact defect.
+# Stated defensively (what to PREVENT), no exploitation detail.
+EF_BOUNTY_SEVERITY = (
+    "Severity follows the Ethereum Foundation bug-bounty model: a defect's "
+    "severity is the network-scale impact an attacker could reach REMOTELY with "
+    "a single message or transaction. Critical = whole-network halt, "
+    "fund-integrity break at scale, or majority validator slashing; High = a "
+    "chain split / halt / slashing affecting roughly a third of the network; "
+    "Medium = a few-percent-scale version. Keep the check aimed at preventing "
+    "the highest-impact, remotely-reachable failure of this invariant — not a "
+    "locally-triggered or cosmetic one."
+)
+
 # Deterministic generality lint: an improved item must not hard-code a client
 # or implementation name lifted from the evidence rows (that would optimize
 # the generality axis's exact failure mode).
@@ -367,9 +385,10 @@ def build_improve_prompt(
         f"ASSERTION: {prop.get('assertion', '')}\n\n"
         f"Judge scores (1-5): {json.dumps(scored['scores'])}\n"
         f"Judge critique: {scored['critique']}\n\n"
+        f"{EF_BOUNTY_SEVERITY}\n\n"
         "Defect CLASSES seen historically in this area (categories only, for "
         "audit coverage — arithmetic width, bounds/indexing, resource caps, "
-        "termination, type fidelity):\n"
+        "termination, type fidelity), each tagged with its bug-bounty severity:\n"
         f"{ev_lines}\n\n"
         "Rewrite the item to raise the weak axes. Rules:\n"
         "- Keep the same underlying invariant; sharpen it to the code-level "

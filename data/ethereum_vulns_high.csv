@@ -1,177 +1,177 @@
 id,severity,label,root_cause,attack_path,title
-row0,Critical,gas,integer_overflow_underflow,malicious_tx,Gas allocation error in CALL operations in Besu EVM [GHSA-4456-w38r-m5
-row1,High,evm,missing_input_validation,malformed_input,"SHL, SHR, and SAR operations trigger native exception at key values"
-row2,High,crypto,resource_exhaustion,malicious_p2p_message,DoS via malicious p2p message
-row3,High,opcodes,consensus_divergence,malicious_tx,RETURNDATA corruption via datacopy
-row4,High,transactions,consensus_divergence,crafted_state,Consensus flaw during block processing
-row5,Critical,other,resource_exhaustion,malformed_input,Denial of service due to Go CVE-2020-28362 [GHSA-m6gx-rhvj-fh52 CVE-20
-row6,High,opcodes,integer_overflow_underflow,malformed_input,Denial of service via `MulMod`
-row7,High,precompiles,improper_state_update,malicious_tx,Shallow copy in the 0x4 precompile could lead to EVM memory corruption
-row8,High,opcodes,missing_bounds_check,malicious_tx,Security disclosures
-row9,High,sync,missing_input_validation,malicious_p2p_message,docs: vulnerability disclosure
-row10,High,p2p,resource_exhaustion,malformed_input,golang.org/x/crypto Vulnerable to Denial of Service (DoS) via Slow or 
-row11,High,transactions,unhandled_error_or_nil,crafted_state,miner: fix nil statedb panic in applyTransaction pre-amsterdam
-row12,High,transactions,missing_input_validation,malformed_input,core/types: fix panic on invalid signature length
-row13,High,blobs,other,malformed_input,core/txpool/blobpool: avoid possible zero index panic
-row14,High,evm,incorrect_gas_accounting,malformed_input,core/vm: remove panic when address is not present
-row15,High,database,improper_state_update,crafted_state,triedb/pathdb: fix panic in recoverable
-row16,High,state-trie,improper_state_update,crafted_state,trie: use explicit errors in stacktrie (instead of panic)
-row17,High,sync,race_condition,malformed_input,"common/prque, eth/downloader: fix timeout resurrection panic"
-row18,High,test,resource_exhaustion,malformed_input,core/beacon: prevent invalid logsBloom length panic
-row19,High,gas,unhandled_error_or_nil,malformed_input,core/vm: evm fix panic
-row20,High,state-trie,improper_state_update,crafted_state,snapshot: add Unlock before return/panic
-row21,High,p2p,unhandled_error_or_nil,malicious_p2p_message,les: fix panic
-row22,High,sync,missing_input_validation,peer,eth/downloader: fix mutex regression causing panics on fail
-row23,High,sync,other,malformed_input,eth/downloader: fix nil panic caused by wrong variable use
-row24,High,transactions,serialization_bug,malicious_tx,fix panic on bad tx sender
-row25,High,serialization,resource_exhaustion,malformed_input,beacon/engine: ensure nil ExecutionPayloadEnvelope.BlockValue doesn't 
-row26,High,sync,other,malformed_input,eth/downloader: fix rare crash when parent header missing in db
-row27,High,p2p,other,malicious_p2p_message,p2p/discover: fix crash in Resolve
-row28,High,block-processing,missing_bounds_check,malicious_block,"core: reorg logs crashed, add a check for corner cases"
-row29,High,sync,resource_exhaustion,crafted_state,"core/state, eth, trie: stabilize memory use, fix memory leak"
-row30,High,state-trie,unhandled_error_or_nil,crafted_state,[core] Race condition on diffLayer
-row31,High,beacon-chain:sync-committee,missing_input_validation,crafted_state,Incorrect processing of effective balances in Electra epoch processing
-row32,High,beacon-chain:attestation,consensus_divergence,malicious_block,Fix reprocess queue memory leak
-row33,High,data-availability-sampling,integer_overflow_underflow,crafted_state,Fix data columns not persisting for PeerDAS due to a `getBlobs` race c
-row34,High,beacon-chain:block-processing,consensus_divergence,malformed_input,Race condition fix + Reliability improvements around forks pruning (#1
-row35,High,p2p-interface,consensus_divergence,malicious_p2p_message,Fork choice timing attack
-row36,High,database,resource_exhaustion,malicious_block,Prune forks from the database
-row37,High,beacon-chain:block-processing,resource_exhaustion,malicious_block,Potential memory exhaustion vector
-row38,High,data-availability-sampling,unhandled_error_or_nil,malicious_attestation,Partial columns cleanup
-row39,High,fork-choice,consensus_divergence,crafted_state,Avoid 0x00 block hashes in fcU
-row40,High,fork-choice,consensus_divergence,malformed_input,Deprecate some `reorg`-related CLI flags and read from spec
-row41,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Fix slasher OOM
-row42,High,fork-choice,integer_overflow_underflow,malformed_input,Fix O(n²) find_head and stack overflow in filter_block_tree
-row43,High,bls,missing_input_validation,crafted_state,fix(bls): fix is_infinity when aggregating onto empty AggregateSignatu
-row44,High,kzg-commitments,crypto_misuse,malformed_input,Remove `expect` usage in `kzg_utils`
-row45,High,p2p-interface,resource_exhaustion,peer,Fix fetch blobs in all-null case
-row46,High,fork-choice,improper_state_update,crafted_state,Work around UB in LMDB bindings
-row47,High,data-availability-sampling,integer_overflow_underflow,malicious_attestation,PeerDAS spec tests
-row48,High,fork-choice,missing_input_validation,malicious_attestation,Fix Electra Fork Choice Tests
-row49,High,data-availability-sampling,resource_exhaustion,malicious_p2p_message,Re-process early sampling requests
-row50,High,fork-choice,integer_overflow_underflow,crafted_state,Reduce size of futures in HTTP API to prevent stack overflows
-row51,High,build-ci,resource_exhaustion,crafted_state,Tree states release v4.6.111-exp
-row52,High,beacon-chain:slashing,consensus_divergence,malformed_input,Delete temporary mitigation for equivocation via RPC
-row53,High,beacon-chain:attestation,resource_exhaustion,malicious_attestation,Add cache for parallel HTTP requests
-row54,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Fix for issue 4860 - Added in process_justification_and_finalization
-row55,High,light-client,missing_input_validation,malicious_attestation,Tree states to support per-slot state diffs
-row56,High,beacon-chain:execution-payload,missing_input_validation,malicious_p2p_message,Capella cleanup
-row57,High,fork-choice,missing_input_validation,crafted_state,Two Capella bugfixes
-row58,High,fork-choice,consensus_divergence,malformed_input,"beacon_node, consensus: fix possible deadlocks when comparing with its"
-row59,High,beacon-chain:slashing,integer_overflow_underflow,crafted_state,Use checked arithmetic in types and state proc
-row60,High,beacon-chain:block-processing,integer_overflow_underflow,crafted_state,Fix Eth1 data underflow
-row61,High,serialization,missing_bounds_check,malformed_input,Protect against OOB offset in variable list SSZ decoding
-row62,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Prevent duplicate gossipsub loops/message amplification
-row63,High,p2p-interface,missing_input_validation,malformed_input,Add timeouts to canonical head rwlock
-row64,High,p2p-interface,missing_input_validation,malicious_p2p_message,RPC Corrections and deadlock fix
-row65,High,beacon-chain:block-processing,integer_overflow_underflow,crafted_state,Fix underflow in verify_transfer
-row66,High,beacon-chain:attestation,race_condition,malicious_attestation,State caching as a first-class citizen
-row67,High,beacon-chain:block-processing,integer_overflow_underflow,malformed_input,Fix underflow in shuffle with empty list
-row68,High,beacon-chain:slashing,integer_overflow_underflow,malicious_block,AttesterSlashing number overflow
-row69,High,beacon-chain:justification-and-finality,missing_input_validation,malicious_p2p_message,feat: eip-8025 optional execution proofs
-row70,High,beacon-chain:execution-payload,consensus_divergence,crafted_state,rename random to prevRandao as per the kiln v2 specs
-row71,High,fork-choice,missing_input_validation,malicious_attestation,Implement Kintsugi specs :tea: (the Merge November sprint PR)
-row72,High,beacon-chain:execution-payload,missing_input_validation,crafted_state,Run sim single node test with Geth catalyst to finality
-row73,High,beacon-chain:attestation,serialization_bug,malicious_attestation,2 changes getting us closer to interop
-row74,High,bls,crypto_misuse,malformed_input,Detect unsafe coefficients in VerifyMultipleSignatures
-row75,Critical,p2p-interface,missing_input_validation,malformed_input,Potential remote code exploit in log4j dependency [GHSA-mwfw-vm54-g3p7
-row76,High,sync,consensus_divergence,malicious_block,Bump EIP-8025 `MAX_PROOF_SIZE` to 400 KiB
-row77,High,p2p,other,internal_only,Ethereum 2.0 Networking Specification
-row78,High,rpc,missing_input_validation,malformed_input,feat(trie): geth-compatible zero hashes for non-existent accounts in e
-row79,High,engine-api,consensus_divergence,malformed_input,feat: Check CL/Reth capability compatibility
-row80,High,rpc,missing_bounds_check,malformed_input,github.com/buger/jsonparser: bump 1.1.1 → 1.1.2 to address CVE-2026-32
-row81,High,gas,missing_input_validation,crafted_state,EIP-7928: Add BAL max items cap and slot uniqueness validation (#19627
-row82,High,other,other,internal_only,"This release contains a high-severity security fix, found by the Go Et"
-row83,High,rpc,resource_exhaustion,malformed_input,‼️ high-severity security issue fixup ‼️
-row84,High,rpc,other,malformed_input,"A few fixes for Polygon, incl. a fix for a critical start up issue whi"
-row85,High,test,integer_overflow_underflow,malformed_input,eth/fetcher: fix announcement drop logic (#32210)
-row86,High,txpool,resource_exhaustion,malformed_input,core/txpool: implement additional DoS defenses (#26648)
-row87,High,sync,integer_overflow_underflow,malicious_p2p_message,"p2p/msgrate: return capacity as integer, clamp to max uint32 (#22943)"
-row88,High,sync,race_condition,crafted_state,core/state/snapshot: fix race condition (#24685)
-row89,High,p2p,integer_overflow_underflow,malicious_p2p_message,go-ethereum vulnerable to DoS via malicious p2p message
-row90,High,txpool,resource_exhaustion,malicious_tx,Denial of Service in Go-Ethereum
-row91,High,evm,missing_bounds_check,malformed_input,Go Ethereum Denial of Service
-row92,High,p2p,resource_exhaustion,malicious_p2p_message,go-ethereum is vulnerable to high CPU usage leading to DoS via malicio
-row93,High,p2p,unhandled_error_or_nil,malicious_p2p_message,go-ethereum is vulnerable to DoS via malicious p2p message affecting a
-row94,High,sync,missing_bounds_check,malicious_p2p_message,Go Ethereum LES protocol implementation vulnerable to Denial of Servic
-row95,High,p2p,resource_exhaustion,malicious_p2p_message,Go-Ethereum vulnerable to denial of service via malicious p2p message
-row96,High,rpc,missing_input_validation,malformed_input,Go Ethereum Improper Input Validation
-row97,High,rpc,resource_exhaustion,malformed_input,go-ethereum vulnerable to denial of service via crafted GraphQL query
-row98,High,p2p,unhandled_error_or_nil,malformed_input,golang.org/x/crypto/ssh NULL Pointer Dereference vulnerability
-row99,High,crypto,unhandled_error_or_nil,malformed_input,golang.org/x/crypto/ssh Denial of service via crafted Signer
-row100,High,crypto,unhandled_error_or_nil,malformed_input,Helm uses crypto package vulnerable to panic from malformed X.509 cert
-row101,High,crypto,missing_input_validation,malformed_input,Improper Verification of Cryptographic Signature in golang.org/x/crypt
-row102,High,other,missing_input_validation,malformed_input,x/crypto/ssh vulnerable to panic via malformed packets
-row103,High,crypto,missing_input_validation,malformed_input,Misuse of ServerConfig.PublicKeyCallback may cause authorization bypas
-row104,High,crypto,missing_input_validation,peer,golang.org/x/crypto/ssh Man-in-the-Middle attack
-row105,High,p2p,integer_overflow_underflow,malformed_input,Integer overflow in github.com/gorilla/websocket
-row106,High,database,resource_exhaustion,malicious_tx,This patch should still be considered bleeding-edge. We advise exchang
-row107,High,block-processing,consensus_divergence,malicious_block,This is a security-critical release that fixes a regression in v1.9.4 
-row108,High,state-trie,improper_state_update,crafted_state,core/state: handle *bintrie.BinaryTrie in mustCopyTrie
-row109,High,state-trie,missing_input_validation,malformed_input,trie/bintrie: fix GetAccount/GetStorage non-membership — verify stem b
-row110,High,state-trie,missing_bounds_check,crafted_state,core/stateless: cap witness depth metrics buckets
-row111,High,state-trie,consensus_divergence,crafted_state,triedb/pathdb: fix state revert on v2 history
-row112,High,state-trie,resource_exhaustion,crafted_state,core/state: fix trie prefetcher for verkle
-row113,High,state-trie,resource_exhaustion,crafted_state,core/state: filter out nil trie for copy
-row114,High,blobs,improper_state_update,crafted_state,core/types: ensure receipts EncodeIndex writes + support blobtx-receip
-row115,High,state-trie,missing_input_validation,crafted_state,trie: fix range prover
-row116,High,p2p,unhandled_error_or_nil,malicious_p2p_message,p2p/discover: fix nil-dereference due to race
-row117,High,test,integer_overflow_underflow,malformed_input,eth/fetcher: fix announcement drop logic
-row118,High,p2p,integer_overflow_underflow,malformed_input,eth/protocols/eth: Fix overflows in  `GetBlockHeaders`
-row119,High,sync,integer_overflow_underflow,malicious_block,consensus/ethash: use 64bit indexes for the DAG generation
-row120,High,transactions,integer_overflow_underflow,malicious_p2p_message,rlp: input limit and other corrections
-row121,High,rlp,missing_bounds_check,malformed_input,rlp: fix list bounds check overflow (found by go-fuzz)
-row122,High,p2p,integer_overflow_underflow,malicious_p2p_message,les: add Skip overflow check to GetBlockHeadersMsg handler
-row123,High,state-trie,integer_overflow_underflow,crafted_state,trie/database: fix overflow in parent tracking
-row124,High,gas,integer_overflow_underflow,malformed_input,core/vm: Correct the Memory Gas Overflow condition
-row125,High,state-trie,missing_input_validation,crafted_state,core/stateless: fix parsing an empty witness
-row126,High,blobs,consensus_divergence,malformed_input,params: add osaka blob schedule
-row127,High,opcodes,unhandled_error_or_nil,malformed_input,core/vm/runtime: Add Random field to config
-row128,High,state-trie,consensus_divergence,crafted_state,"trie, tests/fuzzers: implement a stacktrie fuzzer + stacktrie fixes"
-row129,High,test,consensus_divergence,malformed_input,consensus/ethash: improve cache/dataset handling
-row130,High,state-trie,consensus_divergence,malformed_input,trie: fix delete bug for values contained in fullNode
-row131,High,block-processing,other,malicious_block,core: force import known but rolled back blocks
-row132,High,transactions,resource_exhaustion,malicious_p2p_message,eth/fetcher: throttle peers which deliver many invalid transactions
-row133,High,sync,resource_exhaustion,crafted_state,"cmd, core, tests: avoid hashing the code in the VM"
-row134,High,sync,resource_exhaustion,crafted_state,"cmd, core, eth, trie: get rid of trie cache generations"
-row135,High,test,resource_exhaustion,large_input,core: place a cap on reorglogs
-row136,High,sync,resource_exhaustion,malformed_input,eth/downloader: fix header download limiting
-row137,High,blobs,race_condition,crafted_state,"core/txpool/blobpool: revert #29989, WLock on Nonce"
-row138,High,blobs,missing_bounds_check,malformed_input,core/txpool/blobpool: continue on cell proof error in `GetBlobs`
-row139,High,sync,missing_bounds_check,malformed_input,downloader: fix edgecase where returned index is OOB for downloader
-row140,High,database,missing_bounds_check,crafted_state,triedb/pathdb: fix incorrect address length in history searching
-row141,High,beacon-chain:execution-payload,other,internal_only,"Grandine 2.0.2 is a high-priority release for mainnet users, as it con"
-row142,High,build-ci,other,malformed_input,"Grandine 2.0.3 is a high-priority release for mainnet users, as it con"
-row143,High,fork-choice,consensus_divergence,malformed_input,Grandine 2.0.4 is a high-priority release for mainnet users - it conta
-row144,High,beacon-chain:registry-updates,other,malformed_input,Grandine 2.0.5 is a high-priority release for mainnet users - it conta
-row145,High,p2p-interface,resource_exhaustion,peer,libp2p DoS vulnerability from lack of resource management
-row146,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Fix slasher OOM (#9141)
-row147,High,fork-choice,consensus_divergence,malicious_block,Reset payload statuses when resuming fork choice (#3498)
-row148,High,p2p-interface,resource_exhaustion,malformed_input,Add flag to disable lock timeouts (#2714)
-row149,High,p2p-interface,resource_exhaustion,malicious_p2p_message,Tracing cleanup (#7168)
-row150,High,p2p-interface,resource_exhaustion,crafted_state,From panic to crit (#1726)
-row151,High,beacon-chain:block-processing,serialization_bug,malformed_input,Fix panic in ssz decode
-row152,High,beacon-chain:block-processing,improper_state_update,crafted_state,Fix minor vec access panic opportunity
-row153,High,serialization,serialization_bug,malformed_input,"Remove Result from list encoding, panic instead"
-row154,High,beacon-chain:block-processing,missing_input_validation,malformed_input,[Merge] Optimistic EL verification (#2683)
-row155,High,fork-choice,consensus_divergence,malformed_input,Call per_slot_task from a blocking thread (v2) (#3199)
-row156,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Improve validator monitor experience for high validator counts (#3728)
-row157,High,beacon-chain:slashing,integer_overflow_underflow,crafted_state,Add `safe_sum` and use it in state_processing (#1620)
-row158,High,beacon-chain:attestation,race_condition,malicious_attestation,Fix race condition in seen caches (#1937)
-row159,High,beacon-chain:slashing,missing_input_validation,crafted_state,"Although these bugs were *not* security risks, they caused significant"
-row160,High,p2p-interface,crypto_misuse,malformed_input,Analysis of the network shows a concerning portion of users are runnin
-row161,High,other,other,other,:warning: Lighthouse v8.1.2 is a **high-priority** patch release with 
-row162,High,p2p-interface,resource_exhaustion,malicious_p2p_message,:warning: Lighthouse v8.1.3 is a **high-priority** patch release with 
-row163,High,other,other,other,:warning: Lighthouse v8.2.0 is a **high-priority** release containing 
-row164,High,p2p-interface,resource_exhaustion,peer,libp2p DoS vulnerability from lack of resource management
-row165,High,evm,other,malicious_tx,fix: fix hardcoded PadDirection in SliceWithZeroPadding UInt256 overlo
-row166,High,validator,missing_input_validation,malformed_input,A crash on start-up after running the client with `--history:prune` op
-row167,High,rpc,missing_input_validation,crafted_state,A fix of critical bug during live sync that could lead to panic or bad
-row168,High,other,other,internal_only,"Stable**: Since releasing reth 0.2.0-beta.6 in April 2024, there have "
-row169,High,p2p,resource_exhaustion,peer,libp2p DoS vulnerability from lack of resource management
-row170,High,p2p-interface,resource_exhaustion,malicious_p2p_message,Upgraded Netty dependency to include fixes for two HIGH severity secur
-row171,High,other,other,other,This is a critical security update. All users should update immediatel
-row172,High,opcodes,consensus_divergence,malicious_tx,CVE-2021-41272
-row173,High,gas,integer_overflow_underflow,malicious_tx,CVE-2022-36025
-row174,High,evm,missing_bounds_check,malicious_tx,CVE-2018-20421
-row175,High,transactions,integer_overflow_underflow,malicious_tx,CVE-2025-29072
+evd-000,Critical,gas,integer_overflow_underflow,malicious_tx,Gas allocation error in CALL operations in Besu EVM [GHSA-4456-w38r-m5
+evd-001,High,evm,missing_input_validation,malformed_input,"SHL, SHR, and SAR operations trigger native exception at key values"
+evd-002,High,crypto,resource_exhaustion,malicious_p2p_message,DoS via malicious p2p message
+evd-003,High,opcodes,consensus_divergence,malicious_tx,RETURNDATA corruption via datacopy
+evd-004,High,transactions,consensus_divergence,crafted_state,Consensus flaw during block processing
+evd-005,Critical,other,resource_exhaustion,malformed_input,Denial of service due to Go CVE-2020-28362 [GHSA-m6gx-rhvj-fh52 CVE-20
+evd-006,High,opcodes,integer_overflow_underflow,malformed_input,Denial of service via `MulMod`
+evd-007,High,precompiles,improper_state_update,malicious_tx,Shallow copy in the 0x4 precompile could lead to EVM memory corruption
+evd-008,High,opcodes,missing_bounds_check,malicious_tx,Security disclosures
+evd-009,High,sync,missing_input_validation,malicious_p2p_message,docs: vulnerability disclosure
+evd-010,High,p2p,resource_exhaustion,malformed_input,golang.org/x/crypto Vulnerable to Denial of Service (DoS) via Slow or 
+evd-011,High,transactions,unhandled_error_or_nil,crafted_state,miner: fix nil statedb panic in applyTransaction pre-amsterdam
+evd-012,High,transactions,missing_input_validation,malformed_input,core/types: fix panic on invalid signature length
+evd-013,High,blobs,other,malformed_input,core/txpool/blobpool: avoid possible zero index panic
+evd-014,High,evm,incorrect_gas_accounting,malformed_input,core/vm: remove panic when address is not present
+evd-015,High,database,improper_state_update,crafted_state,triedb/pathdb: fix panic in recoverable
+evd-016,High,state-trie,improper_state_update,crafted_state,trie: use explicit errors in stacktrie (instead of panic)
+evd-017,High,sync,race_condition,malformed_input,"common/prque, eth/downloader: fix timeout resurrection panic"
+evd-018,High,test,resource_exhaustion,malformed_input,core/beacon: prevent invalid logsBloom length panic
+evd-019,High,gas,unhandled_error_or_nil,malformed_input,core/vm: evm fix panic
+evd-020,High,state-trie,improper_state_update,crafted_state,snapshot: add Unlock before return/panic
+evd-021,High,p2p,unhandled_error_or_nil,malicious_p2p_message,les: fix panic
+evd-022,High,sync,missing_input_validation,peer,eth/downloader: fix mutex regression causing panics on fail
+evd-023,High,sync,other,malformed_input,eth/downloader: fix nil panic caused by wrong variable use
+evd-024,High,transactions,serialization_bug,malicious_tx,fix panic on bad tx sender
+evd-025,High,serialization,resource_exhaustion,malformed_input,beacon/engine: ensure nil ExecutionPayloadEnvelope.BlockValue doesn't 
+evd-026,High,sync,other,malformed_input,eth/downloader: fix rare crash when parent header missing in db
+evd-027,High,p2p,other,malicious_p2p_message,p2p/discover: fix crash in Resolve
+evd-028,High,block-processing,missing_bounds_check,malicious_block,"core: reorg logs crashed, add a check for corner cases"
+evd-029,High,sync,resource_exhaustion,crafted_state,"core/state, eth, trie: stabilize memory use, fix memory leak"
+evd-030,High,state-trie,unhandled_error_or_nil,crafted_state,[core] Race condition on diffLayer
+evd-031,High,beacon-chain:sync-committee,missing_input_validation,crafted_state,Incorrect processing of effective balances in Electra epoch processing
+evd-032,High,beacon-chain:attestation,consensus_divergence,malicious_block,Fix reprocess queue memory leak
+evd-033,High,data-availability-sampling,integer_overflow_underflow,crafted_state,Fix data columns not persisting for PeerDAS due to a `getBlobs` race c
+evd-034,High,beacon-chain:block-processing,consensus_divergence,malformed_input,Race condition fix + Reliability improvements around forks pruning (#1
+evd-035,High,p2p-interface,consensus_divergence,malicious_p2p_message,Fork choice timing attack
+evd-036,High,database,resource_exhaustion,malicious_block,Prune forks from the database
+evd-037,High,beacon-chain:block-processing,resource_exhaustion,malicious_block,Potential memory exhaustion vector
+evd-038,High,data-availability-sampling,unhandled_error_or_nil,malicious_attestation,Partial columns cleanup
+evd-039,High,fork-choice,consensus_divergence,crafted_state,Avoid 0x00 block hashes in fcU
+evd-040,High,fork-choice,consensus_divergence,malformed_input,Deprecate some `reorg`-related CLI flags and read from spec
+evd-041,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Fix slasher OOM
+evd-042,High,fork-choice,integer_overflow_underflow,malformed_input,Fix O(n²) find_head and stack overflow in filter_block_tree
+evd-043,High,bls,missing_input_validation,crafted_state,fix(bls): fix is_infinity when aggregating onto empty AggregateSignatu
+evd-044,High,kzg-commitments,crypto_misuse,malformed_input,Remove `expect` usage in `kzg_utils`
+evd-045,High,p2p-interface,resource_exhaustion,peer,Fix fetch blobs in all-null case
+evd-046,High,fork-choice,improper_state_update,crafted_state,Work around UB in LMDB bindings
+evd-047,High,data-availability-sampling,integer_overflow_underflow,malicious_attestation,PeerDAS spec tests
+evd-048,High,fork-choice,missing_input_validation,malicious_attestation,Fix Electra Fork Choice Tests
+evd-049,High,data-availability-sampling,resource_exhaustion,malicious_p2p_message,Re-process early sampling requests
+evd-050,High,fork-choice,integer_overflow_underflow,crafted_state,Reduce size of futures in HTTP API to prevent stack overflows
+evd-051,High,build-ci,resource_exhaustion,crafted_state,Tree states release v4.6.111-exp
+evd-052,High,beacon-chain:slashing,consensus_divergence,malformed_input,Delete temporary mitigation for equivocation via RPC
+evd-053,High,beacon-chain:attestation,resource_exhaustion,malicious_attestation,Add cache for parallel HTTP requests
+evd-054,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Fix for issue 4860 - Added in process_justification_and_finalization
+evd-055,High,light-client,missing_input_validation,malicious_attestation,Tree states to support per-slot state diffs
+evd-056,High,beacon-chain:execution-payload,missing_input_validation,malicious_p2p_message,Capella cleanup
+evd-057,High,fork-choice,missing_input_validation,crafted_state,Two Capella bugfixes
+evd-058,High,fork-choice,consensus_divergence,malformed_input,"beacon_node, consensus: fix possible deadlocks when comparing with its"
+evd-059,High,beacon-chain:slashing,integer_overflow_underflow,crafted_state,Use checked arithmetic in types and state proc
+evd-060,High,beacon-chain:block-processing,integer_overflow_underflow,crafted_state,Fix Eth1 data underflow
+evd-061,High,serialization,missing_bounds_check,malformed_input,Protect against OOB offset in variable list SSZ decoding
+evd-062,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Prevent duplicate gossipsub loops/message amplification
+evd-063,High,p2p-interface,missing_input_validation,malformed_input,Add timeouts to canonical head rwlock
+evd-064,High,p2p-interface,missing_input_validation,malicious_p2p_message,RPC Corrections and deadlock fix
+evd-065,High,beacon-chain:block-processing,integer_overflow_underflow,crafted_state,Fix underflow in verify_transfer
+evd-066,High,beacon-chain:attestation,race_condition,malicious_attestation,State caching as a first-class citizen
+evd-067,High,beacon-chain:block-processing,integer_overflow_underflow,malformed_input,Fix underflow in shuffle with empty list
+evd-068,High,beacon-chain:slashing,integer_overflow_underflow,malicious_block,AttesterSlashing number overflow
+evd-069,High,beacon-chain:justification-and-finality,missing_input_validation,malicious_p2p_message,feat: eip-8025 optional execution proofs
+evd-070,High,beacon-chain:execution-payload,consensus_divergence,crafted_state,rename random to prevRandao as per the kiln v2 specs
+evd-071,High,fork-choice,missing_input_validation,malicious_attestation,Implement Kintsugi specs :tea: (the Merge November sprint PR)
+evd-072,High,beacon-chain:execution-payload,missing_input_validation,crafted_state,Run sim single node test with Geth catalyst to finality
+evd-073,High,beacon-chain:attestation,serialization_bug,malicious_attestation,2 changes getting us closer to interop
+evd-074,High,bls,crypto_misuse,malformed_input,Detect unsafe coefficients in VerifyMultipleSignatures
+evd-075,Critical,p2p-interface,missing_input_validation,malformed_input,Potential remote code exploit in log4j dependency [GHSA-mwfw-vm54-g3p7
+evd-076,High,sync,consensus_divergence,malicious_block,Bump EIP-8025 `MAX_PROOF_SIZE` to 400 KiB
+evd-077,High,p2p,other,internal_only,Ethereum 2.0 Networking Specification
+evd-078,High,rpc,missing_input_validation,malformed_input,feat(trie): geth-compatible zero hashes for non-existent accounts in e
+evd-079,High,engine-api,consensus_divergence,malformed_input,feat: Check CL/Reth capability compatibility
+evd-080,High,rpc,missing_bounds_check,malformed_input,github.com/buger/jsonparser: bump 1.1.1 → 1.1.2 to address CVE-2026-32
+evd-081,High,gas,missing_input_validation,crafted_state,EIP-7928: Add BAL max items cap and slot uniqueness validation (#19627
+evd-082,High,other,other,internal_only,"This release contains a high-severity security fix, found by the Go Et"
+evd-083,High,rpc,resource_exhaustion,malformed_input,‼️ high-severity security issue fixup ‼️
+evd-084,High,rpc,other,malformed_input,"A few fixes for Polygon, incl. a fix for a critical start up issue whi"
+evd-085,High,test,integer_overflow_underflow,malformed_input,eth/fetcher: fix announcement drop logic (#32210)
+evd-086,High,txpool,resource_exhaustion,malformed_input,core/txpool: implement additional DoS defenses (#26648)
+evd-087,High,sync,integer_overflow_underflow,malicious_p2p_message,"p2p/msgrate: return capacity as integer, clamp to max uint32 (#22943)"
+evd-088,High,sync,race_condition,crafted_state,core/state/snapshot: fix race condition (#24685)
+evd-089,High,p2p,integer_overflow_underflow,malicious_p2p_message,go-ethereum vulnerable to DoS via malicious p2p message
+evd-090,High,txpool,resource_exhaustion,malicious_tx,Denial of Service in Go-Ethereum
+evd-091,High,evm,missing_bounds_check,malformed_input,Go Ethereum Denial of Service
+evd-092,High,p2p,resource_exhaustion,malicious_p2p_message,go-ethereum is vulnerable to high CPU usage leading to DoS via malicio
+evd-093,High,p2p,unhandled_error_or_nil,malicious_p2p_message,go-ethereum is vulnerable to DoS via malicious p2p message affecting a
+evd-094,High,sync,missing_bounds_check,malicious_p2p_message,Go Ethereum LES protocol implementation vulnerable to Denial of Servic
+evd-095,High,p2p,resource_exhaustion,malicious_p2p_message,Go-Ethereum vulnerable to denial of service via malicious p2p message
+evd-096,High,rpc,missing_input_validation,malformed_input,Go Ethereum Improper Input Validation
+evd-097,High,rpc,resource_exhaustion,malformed_input,go-ethereum vulnerable to denial of service via crafted GraphQL query
+evd-098,High,p2p,unhandled_error_or_nil,malformed_input,golang.org/x/crypto/ssh NULL Pointer Dereference vulnerability
+evd-099,High,crypto,unhandled_error_or_nil,malformed_input,golang.org/x/crypto/ssh Denial of service via crafted Signer
+evd-100,High,crypto,unhandled_error_or_nil,malformed_input,Helm uses crypto package vulnerable to panic from malformed X.509 cert
+evd-101,High,crypto,missing_input_validation,malformed_input,Improper Verification of Cryptographic Signature in golang.org/x/crypt
+evd-102,High,other,missing_input_validation,malformed_input,x/crypto/ssh vulnerable to panic via malformed packets
+evd-103,High,crypto,missing_input_validation,malformed_input,Misuse of ServerConfig.PublicKeyCallback may cause authorization bypas
+evd-104,High,crypto,missing_input_validation,peer,golang.org/x/crypto/ssh Man-in-the-Middle attack
+evd-105,High,p2p,integer_overflow_underflow,malformed_input,Integer overflow in github.com/gorilla/websocket
+evd-106,High,database,resource_exhaustion,malicious_tx,This patch should still be considered bleeding-edge. We advise exchang
+evd-107,High,block-processing,consensus_divergence,malicious_block,This is a security-critical release that fixes a regression in v1.9.4 
+evd-108,High,state-trie,improper_state_update,crafted_state,core/state: handle *bintrie.BinaryTrie in mustCopyTrie
+evd-109,High,state-trie,missing_input_validation,malformed_input,trie/bintrie: fix GetAccount/GetStorage non-membership — verify stem b
+evd-110,High,state-trie,missing_bounds_check,crafted_state,core/stateless: cap witness depth metrics buckets
+evd-111,High,state-trie,consensus_divergence,crafted_state,triedb/pathdb: fix state revert on v2 history
+evd-112,High,state-trie,resource_exhaustion,crafted_state,core/state: fix trie prefetcher for verkle
+evd-113,High,state-trie,resource_exhaustion,crafted_state,core/state: filter out nil trie for copy
+evd-114,High,blobs,improper_state_update,crafted_state,core/types: ensure receipts EncodeIndex writes + support blobtx-receip
+evd-115,High,state-trie,missing_input_validation,crafted_state,trie: fix range prover
+evd-116,High,p2p,unhandled_error_or_nil,malicious_p2p_message,p2p/discover: fix nil-dereference due to race
+evd-117,High,test,integer_overflow_underflow,malformed_input,eth/fetcher: fix announcement drop logic
+evd-118,High,p2p,integer_overflow_underflow,malformed_input,eth/protocols/eth: Fix overflows in  `GetBlockHeaders`
+evd-119,High,sync,integer_overflow_underflow,malicious_block,consensus/ethash: use 64bit indexes for the DAG generation
+evd-120,High,transactions,integer_overflow_underflow,malicious_p2p_message,rlp: input limit and other corrections
+evd-121,High,rlp,missing_bounds_check,malformed_input,rlp: fix list bounds check overflow (found by go-fuzz)
+evd-122,High,p2p,integer_overflow_underflow,malicious_p2p_message,les: add Skip overflow check to GetBlockHeadersMsg handler
+evd-123,High,state-trie,integer_overflow_underflow,crafted_state,trie/database: fix overflow in parent tracking
+evd-124,High,gas,integer_overflow_underflow,malformed_input,core/vm: Correct the Memory Gas Overflow condition
+evd-125,High,state-trie,missing_input_validation,crafted_state,core/stateless: fix parsing an empty witness
+evd-126,High,blobs,consensus_divergence,malformed_input,params: add osaka blob schedule
+evd-127,High,opcodes,unhandled_error_or_nil,malformed_input,core/vm/runtime: Add Random field to config
+evd-128,High,state-trie,consensus_divergence,crafted_state,"trie, tests/fuzzers: implement a stacktrie fuzzer + stacktrie fixes"
+evd-129,High,test,consensus_divergence,malformed_input,consensus/ethash: improve cache/dataset handling
+evd-130,High,state-trie,consensus_divergence,malformed_input,trie: fix delete bug for values contained in fullNode
+evd-131,High,block-processing,other,malicious_block,core: force import known but rolled back blocks
+evd-132,High,transactions,resource_exhaustion,malicious_p2p_message,eth/fetcher: throttle peers which deliver many invalid transactions
+evd-133,High,sync,resource_exhaustion,crafted_state,"cmd, core, tests: avoid hashing the code in the VM"
+evd-134,High,sync,resource_exhaustion,crafted_state,"cmd, core, eth, trie: get rid of trie cache generations"
+evd-135,High,test,resource_exhaustion,large_input,core: place a cap on reorglogs
+evd-136,High,sync,resource_exhaustion,malformed_input,eth/downloader: fix header download limiting
+evd-137,High,blobs,race_condition,crafted_state,"core/txpool/blobpool: revert #29989, WLock on Nonce"
+evd-138,High,blobs,missing_bounds_check,malformed_input,core/txpool/blobpool: continue on cell proof error in `GetBlobs`
+evd-139,High,sync,missing_bounds_check,malformed_input,downloader: fix edgecase where returned index is OOB for downloader
+evd-140,High,database,missing_bounds_check,crafted_state,triedb/pathdb: fix incorrect address length in history searching
+evd-141,High,beacon-chain:execution-payload,other,internal_only,"Grandine 2.0.2 is a high-priority release for mainnet users, as it con"
+evd-142,High,build-ci,other,malformed_input,"Grandine 2.0.3 is a high-priority release for mainnet users, as it con"
+evd-143,High,fork-choice,consensus_divergence,malformed_input,Grandine 2.0.4 is a high-priority release for mainnet users - it conta
+evd-144,High,beacon-chain:registry-updates,other,malformed_input,Grandine 2.0.5 is a high-priority release for mainnet users - it conta
+evd-145,High,p2p-interface,resource_exhaustion,peer,libp2p DoS vulnerability from lack of resource management
+evd-146,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Fix slasher OOM (#9141)
+evd-147,High,fork-choice,consensus_divergence,malicious_block,Reset payload statuses when resuming fork choice (#3498)
+evd-148,High,p2p-interface,resource_exhaustion,malformed_input,Add flag to disable lock timeouts (#2714)
+evd-149,High,p2p-interface,resource_exhaustion,malicious_p2p_message,Tracing cleanup (#7168)
+evd-150,High,p2p-interface,resource_exhaustion,crafted_state,From panic to crit (#1726)
+evd-151,High,beacon-chain:block-processing,serialization_bug,malformed_input,Fix panic in ssz decode
+evd-152,High,beacon-chain:block-processing,improper_state_update,crafted_state,Fix minor vec access panic opportunity
+evd-153,High,serialization,serialization_bug,malformed_input,"Remove Result from list encoding, panic instead"
+evd-154,High,beacon-chain:block-processing,missing_input_validation,malformed_input,[Merge] Optimistic EL verification (#2683)
+evd-155,High,fork-choice,consensus_divergence,malformed_input,Call per_slot_task from a blocking thread (v2) (#3199)
+evd-156,High,beacon-chain:attestation,missing_input_validation,malicious_attestation,Improve validator monitor experience for high validator counts (#3728)
+evd-157,High,beacon-chain:slashing,integer_overflow_underflow,crafted_state,Add `safe_sum` and use it in state_processing (#1620)
+evd-158,High,beacon-chain:attestation,race_condition,malicious_attestation,Fix race condition in seen caches (#1937)
+evd-159,High,beacon-chain:slashing,missing_input_validation,crafted_state,"Although these bugs were *not* security risks, they caused significant"
+evd-160,High,p2p-interface,crypto_misuse,malformed_input,Analysis of the network shows a concerning portion of users are runnin
+evd-161,High,other,other,other,:warning: Lighthouse v8.1.2 is a **high-priority** patch release with 
+evd-162,High,p2p-interface,resource_exhaustion,malicious_p2p_message,:warning: Lighthouse v8.1.3 is a **high-priority** patch release with 
+evd-163,High,other,other,other,:warning: Lighthouse v8.2.0 is a **high-priority** release containing 
+evd-164,High,p2p-interface,resource_exhaustion,peer,libp2p DoS vulnerability from lack of resource management
+evd-165,High,evm,other,malicious_tx,fix: fix hardcoded PadDirection in SliceWithZeroPadding UInt256 overlo
+evd-166,High,validator,missing_input_validation,malformed_input,A crash on start-up after running the client with `--history:prune` op
+evd-167,High,rpc,missing_input_validation,crafted_state,A fix of critical bug during live sync that could lead to panic or bad
+evd-168,High,other,other,internal_only,"Stable**: Since releasing reth 0.2.0-beta.6 in April 2024, there have "
+evd-169,High,p2p,resource_exhaustion,peer,libp2p DoS vulnerability from lack of resource management
+evd-170,High,p2p-interface,resource_exhaustion,malicious_p2p_message,Upgraded Netty dependency to include fixes for two HIGH severity secur
+evd-171,High,other,other,other,This is a critical security update. All users should update immediatel
+evd-172,High,opcodes,consensus_divergence,malicious_tx,CVE-2021-41272
+evd-173,High,gas,integer_overflow_underflow,malicious_tx,CVE-2022-36025
+evd-174,High,evm,missing_bounds_check,malicious_tx,CVE-2018-20421
+evd-175,High,transactions,integer_overflow_underflow,malicious_tx,CVE-2025-29072
