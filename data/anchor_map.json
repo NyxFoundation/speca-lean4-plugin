@@ -630,6 +630,66 @@
         "resolution": "label",
         "note": "per-def client-code mapping is TODO: it needs the @[speca_spec] annotations in gasper-lean4 (C1/C2, blocked on issue #9 G2); until then resolve client symbols via labels[label].client_code"
       }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.k_safety'",
+      "property_id": "CHK-GEN-01",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "fork-choice",
+      "spec_symbol": "on_block",
+      "spec_reference": "consensus-specs:specs/phase0/fork-choice.md#on_block",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO (see issue #9 G2); resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.k_safety'",
+      "property_id": "CHK-GEN-02",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "fork-choice",
+      "spec_symbol": "on_block",
+      "spec_reference": "consensus-specs:specs/phase0/fork-choice.md#on_block",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO (see issue #9 G2); resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.justified_iff_bounded",
+      "property_id": "CHK-GEN-03",
+      "source_file": "Executable/Justification.lean",
+      "label": "p2p-interface",
+      "spec_symbol": "the-gossip-domain-gossipsub",
+      "spec_reference": "consensus-specs:specs/phase0/p2p-interface.md#the-gossip-domain-gossipsub",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO (see issue #9 G2); resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+      "property_id": "CHK-GEN-04",
+      "source_file": "Core/Theories/PlausibleLiveness.lean",
+      "label": "p2p-interface",
+      "spec_symbol": "the-gossip-domain-gossipsub",
+      "spec_reference": "consensus-specs:specs/phase0/p2p-interface.md#the-gossip-domain-gossipsub",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO (see issue #9 G2); resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.k_safety'",
+      "property_id": "CHK-GEN-05",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:attestation",
+      "spec_symbol": "process_attestation",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_attestation",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO (see issue #9 G2); resolve via labels[label].client_code"
+      }
     }
   ]
 }

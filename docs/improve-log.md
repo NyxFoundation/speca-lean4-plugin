@@ -43,3 +43,12 @@ general, concrete). Saved as a **proposal** in `data/generated_properties.json`;
 they are NOT yet in `theorem_map.json` (adding them makes them live audit
 drivers and requires updating the checklist-count/shard contract tests, so it
 gates on human review).
+
+### adopted 2026-07-23
+
+The 5 generated proposals were **adopted into `theorem_map.json`** (vocabulary-
+conformed, `anchor_map.json` defs rows added, checklist-count/shard contract
+tests updated 15→20). The checklist SPECA uses is now **20 items** (15 improved
+hand-authored + 5 generated). Emit: 74 properties (54 mechanical lowerings + 20
+checklist). `data/generated_properties.json` was removed as it is now superseded
+by the theorem_map entries.

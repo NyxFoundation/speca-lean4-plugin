@@ -475,7 +475,7 @@ def _chk_entries(theorem_map: dict) -> list[dict]:
 
 def test_chk_entries_present_and_verbatim(theorem_map):
     chks = _chk_entries(theorem_map)
-    assert len(chks) == 15
+    assert len(chks) == 20
     for e in chks:
         assert e.get("lowering") == "verbatim", e["property_id"]
         assert e.get("x_dataset_evidence", "").strip(), e["property_id"]
