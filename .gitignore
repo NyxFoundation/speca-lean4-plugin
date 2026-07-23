@@ -14,4 +14,3 @@ lean/lake-packages/
 
 # work
 *.targets
-outputs/

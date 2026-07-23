@@ -1,51 +1,57 @@
 #!/usr/bin/env bash
-# Emit a track's completed 01e into outputs/<track>/ as the audit source
-# (speca#88 a/b/c-3). Each M2 track produces its own 01e checklist that becomes
-# the property source for the 11-client SPECA audit run in speca-audits-2026:
+# Emit a completed 01e checklist into outputs/<date>-<title>/ as the audit
+# source (speca#88 a/b/c-3). Each M2 audit track produces its own 01e that
+# becomes the property source for the 11-client SPECA run in speca-audits-2026.
 #
-#   a = gasper (this repo's theorem_map — the 20 CHK-* checklist)
-#   b = EL spec        (plugs in once b-1 formalizes an EL theorem set)
-#   c = vuln-dataset   (plugs in once c-1 formalizes a critical/high theorem set)
+# Subfolders are named <YYYYMMDD>-<title> (e.g. 20260723-gasper), not by track
+# letter, so a run is identifiable at a glance. Title examples: gasper (the
+# gasper-lean4 checklist), an EL-spec title, a vuln-dataset title.
 #
-# Writes a stable single-file 01e (outputs/<track>/01e.json) plus a manifest
-# recording the theorem_map / plugin commit it came from, so the audit source is
-# traceable. b/c pass their own --map/--scope/--health once they exist.
+# Writes a stable single-file 01e (01e.json) plus a manifest recording the
+# plugin commit / theorem_map / checklist ids, so the audit source is traceable.
 #
-# Usage: tools/emit-track.sh <a|b|c> [MAP] [SCOPE] [HEALTH]
+# Usage: tools/emit-track.sh <title> [DATE] [MAP] [SCOPE] [HEALTH]
+#   DATE defaults to today (YYYY-MM-DD).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-TRACK="${1:?usage: emit-track.sh <a|b|c> [MAP] [SCOPE] [HEALTH]}"
-case "$TRACK" in a|b|c) ;; *) echo "track must be a, b, or c" >&2; exit 2;; esac
-MAP="${2:-theorem_map.json}"
-SCOPE="${3:-tests/fixtures/bug_bounty_scope.sample.json}"
-HEALTH="${4:-tests/fixtures/theorem_health.sample.json}"
+TITLE="${1:?usage: emit-track.sh <title> [DATE] [MAP] [SCOPE] [HEALTH]  e.g. emit-track.sh gasper}"
+DATE="${2:-$(date +%Y%m%d)}"
+MAP="${3:-theorem_map.json}"
+SCOPE="${4:-tests/fixtures/bug_bounty_scope.sample.json}"
+HEALTH="${5:-tests/fixtures/theorem_health.sample.json}"
 
-OUT="outputs/$TRACK"
+# sanitize title into a folder-safe slug
+SLUG="$(printf '%s' "$TITLE" | tr '[:upper:] ' '[:lower:]-' | tr -cd 'a-z0-9-')"
+OUT="outputs/${DATE}-${SLUG}"
 mkdir -p "$OUT"
 
-echo "[emit-track $TRACK] map=$MAP scope=$SCOPE"
+echo "[emit-track] title=$TITLE date=$DATE -> $OUT"
 uv run speca-lean4 emit-01e --map "$MAP" --scope "$SCOPE" --health-json "$HEALTH" \
     --out "$OUT/01e.json"
 
 COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unknown)"
-uv run python - "$TRACK" "$OUT" "$MAP" "$COMMIT" <<'PY'
+uv run python - "$TITLE" "$DATE" "$OUT" "$MAP" "$COMMIT" <<'PY'
 import json, sys
-track, out, mapf, commit = sys.argv[1:5]
+title, date, out, mapf, commit = sys.argv[1:6]
 doc = json.load(open(f"{out}/01e.json", encoding="utf-8"))
 props = doc.get("properties", [])
 chk = [p for p in props if str(p.get("property_id", "")).startswith("CHK-")]
+from collections import Counter
 manifest = {
-    "track": track,
+    "title": title,
+    "date": date,
+    "folder": out,
     "plugin_repo": "NyxFoundation/speca-lean4-plugin",
     "plugin_commit": commit,
     "theorem_map": mapf,
     "property_count": len(props),
     "checklist_count": len(chk),
+    "checklist_severity": dict(Counter(p.get("severity") for p in chk)),
     "checklist_ids": [p["property_id"] for p in chk],
-    "note": "Audit source for speca-audits-2026 (a/b/c-3). Copy outputs/%s/01e.json into the audit repo's source location; run 02c-04 per client against it." % track,
+    "note": "Audit source for speca-audits-2026 (a/b/c-3). Copy %s/01e.json into the audit repo's source location; run 02c-04 per client against it." % out,
 }
 json.dump(manifest, open(f"{out}/manifest.json", "w", encoding="utf-8"), indent=2, ensure_ascii=False)
-print(f"  {len(props)} properties ({len(chk)} checklist) -> {out}/01e.json + manifest.json")
+print(f"  {len(props)} properties ({len(chk)} checklist, severity {manifest['checklist_severity']}) -> {out}/")
 PY
-echo "[emit-track $TRACK] done -> $OUT/"
+echo "[emit-track] done -> $OUT/"
