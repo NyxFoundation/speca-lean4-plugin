@@ -1,0 +1,9 @@
+{
+  "source": "NyxFoundation/ethereum-vuln-dataset",
+  "source_file": "data/ethereum_vulns.preview.csv",
+  "filter": "severity in {Critical, High} OR severity_estimated in {Critical, High}",
+  "row_count": 176,
+  "columns": ["id", "severity", "label", "root_cause", "attack_path", "title"],
+  "purpose": "Stage-2 improve-loop teaching material (speca#88/#143): concrete critical/high failure classes across the EL+CL surface. The vendored data/ethereum_vulns.csv is a 37-row consensus slice with only 3 critical/high rows, too thin to drive concreteness; this slice widens the critical/high signal.",
+  "note": "Improve reads only class fields (severity/label/root_cause); title/attack_path are carried for traceability but never enter the improve prompt (speca#143 safeguard fix)."
+}

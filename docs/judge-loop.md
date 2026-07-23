@@ -148,3 +148,28 @@ aborting the loop (the honesty guard correctly stopped rather than emitting a
 thin green). The class-only framing keeps the dataset as teaching material
 while staying clearly defensive. If a model still refuses, point `--improve-cmd`
 at a safeguard-exempt cross-family model (same adapter as above).
+
+## Running it as a system
+
+`tools/run-improve.sh [OUT_DIR] [MAX_ROUNDS]` is the reproducible entry point:
+emit the CHK 01e, cross-family judge (self-preference check), then the improve
+loop, using `data/ethereum_vulns_high.csv` (176 critical/high failure classes
+from ethereum-vuln-dataset — the vendored consensus slice has only 3, too thin
+to drive concreteness) as teaching material. Env overrides `JUDGE_CMD` /
+`IMPROVE_CMD` / `VULNS_CSV`.
+
+The loop writes `improved_01e.json` (a proposal). Persist it with
+`tools/apply-improved.py improved_01e.json`, which writes the sharpened
+`text`/`assertion` back into `theorem_map.json` (only those two string fields;
+theorem_map round-trips exactly at `json.dumps(indent=2)`, so the commit diff is
+the before/after record). Log each run in `docs/improve-log.md` with the commit
+link so the actual property changes are traceable.
+
+### Granularity backstop
+
+A sharpened item must stay ONE auditable concern at benchmark width. The improve
+prompt asks for terse, single-concern output (`TEXT_MAX` / `ASSERTION_MAX`), and
+`apply_improvement` rejects any rewrite that bloats past those caps (original
+kept) — "concrete" must not become an unbounded multi-check blob, which
+`tests/test_mapping.py::test_assertion_granularity_matches_benchmark` also
+enforces on the emitted properties.

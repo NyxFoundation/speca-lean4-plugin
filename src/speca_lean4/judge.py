@@ -75,6 +75,14 @@ SCORE_MIN, SCORE_MAX = 1, 5
 # metadata.
 MUTABLE_FIELDS = ("text", "assertion")
 
+# Benchmark granularity band (tests/test_mapping: benchmark assertions are
+# 94±15 chars, text ≤260). A rewrite may sharpen an item but must stay ONE
+# auditable concern at benchmark width — an unbounded multi-check blob is a
+# granularity regression, not concreteness. These caps are the deterministic
+# backstop; the improve prompt also asks for terse, single-concern output.
+TEXT_MAX = 260
+ASSERTION_MAX = 160
+
 # Deterministic generality lint: an improved item must not hard-code a client
 # or implementation name lifted from the evidence rows (that would optimize
 # the generality axis's exact failure mode).
@@ -368,8 +376,13 @@ def build_improve_prompt(
         "condition and concrete failure mode an implementation would hit.\n"
         "- Stay general: NEVER name a specific client or implementation "
         "(e.g. a client name from the evidence) in the rewritten item.\n"
-        "- TEXT: one imperative, code-level, audit-ready checklist sentence.\n"
-        "- ASSERTION: a compact machine-readable condition sketch.\n"
+        "- ONE auditable concern only. Do NOT bundle several checks; if the "
+        "item covers multiple, keep the single most important one. Concrete is "
+        "not the same as long.\n"
+        f"- TEXT: one imperative, code-level checklist sentence, <= {TEXT_MAX} "
+        "characters.\n"
+        f"- ASSERTION: a compact machine-readable condition sketch, "
+        f"<= {ASSERTION_MAX} characters.\n"
         "Return STRICT JSON only: {\"text\": \"...\", \"assertion\": \"...\"}"
     )
 
@@ -401,6 +414,15 @@ def apply_improvement(prop: dict[str, Any], response_text: str) -> tuple[dict[st
         m = _CLIENT_RE.search(v)
         if m:
             return None, f"rejected: client name {m.group(0)!r} in rewritten item (generality lint)"
+    # granularity backstop: keep the sharpened item at benchmark width (one
+    # auditable concern), never let it grow into an unbounded multi-check blob
+    if "text" in changes and len(changes["text"]) > TEXT_MAX:
+        return None, f"rejected: text {len(changes['text'])} chars > {TEXT_MAX} (granularity/length cap)"
+    if "assertion" in changes and len(changes["assertion"]) > ASSERTION_MAX:
+        return None, (
+            f"rejected: assertion {len(changes['assertion'])} chars > "
+            f"{ASSERTION_MAX} (granularity/length cap)"
+        )
     new_prop = dict(prop)
     new_prop.update(changes)
     problems = validate_property(new_prop)

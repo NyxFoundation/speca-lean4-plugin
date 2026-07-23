@@ -316,6 +316,24 @@ def test_apply_improvement_accepts_and_keeps_immutables():
     assert new["text"].startswith("Exact uint64")
 
 
+def test_apply_improvement_rejects_over_length_blob():
+    """Granularity backstop: a rewrite that bloats past the benchmark width is
+    rejected and the original kept, so improve can never emit an unbounded
+    multi-check blob (the granularity regression that fails the benchmark)."""
+    from speca_lean4.judge import TEXT_MAX, ASSERTION_MAX
+    long_text, reason = apply_improvement(_PROP, json.dumps({
+        "text": "audit " * 60,  # >260 chars
+        "assertion": "forall f: width(f)==u64",
+    }))
+    assert long_text is None and "text" in reason and "cap" in reason
+    long_assert, reason2 = apply_improvement(_PROP, json.dumps({
+        "text": "Exact uint64 comparison on every slashing field",
+        "assertion": "x " * 90,  # >160 chars
+    }))
+    assert long_assert is None and "assertion" in reason2 and "cap" in reason2
+    assert TEXT_MAX == 260 and ASSERTION_MAX == 160
+
+
 @pytest.mark.parametrize("resp,frag", [
     ("not json", "rejected"),
     (json.dumps({"other": "x"}), "no usable mutable field"),
