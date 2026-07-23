@@ -185,6 +185,7 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
         out_dir.mkdir(parents=True, exist_ok=True)
         total = 0
         for shard, props in groups.items():
+            props = _maybe_concrete_only(props, args)
             fp = out_dir / f"01e_PARTIAL_{shard}.json"
             fp.write_text(json.dumps(_doc(props, shard), indent=2, ensure_ascii=False), encoding="utf-8")
             total += len(props)
@@ -195,12 +196,43 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
     # Single-file output (back-compat; what speca's provider call uses).
     if args.out:
         properties = build_properties(theorem_map, health, scope, subgraphs, args.gasper_ref)
+        properties = _maybe_concrete_only(properties, args)
         Path(args.out).write_text(
             json.dumps(_doc(properties), indent=2, ensure_ascii=False), encoding="utf-8"
         )
         _flag_mismatches(properties)
         print(f"wrote {args.out}: {_summary(properties)}")
     return 0
+
+
+def _maybe_concrete_only(properties: list, args: argparse.Namespace) -> list:
+    """--concrete-only: keep only the sharpened/concrete checklist (CHK-* and
+    CHK-GEN-*), dropping the abstract theorem `-me*` must-establish decompositions.
+
+    The `-me*` properties are raw Lean proof-obligation decompositions (e.g.
+    "implementation must preserve [k_finalized ...]; if so, k_safety' guarantees
+    ..."). Their large spec->code semantic gap makes an LLM auditor invent
+    concrete sub-claims -> false positives. Only the CHK-* checklist goes through
+    the self-improvement loop and is implementation-operational, so an audit
+    should run on those. (Theorems that exist ONLY in abstract -me* form are lost
+    until concretized — surfaced below so it's never a silent drop.)
+    """
+    if not getattr(args, "concrete_only", False):
+        return properties
+    concrete = [p for p in properties if str(p.get("property_id", "")).startswith("CHK-")]
+    dropped = [p for p in properties if p not in concrete]
+    # theorems whose ONLY representation was abstract -> flag the coverage loss
+    concrete_thms = {p.get("lean_artifact") for p in concrete}
+    orphan_thms = sorted({p.get("lean_artifact") for p in dropped
+                          if p.get("lean_artifact") not in concrete_thms})
+    print(f"--concrete-only: kept {len(concrete)} CHK-* / dropped {len(dropped)} abstract",
+          file=sys.stderr)
+    if orphan_thms:
+        print(f"  NOTE: {len(orphan_thms)} theorem(s) had ONLY abstract -me* form "
+              f"(no concrete twin) — now uncovered until concretized:", file=sys.stderr)
+        for t in orphan_thms:
+            print(f"    - {t}", file=sys.stderr)
+    return concrete
 
 
 def cmd_emit_kurtosis(args: argparse.Namespace) -> int:
@@ -454,6 +486,13 @@ def build_parser() -> argparse.ArgumentParser:
     src = e.add_mutually_exclusive_group()
     src.add_argument("--health-json", help="precomputed speca-export health JSON")
     src.add_argument("--run-lean", action="store_true", help="run `lake exe speca-export` now")
+    e.add_argument(
+        "--concrete-only",
+        action="store_true",
+        help="emit only the concrete/self-improved checklist (CHK-*), dropping the "
+        "abstract theorem -me* must-establish decompositions (the FP source). "
+        "Recommended for the audit source.",
+    )
     e.add_argument("--out", help="single-file output 01e_PARTIAL JSON path (speca provider call)")
     e.add_argument(
         "--out-dir",

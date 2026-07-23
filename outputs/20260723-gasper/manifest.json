@@ -4,9 +4,9 @@
   "folder": "outputs/20260723-gasper",
   "file": "01e_PARTIAL_gasper.json",
   "plugin_repo": "NyxFoundation/speca-lean4-plugin",
-  "plugin_commit": "5bdd3ea7b9ebd7772e95d62e2b33777987c168ba",
+  "plugin_commit": "c476222a8bd1bf6c6cf645a4760736c8cb7b0e9b",
   "theorem_map": "theorem_map.json",
-  "property_count": 74,
+  "property_count": 20,
   "checklist_count": 20,
   "checklist_severity": {
     "CRITICAL": 8,

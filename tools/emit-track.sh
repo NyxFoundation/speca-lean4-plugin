@@ -21,6 +21,12 @@ DATE="${2:-$(date +%Y%m%d)}"
 MAP="${3:-theorem_map.json}"
 SCOPE="${4:-tests/fixtures/bug_bounty_scope.sample.json}"
 HEALTH="${5:-tests/fixtures/theorem_health.sample.json}"
+# The audit source must be the CONCRETE, self-improved checklist only (CHK-*),
+# NOT the abstract theorem -me* must-establish decompositions — mixing them was
+# the false-positive source (speca#88). Set EMIT_FULL=1 to include the abstract
+# proof-obligation properties (research use; expect more FPs).
+CONCRETE_FLAG="--concrete-only"
+[ "${EMIT_FULL:-}" = "1" ] && CONCRETE_FLAG=""
 
 # sanitize title into a folder-safe slug
 SLUG="$(printf '%s' "$TITLE" | tr '[:upper:] ' '[:lower:]-' | tr -cd 'a-z0-9-')"
@@ -28,7 +34,7 @@ OUT="outputs/${DATE}-${SLUG}"
 mkdir -p "$OUT"
 
 echo "[emit-track] title=$TITLE date=$DATE -> $OUT"
-uv run speca-lean4 emit-01e --map "$MAP" --scope "$SCOPE" --health-json "$HEALTH" \
+uv run speca-lean4 emit-01e $CONCRETE_FLAG --map "$MAP" --scope "$SCOPE" --health-json "$HEALTH" \
     --out "$OUT/01e_PARTIAL_${SLUG}.json"
 
 COMMIT="$(git rev-parse HEAD 2>/dev/null || echo unknown)"
