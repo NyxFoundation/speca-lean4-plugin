@@ -2696,6 +2696,997 @@
       "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
       "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
       "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_attestation"
+    },
+    {
+      "property_id": "CHK-GEN-06",
+      "text": "Confirm every incoming attestation's (source, target) checkpoint pair is validated for epoch ordering and block-tree ancestry before being tallied toward justification/finalization, rejecting pairs that could let conflicting checkpoints both finalize.",
+      "type": "invariant",
+      "assertion": "is_ancestor(source.root,target.root) and source.epoch<target.epoch required before tally_for_finalization(pair)",
+      "severity": "HIGH",
+      "covers": "process_justification_and_finalization",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "out-of-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#finalization_fork_means_same_finalization_fork_one",
+      "label": "beacon-chain:justification-and-finality",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash), finalization_fork τ stake vset parent genesis st ↔ same_k_finalization_fork τ stake vset parent genesis st 1",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        }
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.finalization_fork",
+        "GasperBeaconChain.Core.same_k_finalization_fork"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st => Iff.intro (fun h => ⋯) (fun h => ⋯)",
+      "lean_conclusion": "finalization_fork τ stake vset parent genesis st ↔ same_k_finalization_fork τ stake vset parent genesis st 1",
+      "lean_proof_source": "theorem finalization_fork_means_same_finalization_fork_one\n    ... (model parameters elided in sample fixture) ... :\n    finalization_fork τ stake vset parent genesis st ↔ same_k_finalization_fork τ stake vset parent gene :=\n  fun τ stake vset parent genesis st => Iff.intro (fun h => ⋯) (fun h => ⋯)",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization"
+    },
+    {
+      "property_id": "CHK-GEN-07",
+      "text": "Confirm every finalization/fork-choice comparison of checkpoint heights validates the incoming height field is well-formed and in-range before branching on the non-equal-height case, so a malformed message cannot force conflicting finalized checkpoints.",
+      "type": "invariant",
+      "assertion": "require validate_height(cp.height) before height_cmp(source.height, target.height) in non_equal_height branch; reject null/out-of-range/malformed height",
+      "severity": "CRITICAL",
+      "covers": "process_justification_and_finalization",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "out-of-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_non_equal_height_case",
+      "label": "beacon-chain:justification-and-finality",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (b1 : Hash) (b2 : Hash) (h1 : Nat) (h2 : Nat) (k1 : Nat) (k2 : Nat), k_finalized τ stake vset parent genesis st b1 k1 → k_finalized τ stake vset parent genesis st b2 k2 → h2 < h1 → not_ancestor parent b2 b1 → q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b1",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b2",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "h1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "h2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hfin1",
+          "type": "k_finalized τ stake vset parent genesis st b1 k1",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hfin2",
+          "type": "k_finalized τ stake vset parent genesis st b2 k2",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hlt",
+          "type": "h2 < h1",
+          "head": "Nat.lt",
+          "class": "must-establish"
+        },
+        {
+          "name": "hna",
+          "type": "not_ancestor parent b2 b1",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "k_finalized τ stake vset parent genesis st b1 k1",
+        "k_finalized τ stake vset parent genesis st b2 k2",
+        "h2 < h1",
+        "not_ancestor parent b2 b1"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.k_finalized",
+        "GasperBeaconChain.Core.not_ancestor",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st b1 b2 h1 h2 k1 k2 hfin1 hfin2 hlt hna => ⋯",
+      "lean_conclusion": "q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "theorem k_non_equal_height_case\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 h1 h2 k1 k2 hfin1 hfin2 hlt hna => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization"
+    },
+    {
+      "property_id": "CHK-GEN-08",
+      "text": "Verify surround-vote slashing checks validate source/target epoch ordering and bounds on both attestations before comparison, so malformed epochs can't bypass surround detection.",
+      "type": "invariant",
+      "assertion": "validate(a.src<a.tgt && b.src<b.tgt) before is_surround(a,b)",
+      "severity": "CRITICAL",
+      "covers": "process_justification_and_finalization",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "out-of-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_slash_surround_case_general",
+      "label": "beacon-chain:justification-and-finality",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (s : Hash) (t : Hash) (final : Hash) (s_h : Nat) (t_h : Nat) (final_h : Nat) (k : Nat), justified τ stake vset parent genesis st s s_h → supermajority_link τ stake vset st s t s_h t_h → k_finalized τ stake vset parent genesis st final k → final_h < t_h → s_h < final_h → not_ancestor parent final t → q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "s",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "t",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "final",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "s_h",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "t_h",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "final_h",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hjust",
+          "type": "justified τ stake vset parent genesis st s s_h",
+          "head": "GasperBeaconChain.Core.justified",
+          "class": "must-establish"
+        },
+        {
+          "name": "hlink",
+          "type": "supermajority_link τ stake vset st s t s_h t_h",
+          "head": "GasperBeaconChain.Core.supermajority_link",
+          "class": "must-establish"
+        },
+        {
+          "name": "hfin",
+          "type": "k_finalized τ stake vset parent genesis st final k",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hlt1",
+          "type": "final_h < t_h",
+          "head": "Nat.lt",
+          "class": "must-establish"
+        },
+        {
+          "name": "hlt2",
+          "type": "s_h < final_h",
+          "head": "Nat.lt",
+          "class": "must-establish"
+        },
+        {
+          "name": "hna",
+          "type": "not_ancestor parent final t",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "justified τ stake vset parent genesis st s s_h",
+        "supermajority_link τ stake vset st s t s_h t_h",
+        "k_finalized τ stake vset parent genesis st final k",
+        "final_h < t_h",
+        "s_h < final_h",
+        "not_ancestor parent final t"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.justified",
+        "GasperBeaconChain.Core.supermajority_link",
+        "GasperBeaconChain.Core.k_finalized",
+        "GasperBeaconChain.Core.not_ancestor",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st s t final s_h t_h final_h k hjust hlink hfin hlt1 hlt2 hna => ⋯",
+      "lean_conclusion": "q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "theorem k_slash_surround_case_general\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st s t final s_h t_h final_h k hjust hlink hfin hlt1 hlt2 hna => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization"
+    },
+    {
+      "property_id": "CHK-GEN-09",
+      "text": "Confirm the implementation validates that a checkpoint epoch matches compute_epoch_at_slot(block.slot) and that its root is a genuine chain ancestor before accepting it into justification or finalization updates, rejecting any mismatch.",
+      "type": "invariant",
+      "assertion": "forall c in accepted_checkpoints: c.epoch == epoch_of_slot(block[c.root].slot) and is_ancestor(c.root, head)",
+      "severity": "CRITICAL",
+      "covers": "process_justification_and_finalization",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "out-of-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#no_k_finalized_justified_same_height",
+      "label": "beacon-chain:justification-and-finality",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (bf : Hash) (bj : Hash) (h1 : Nat) (h2 : Nat) (k : Nat), k_finalized τ stake vset parent genesis st bf k → justified τ stake vset parent genesis st bj h2 → ¬ q_intersection_slashed τ stake vset st → bj ≠ bf → h2 ≠ h1",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "bf",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "bj",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "h1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "h2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hfin",
+          "type": "k_finalized τ stake vset parent genesis st bf k",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hjust",
+          "type": "justified τ stake vset parent genesis st bj h2",
+          "head": "GasperBeaconChain.Core.justified",
+          "class": "must-establish"
+        },
+        {
+          "name": "hns",
+          "type": "¬ q_intersection_slashed τ stake vset st",
+          "head": "GasperBeaconChain.Core.q_intersection_slashed",
+          "class": "must-establish"
+        },
+        {
+          "name": "hne",
+          "type": "bj ≠ bf",
+          "head": "Ne",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "k_finalized τ stake vset parent genesis st bf k",
+        "justified τ stake vset parent genesis st bj h2",
+        "¬ q_intersection_slashed τ stake vset st",
+        "bj ≠ bf"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.k_finalized",
+        "GasperBeaconChain.Core.justified",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st bf bj h1 h2 k hfin hjust hns hne => ⋯",
+      "lean_conclusion": "h2 ≠ h1",
+      "lean_proof_source": "theorem no_k_finalized_justified_same_height\n    ... (model parameters elided in sample fixture) ... :\n    h2 ≠ h1 :=\n  fun τ stake vset parent genesis st bf bj h1 h2 k hfin hjust hns hne => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization"
+    },
+    {
+      "property_id": "CHK-GEN-10",
+      "text": "Verify checkpoint justification rejects any supermajority computation whose signer set, height, or checkpoint hash fails validation before votes are tallied.",
+      "type": "invariant",
+      "assertion": "validate(signers, height, checkpoint_hash) before tally_supermajority(votes)",
+      "severity": "CRITICAL",
+      "covers": "process_justification_and_finalization",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "out-of-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Lemmas/AccountableSafety.lean#no_two_justified_same_height",
+      "label": "beacon-chain:justification-and-finality",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (b1 : Hash) (b2 : Hash) (h1 : Nat) (h2 : Nat), justified τ stake vset parent genesis st b1 h1 → justified τ stake vset parent genesis st b2 h2 → ¬ q_intersection_slashed τ stake vset st → b1 ≠ b2 → h1 ≠ h2",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b1",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b2",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "h1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "h2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hj1",
+          "type": "justified τ stake vset parent genesis st b1 h1",
+          "head": "GasperBeaconChain.Core.justified",
+          "class": "must-establish"
+        },
+        {
+          "name": "hj2",
+          "type": "justified τ stake vset parent genesis st b2 h2",
+          "head": "GasperBeaconChain.Core.justified",
+          "class": "must-establish"
+        },
+        {
+          "name": "hns",
+          "type": "¬ q_intersection_slashed τ stake vset st",
+          "head": "GasperBeaconChain.Core.q_intersection_slashed",
+          "class": "must-establish"
+        },
+        {
+          "name": "hne",
+          "type": "b1 ≠ b2",
+          "head": "Ne",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "justified τ stake vset parent genesis st b1 h1",
+        "justified τ stake vset parent genesis st b2 h2",
+        "¬ q_intersection_slashed τ stake vset st",
+        "b1 ≠ b2"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.justified",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st b1 b2 h1 h2 hj1 hj2 hns hne => ⋯",
+      "lean_conclusion": "h1 ≠ h2",
+      "lean_proof_source": "theorem no_two_justified_same_height\n    ... (model parameters elided in sample fixture) ... :\n    h1 ≠ h2 :=\n  fun τ stake vset parent genesis st b1 b2 h1 h2 hj1 hj2 hns hne => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization"
+    },
+    {
+      "property_id": "CHK-GEN-11",
+      "text": "Verify all height/epoch/index arithmetic in checkpoint and slashing-detection paths uses checked/saturating ops or explicit bounds checks, preventing overflow-induced false negatives in equivocation detection.",
+      "type": "invariant",
+      "assertion": "no unchecked +,-,* on height/epoch/index vars in checkpoint/slashing paths; all use checked_add/sub/mul or bounds-checked equivalents",
+      "severity": "CRITICAL",
+      "covers": "process_slashings",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "out-of-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Lemmas/AccountableSafety.lean#two_justified_same_height_slashed",
+      "label": "beacon-chain:slashing",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (b1 : Hash) (b2 : Hash) (h : Nat), justified τ stake vset parent genesis st b1 h → justified τ stake vset parent genesis st b2 h → b1 ≠ b2 → q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b1",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b2",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "h",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hj1",
+          "type": "justified τ stake vset parent genesis st b1 h",
+          "head": "GasperBeaconChain.Core.justified",
+          "class": "must-establish"
+        },
+        {
+          "name": "hj2",
+          "type": "justified τ stake vset parent genesis st b2 h",
+          "head": "GasperBeaconChain.Core.justified",
+          "class": "must-establish"
+        },
+        {
+          "name": "hne",
+          "type": "b1 ≠ b2",
+          "head": "Ne",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "justified τ stake vset parent genesis st b1 h",
+        "justified τ stake vset parent genesis st b2 h",
+        "b1 ≠ b2"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.justified",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st b1 b2 h hj1 hj2 hne => ⋯",
+      "lean_conclusion": "q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "theorem two_justified_same_height_slashed\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 h hj1 hj2 hne => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_slashings"
+    },
+    {
+      "property_id": "CHK-GEN-12",
+      "text": "Verify pre-quorum validation rejects malformed/duplicate/out-of-range attester weights before they contribute to attesting balance, so total_active_balance and quorum math cannot be inflated to force a false slashing witness.",
+      "type": "invariant",
+      "assertion": "validate(attester_weight) before sum; reject if weight<=0 || weight>effective_balance_max || duplicate(attester_id)",
+      "severity": "HIGH",
+      "covers": "process_justification_and_finalization",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "out-of-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Executable/Quorums.lean#q_intersection_slashed_iff_exists_witness",
+      "label": "beacon-chain:justification-and-finality",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash), qIntersectionWitnessB τ stake vset st ≠ none ↔ q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        }
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Executable.qIntersectionWitnessB",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset st => Iff.intro (fun h => ⋯) (fun h => ⋯)",
+      "lean_conclusion": "qIntersectionWitnessB τ stake vset st ≠ none ↔ q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "theorem q_intersection_slashed_iff_exists_witness\n    ... (model parameters elided in sample fixture) ... :\n    qIntersectionWitnessB τ stake vset st ≠ none ↔ q_intersection_slashed τ stake vset st :=\n  fun τ stake vset st => Iff.intro (fun h => ⋯) (fun h => ⋯)",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization"
     }
   ]
 }

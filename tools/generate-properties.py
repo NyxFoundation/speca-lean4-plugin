@@ -49,15 +49,62 @@ _SEV_FROM_CLASS = {"Critical": "CRITICAL", "High": "HIGH"}
 
 
 def load_theorems(theorem_map: dict) -> dict[str, dict]:
-    """theorem -> {labels, covers_hint} from the CHK entries' parent theorems."""
+    """theorem -> {labels, covers_hint, x_layer, severity, has_chk} from ALL entries.
+
+    Previously this skipped every non-CHK entry, so theorems that had ONLY the
+    abstract PROP-lean-*/-me* form (no concrete CHK twin) were invisible to the
+    generator — which is exactly why the core critical/high safety lemmas
+    (k_slash_surround_case_general, k_non_equal_height_case, …) never got
+    concretized. Now every theorem entry is loaded; ``has_chk`` marks the ones a
+    concrete checklist already covers so we only generate for the rest.
+    """
     out: dict[str, dict] = {}
     for p in theorem_map["properties"]:
-        if not str(p.get("property_id", "")).startswith("CHK-"):
+        t = p.get("theorem")
+        if not t:
             continue
-        t = p["theorem"]
-        d = out.setdefault(t, {"labels": set(), "covers_hint": set(), "x_layer": p.get("x_layer", "")})
+        d = out.setdefault(t, {"labels": set(), "covers_hint": set(),
+                               "x_layer": p.get("x_layer", ""), "severity": None,
+                               "has_chk": False})
         d["labels"].add(p.get("label", ""))
         d["covers_hint"].update(p.get("covers_hint", []) or [])
+        if p.get("severity") and not d["severity"]:
+            d["severity"] = p.get("severity")
+        if str(p.get("property_id", "")).startswith("CHK-"):
+            d["has_chk"] = True
+    return out
+
+
+def coverage_candidates(theorems: dict[str, dict], vulns: list[dict]) -> list[dict]:
+    """One candidate per CRITICAL/HIGH theorem with NO concrete CHK twin.
+
+    Theorem-driven and UNCAPPED — guarantees every high-severity proved invariant
+    gets a concrete checklist item (the fix for "concretize everything"). The
+    defect class is the most dataset-prevalent vuln class matching the theorem's
+    protocol label; if none matches, a generic invariant-violation class is used
+    so a candidate is still produced (never silently skipped).
+    """
+    prevalence = Counter((v["label"], v["root_cause"]) for v in vulns
+                         if v.get("severity") in ("Critical", "High"))
+    best_class: dict[str, str] = {}
+    for (label, rc), _ in prevalence.most_common():
+        best_class.setdefault(label, rc)
+    out: list[dict] = []
+    for t, d in sorted(theorems.items()):
+        if d.get("has_chk"):
+            continue
+        sev = (d.get("severity") or "").upper()
+        if sev not in ("CRITICAL", "HIGH"):
+            continue
+        rc = next((best_class[lab] for lab in d["labels"] if lab in best_class),
+                  "logic_error_invariant_violation")
+        out.append({"theorem": t,
+                    "label": next(iter(sorted(l for l in d["labels"] if l)), ""),
+                    "root_cause": rc,
+                    "severity": "Critical" if sev == "CRITICAL" else "High",
+                    "prevalence": 0,
+                    "covers_hint": sorted(d["covers_hint"]),
+                    "x_layer": d["x_layer"]})
     return out
 
 
@@ -141,6 +188,9 @@ def main() -> int:
     ap.add_argument("--gen-cmd", required=True, help="LLM adapter for generation")
     ap.add_argument("--judge-cmd", required=True, help="LLM adapter for judging")
     ap.add_argument("--max-new", type=int, default=6)
+    ap.add_argument("--cover-all", action="store_true",
+                    help="concretize EVERY critical/high theorem with no concrete CHK twin "
+                         "(theorem-driven, uncapped) instead of the top-N-by-prevalence set")
     ap.add_argument("--floor", type=float, default=3.5, help="min judged overall to keep")
     ap.add_argument("--out", default=str(_ROOT / "data" / "generated_properties.json"))
     args = ap.parse_args()
@@ -149,8 +199,12 @@ def main() -> int:
     theorems = load_theorems(tmap)
     with open(args.vulns_csv, encoding="utf-8-sig") as f:
         vulns = list(csv.DictReader(f))
-    cands = candidates(theorems, vulns, args.max_new)
-    print(f"{len(cands)} candidate (theorem x uncovered critical/high class) pairs")
+    if args.cover_all:
+        cands = coverage_candidates(theorems, vulns)
+        print(f"{len(cands)} critical/high theorem(s) with no concrete CHK twin -> concretizing all")
+    else:
+        cands = candidates(theorems, vulns, args.max_new)
+        print(f"{len(cands)} candidate (theorem x uncovered critical/high class) pairs")
 
     gen = subprocess_llm(split_cmd(args.gen_cmd), timeout=180)
     judge = subprocess_llm(split_cmd(args.judge_cmd), timeout=180)
@@ -158,11 +212,26 @@ def main() -> int:
     kept, seq = [], 1
     for c in cands:
         thm = c["theorem"].split(".")[-1]
-        try:
-            obj = _extract_json(gen(build_generate_prompt(c)))
-        except Exception as e:
-            print(f"  gen fail [{thm}/{c['root_cause']}]: {str(e)[:80]}"); continue
-        prop, why = validate_generated(obj)
+        # generate with a retry when the ONLY problem is length — re-prompt tersely
+        # rather than dropping the theorem (important for the critical/high ones).
+        prompt = build_generate_prompt(c)
+        prop, why = None, "gen fail"
+        for attempt in range(3):
+            try:
+                obj = _extract_json(gen(prompt))
+            except Exception as e:
+                why = f"gen fail: {str(e)[:80]}"; break
+            prop, why = validate_generated(obj)
+            if prop:
+                break
+            if ">" in why and "chars" not in why and "name" not in why:
+                # length overflow -> ask for a terser rewrite and retry
+                prompt = (build_generate_prompt(c) +
+                          f"\n\nSTRICT RETRY: your previous answer was REJECTED for being too long "
+                          f"({why}). Return TEXT <= {TEXT_MAX} chars and ASSERTION <= {ASSERTION_MAX} "
+                          f"chars — be terse, drop examples, keep the one core check.")
+                continue
+            break
         if not prop:
             print(f"  rejected [{thm}/{c['root_cause']}]: {why}"); continue
         # judge the new item blind, same rubric as everything else
