@@ -1,0 +1,3271 @@
+{
+  "phase": "01e",
+  "provider": "lean",
+  "projection": "gasper-causal",
+  "target_layer": "both",
+  "gasper_source": "NyxFoundation/gasper-lean4",
+  "gasper_ref": "main",
+  "projection_report": {
+    "cl": {
+      "target_layer": "cl",
+      "theorem_count": 25,
+      "property_count": 5,
+      "applicable": {
+        "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Core.finalized_means_justified_child": [
+          "CL-GASPER-JUST-001"
+        ],
+        "GasperBeaconChain.Core.finalized_means_one_finalized": [
+          "CL-GASPER-JUST-001"
+        ],
+        "GasperBeaconChain.Core.k_finalized_means_justified": [
+          "CL-GASPER-JUST-001"
+        ],
+        "GasperBeaconChain.Core.k_non_equal_height_case": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Core.k_safety'": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Core.k_slash_surround_case_general": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Core.no_k_finalized_justified_same_height": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Core.no_new_slashed_two_link_extension": [
+          "CL-GASPER-LIVE-001"
+        ],
+        "GasperBeaconChain.Core.no_two_justified_same_height": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Core.plausible_liveness_construct_extension": [
+          "CL-GASPER-LIVE-001"
+        ],
+        "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist": [
+          "CL-GASPER-LIVE-001"
+        ],
+        "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos": [
+          "CL-GASPER-QUORUM-001"
+        ],
+        "GasperBeaconChain.Core.quorum_2_upclosed": [
+          "CL-GASPER-QUORUM-001"
+        ],
+        "GasperBeaconChain.Core.quorum_intersection_weight_lower": [
+          "CL-GASPER-QUORUM-001"
+        ],
+        "GasperBeaconChain.Core.slashable_bound": [
+          "CL-GASPER-QUORUM-001"
+        ],
+        "GasperBeaconChain.Core.two_justified_same_height_slashed": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Core.validator_intersection_lower_bound": [
+          "CL-GASPER-QUORUM-001"
+        ],
+        "GasperBeaconChain.Executable.accountable_safety_witnessB": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Executable.justified_iff_bounded": [
+          "CL-GASPER-JUST-001"
+        ],
+        "GasperBeaconChain.Executable.k_accountable_safety_witnessB": [
+          "CL-GASPER-FIN-001"
+        ],
+        "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness": [
+          "CL-GASPER-QUORUM-001"
+        ],
+        "GasperBeaconChain.Executable.slashed_double_vote_iff_bex": [
+          "CL-GASPER-SLASH-001"
+        ],
+        "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex": [
+          "CL-GASPER-SLASH-001"
+        ],
+        "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum": [
+          "CL-GASPER-LIVE-001"
+        ]
+      },
+      "not_applicable": [],
+      "unclassified": [],
+      "stale_exclusions": []
+    },
+    "el": {
+      "target_layer": "el",
+      "theorem_count": 25,
+      "property_count": 7,
+      "applicable": {
+        "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one": [
+          "EL-GASPER-IDENTITY-001",
+          "EL-GASPER-FCU-001"
+        ],
+        "GasperBeaconChain.Core.finalized_means_justified_child": [
+          "EL-GASPER-FCU-001"
+        ],
+        "GasperBeaconChain.Core.finalized_means_one_finalized": [
+          "EL-GASPER-FCU-001"
+        ],
+        "GasperBeaconChain.Core.k_finalized_means_justified": [
+          "EL-GASPER-FCU-001"
+        ],
+        "GasperBeaconChain.Core.k_non_equal_height_case": [
+          "EL-GASPER-IDENTITY-001"
+        ],
+        "GasperBeaconChain.Core.k_safety'": [
+          "EL-GASPER-VALID-001",
+          "EL-GASPER-STATUS-001",
+          "EL-GASPER-FCU-001",
+          "EL-GASPER-RECOVERY-001"
+        ],
+        "GasperBeaconChain.Core.k_slash_surround_case_general": [
+          "EL-GASPER-IDENTITY-001"
+        ],
+        "GasperBeaconChain.Core.no_k_finalized_justified_same_height": [
+          "EL-GASPER-VALID-001"
+        ],
+        "GasperBeaconChain.Core.no_new_slashed_two_link_extension": [
+          "EL-GASPER-LIVE-001"
+        ],
+        "GasperBeaconChain.Core.no_two_justified_same_height": [
+          "EL-GASPER-VALID-001"
+        ],
+        "GasperBeaconChain.Core.plausible_liveness_construct_extension": [
+          "EL-GASPER-LIVE-001",
+          "EL-GASPER-RECOVERY-001"
+        ],
+        "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist": [
+          "EL-GASPER-LIVE-001"
+        ],
+        "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos": [
+          "EL-GASPER-REGISTRY-001"
+        ],
+        "GasperBeaconChain.Core.quorum_2_upclosed": [
+          "EL-GASPER-REGISTRY-001"
+        ],
+        "GasperBeaconChain.Core.quorum_intersection_weight_lower": [
+          "EL-GASPER-REGISTRY-001"
+        ],
+        "GasperBeaconChain.Core.slashable_bound": [
+          "EL-GASPER-REGISTRY-001"
+        ],
+        "GasperBeaconChain.Core.two_justified_same_height_slashed": [
+          "EL-GASPER-REGISTRY-001"
+        ],
+        "GasperBeaconChain.Core.validator_intersection_lower_bound": [
+          "EL-GASPER-REGISTRY-001"
+        ],
+        "GasperBeaconChain.Executable.accountable_safety_witnessB": [
+          "EL-GASPER-VALID-001",
+          "EL-GASPER-STATUS-001"
+        ],
+        "GasperBeaconChain.Executable.k_accountable_safety_witnessB": [
+          "EL-GASPER-VALID-001",
+          "EL-GASPER-STATUS-001"
+        ],
+        "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness": [
+          "EL-GASPER-REGISTRY-001"
+        ],
+        "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum": [
+          "EL-GASPER-LIVE-001"
+        ]
+      },
+      "not_applicable": [
+        {
+          "theorem": "GasperBeaconChain.Executable.justified_iff_bounded",
+          "reason": "The bounded justification checker is CL-local. EL validity affects its input DAG through other obligations, not the checker algorithm itself."
+        },
+        {
+          "theorem": "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+          "reason": "Double-vote classification is computed solely from CL attestations; the current Gasper model exposes no EL-owned input to this checker."
+        },
+        {
+          "theorem": "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex",
+          "reason": "Surround-vote classification is computed solely from CL attestations; the current Gasper model exposes no EL-owned input to this checker."
+        }
+      ],
+      "unclassified": [],
+      "stale_exclusions": []
+    }
+  },
+  "properties": [
+    {
+      "property_id": "CL-GASPER-FIN-001",
+      "text": "Verify that justification and finalization updates use one atomic fork-choice snapshot and reject any checkpoint whose root is absent, invalid, or not an ancestor of the candidate head.",
+      "type": "invariant",
+      "assertion": "accept_finalized(c,h) -> known_valid(c.root) and ancestor(c.root,h) and atomic_snapshot(justified,votes,parent)",
+      "severity": "CRITICAL",
+      "covers": "process_justification_and_finalization",
+      "reachability": {
+        "classification": "external-reachable",
+        "entry_points": [
+          "CallbackHandler"
+        ],
+        "attacker_controlled": true,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "external-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
+      "label": "beacon-chain:justification-and-finality",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (b1 : Hash) (b2 : Hash) (k1 : Nat) (k2 : Nat), k_finalized τ stake vset parent genesis st b1 k1 → k_finalized τ stake vset parent genesis st b2 k2 → not_ancestor parent b1 b2 → not_ancestor parent b2 b1 → q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b1",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b2",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hfin1",
+          "type": "k_finalized τ stake vset parent genesis st b1 k1",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hfin2",
+          "type": "k_finalized τ stake vset parent genesis st b2 k2",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc1",
+          "type": "not_ancestor parent b1 b2",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc2",
+          "type": "not_ancestor parent b2 b1",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "k_finalized τ stake vset parent genesis st b1 k1",
+        "k_finalized τ stake vset parent genesis st b2 k2",
+        "not_ancestor parent b1 b2",
+        "not_ancestor parent b2 b1"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.k_finalized",
+        "GasperBeaconChain.Core.not_ancestor",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_referenced_defs_expanded": [
+        {
+          "name": "GasperBeaconChain.Core.k_finalized",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.k_finalized : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset parent genesis st b k => ⋯"
+        },
+        {
+          "name": "GasperBeaconChain.Core.State",
+          "kind": "structure",
+          "pp": "structure GasperBeaconChain.Core.State : Type u → Type v → Type (max u v)\n  justified : ... (field signatures elided in sample fixture) ...\n  votes : ... (field signatures elided in sample fixture) ..."
+        },
+        {
+          "name": "GasperBeaconChain.Core.q_intersection_slashed",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.q_intersection_slashed : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset st => ⋯"
+        }
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_conclusion": "q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+        "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+        "GasperBeaconChain.Core.k_slash_surround_case_general",
+        "GasperBeaconChain.Core.k_non_equal_height_case",
+        "GasperBeaconChain.Core.no_two_justified_same_height",
+        "GasperBeaconChain.Core.two_justified_same_height_slashed",
+        "GasperBeaconChain.Executable.accountable_safety_witnessB",
+        "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+      ],
+      "owned_inputs": [
+        "State.justified",
+        "State.votes",
+        "HashParent",
+        "k_finalized",
+        "not_ancestor"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.k_safety'",
+            "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+            "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+            "GasperBeaconChain.Core.k_slash_surround_case_general",
+            "GasperBeaconChain.Core.k_non_equal_height_case",
+            "GasperBeaconChain.Core.no_two_justified_same_height",
+            "GasperBeaconChain.Core.two_justified_same_height_slashed",
+            "GasperBeaconChain.Executable.accountable_safety_witnessB",
+            "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "State.justified",
+            "State.votes",
+            "HashParent",
+            "k_finalized",
+            "not_ancestor"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "CL-GASPER-FIN-001",
+          "status": "not-required"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "process_justification_and_finalization",
+            "fork-choice store",
+            "checkpoint persistence"
+          ]
+        }
+      ],
+      "causal_rationale": "The accountable-safety theorems transfer only when every honest CL computes finalization, justification, and ancestry over one validated block DAG.",
+      "bridge_status": "not-required",
+      "spec_references": [
+        "consensus-specs:specs/phase0/beacon-chain.md#process-justification-and-finalization"
+      ],
+      "implementation_surfaces": [
+        "process_justification_and_finalization",
+        "fork-choice store",
+        "checkpoint persistence"
+      ],
+      "engine_methods": [],
+      "dataset_query": {
+        "labels": [
+          "beacon-chain:justification-and-finality",
+          "fork-choice"
+        ],
+        "root_causes": [
+          "consensus_divergence",
+          "improper_state_update",
+          "race_condition"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-039",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-040",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-046",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-058",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-143",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-147",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malicious_block"
+        },
+        {
+          "id": "evd-155",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        }
+      ]
+    },
+    {
+      "property_id": "CL-GASPER-QUORUM-001",
+      "text": "Verify that quorum membership is deduplicated and every effective-balance sum and two-thirds threshold comparison is exact, overflow-checked, and computed from the same validator-set snapshot.",
+      "type": "invariant",
+      "assertion": "quorum_weight(q)=sum_exact(unique(q) intersect active_snapshot) and no_overflow and 3*weight(q)>=2*total_active",
+      "severity": "HIGH",
+      "covers": "get_total_active_balance",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [
+          "FunctionCall"
+        ],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/SlashableBound.lean#slashable_bound",
+      "label": "beacon-chain:effective-balance-updates",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash), conflicting_k_finalization τ stake vset parent genesis st → ∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR)",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hconf",
+          "type": "conflicting_k_finalization τ stake vset parent genesis st",
+          "head": "GasperBeaconChain.Core.conflicting_k_finalization",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "conflicting_k_finalization τ stake vset parent genesis st"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.conflicting_k_finalization",
+        "GasperBeaconChain.Core.weight"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st hconf => ⋯",
+      "lean_conclusion": "∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR)",
+      "lean_proof_source": "theorem slashable_bound\n    ... (model parameters elided in sample fixture) ... :\n    ∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR) :=\n  fun τ stake vset parent genesis st hconf => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_effective_balance_updates",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Core.slashable_bound",
+        "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+        "GasperBeaconChain.Core.validator_intersection_lower_bound",
+        "GasperBeaconChain.Core.quorum_2_upclosed",
+        "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+        "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"
+      ],
+      "owned_inputs": [
+        "Threshold",
+        "stake",
+        "validator set",
+        "quorum_2",
+        "weight sums"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.slashable_bound",
+            "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+            "GasperBeaconChain.Core.validator_intersection_lower_bound",
+            "GasperBeaconChain.Core.quorum_2_upclosed",
+            "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+            "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "Threshold",
+            "stake",
+            "validator set",
+            "quorum_2",
+            "weight sums"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "CL-GASPER-QUORUM-001",
+          "status": "not-required"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "effective balance aggregation",
+            "committee deduplication",
+            "quorum threshold comparison"
+          ]
+        }
+      ],
+      "causal_rationale": "The quorum and slashable-bound results assume exact validator membership and arithmetic; representation loss or duplicate membership changes the proved lower bound.",
+      "bridge_status": "not-required",
+      "spec_references": [
+        "consensus-specs:specs/phase0/beacon-chain.md#get-total-active-balance"
+      ],
+      "implementation_surfaces": [
+        "effective balance aggregation",
+        "committee deduplication",
+        "quorum threshold comparison"
+      ],
+      "engine_methods": [],
+      "dataset_query": {
+        "labels": [
+          "beacon-chain:effective-balance-updates",
+          "beacon-chain:attestation"
+        ],
+        "root_causes": [
+          "integer_overflow_underflow",
+          "missing_bounds_check",
+          "consensus_divergence"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-032",
+          "severity": "High",
+          "label": "beacon-chain:attestation",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malicious_block"
+        }
+      ]
+    },
+    {
+      "property_id": "CL-GASPER-SLASH-001",
+      "text": "Verify that slashing detection compares exact source and target checkpoints and implements double-vote and strict surround-vote predicates in both attestation orderings without lossy numeric conversion.",
+      "type": "invariant",
+      "assertion": "slashed(v) iff double_vote_exact(v,a,b) or strict_surround_either_direction(v,a,b)",
+      "severity": "HIGH",
+      "covers": "is_slashable_attestation_data",
+      "reachability": {
+        "classification": "external-reachable",
+        "entry_points": [
+          "CallbackHandler"
+        ],
+        "attacker_controlled": true,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "external-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Executable/Slashing.lean#slashed_double_vote_iff_bex",
+      "label": "beacon-chain:slashing",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (v : Validator), slashedB st v = true ↔ ∃ a1 ∈ st.votes, ∃ a2 ∈ st.votes, double_vote v a1 a2",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "v",
+          "type": "Validator",
+          "head": "",
+          "class": "depend-allowed"
+        }
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Executable.slashedB",
+        "GasperBeaconChain.Core.double_vote"
+      ],
+      "lean_proof_provenance": "automated",
+      "lean_proof_code": "fun st v => of_decide_eq_true ⋯",
+      "lean_conclusion": "slashedB st v = true ↔ ∃ a1 ∈ st.votes, ∃ a2 ∈ st.votes, double_vote v a1 a2",
+      "lean_proof_source": "theorem slashed_double_vote_iff_bex\n    ... (model parameters elided in sample fixture) ... :\n    slashedB st v = true ↔ ∃ a1 ∈ st.votes, ∃ a2 ∈ st.votes, double_vote v a1 a2 :=\n  fun st v => of_decide_eq_true ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_slashings",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+        "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex"
+      ],
+      "owned_inputs": [
+        "attestation source",
+        "attestation target",
+        "target epoch",
+        "validator index"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+            "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "attestation source",
+            "attestation target",
+            "target epoch",
+            "validator index"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "CL-GASPER-SLASH-001",
+          "status": "not-required"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "attester slashing validation",
+            "slashing protection storage",
+            "checkpoint comparison"
+          ]
+        }
+      ],
+      "causal_rationale": "The executable iff theorems are implementation oracles: a CL checker must accept exactly the S1/S2 witnesses represented by the model.",
+      "bridge_status": "not-required",
+      "spec_references": [
+        "consensus-specs:specs/phase0/beacon-chain.md#is-slashable-attestation-data"
+      ],
+      "implementation_surfaces": [
+        "attester slashing validation",
+        "slashing protection storage",
+        "checkpoint comparison"
+      ],
+      "engine_methods": [],
+      "dataset_query": {
+        "labels": [
+          "beacon-chain:slashing"
+        ],
+        "root_causes": [
+          "integer_overflow_underflow",
+          "missing_input_validation",
+          "improper_state_update"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-059",
+          "severity": "High",
+          "label": "beacon-chain:slashing",
+          "root_cause": "integer_overflow_underflow",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-068",
+          "severity": "High",
+          "label": "beacon-chain:slashing",
+          "root_cause": "integer_overflow_underflow",
+          "attack_path": "malicious_block"
+        },
+        {
+          "id": "evd-157",
+          "severity": "High",
+          "label": "beacon-chain:slashing",
+          "root_cause": "integer_overflow_underflow",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-159",
+          "severity": "High",
+          "label": "beacon-chain:slashing",
+          "root_cause": "missing_input_validation",
+          "attack_path": "crafted_state"
+        }
+      ]
+    },
+    {
+      "property_id": "CL-GASPER-JUST-001",
+      "text": "Verify that every justified checkpoint is backed by a bounded, cycle-free chain of validated supermajority links and that justification-bit shifts reject negative or out-of-range epoch deltas.",
+      "type": "invariant",
+      "assertion": "justified(c) -> exists bounded_cycle_free_links(anchor,c) and every epoch_delta in justification_bits is in_range",
+      "severity": "HIGH",
+      "covers": "process_justification_and_finalization",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [
+          "FunctionCall"
+        ],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Lemmas/Justification.lean#finalized_means_justified_child",
+      "label": "beacon-chain:justification-and-finality",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (p : Hash) (h : Nat), finalized τ stake vset parent genesis st p h → ∃ c, parent p c ∧ justified τ stake vset parent genesis st c (h + 1)",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "p",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "h",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hfin",
+          "type": "finalized τ stake vset parent genesis st p h",
+          "head": "GasperBeaconChain.Core.finalized",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "finalized τ stake vset parent genesis st p h"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.finalized",
+        "GasperBeaconChain.Core.justified"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st p h hfin => ⋯",
+      "lean_conclusion": "∃ c, parent p c ∧ justified τ stake vset parent genesis st c (h + 1)",
+      "lean_proof_source": "theorem finalized_means_justified_child\n    ... (model parameters elided in sample fixture) ... :\n    ∃ c, parent p c ∧ justified τ stake vset parent genesis st c (h + 1) :=\n  fun τ stake vset parent genesis st p h hfin => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Core.finalized_means_justified_child",
+        "GasperBeaconChain.Core.k_finalized_means_justified",
+        "GasperBeaconChain.Core.finalized_means_one_finalized",
+        "GasperBeaconChain.Executable.justified_iff_bounded"
+      ],
+      "owned_inputs": [
+        "justified",
+        "supermajority links",
+        "bounded ancestor traversal",
+        "justification bits"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.finalized_means_justified_child",
+            "GasperBeaconChain.Core.k_finalized_means_justified",
+            "GasperBeaconChain.Core.finalized_means_one_finalized",
+            "GasperBeaconChain.Executable.justified_iff_bounded"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "justified",
+            "supermajority links",
+            "bounded ancestor traversal",
+            "justification bits"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "CL-GASPER-JUST-001",
+          "status": "not-required"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "justification bits",
+            "checkpoint ancestry traversal",
+            "supermajority link construction"
+          ]
+        }
+      ],
+      "causal_rationale": "Finalization lemmas depend on the implementation preserving the exact justified-link chain and its bounded traversal.",
+      "bridge_status": "not-required",
+      "spec_references": [
+        "consensus-specs:specs/phase0/beacon-chain.md#process-justification-and-finalization"
+      ],
+      "implementation_surfaces": [
+        "justification bits",
+        "checkpoint ancestry traversal",
+        "supermajority link construction"
+      ],
+      "engine_methods": [],
+      "dataset_query": {
+        "labels": [
+          "beacon-chain:justification-and-finality",
+          "beacon-chain:block-processing"
+        ],
+        "root_causes": [
+          "integer_overflow_underflow",
+          "missing_bounds_check",
+          "consensus_divergence"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-034",
+          "severity": "High",
+          "label": "beacon-chain:block-processing",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-060",
+          "severity": "High",
+          "label": "beacon-chain:block-processing",
+          "root_cause": "integer_overflow_underflow",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-065",
+          "severity": "High",
+          "label": "beacon-chain:block-processing",
+          "root_cause": "integer_overflow_underflow",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-067",
+          "severity": "High",
+          "label": "beacon-chain:block-processing",
+          "root_cause": "integer_overflow_underflow",
+          "attack_path": "malformed_input"
+        }
+      ]
+    },
+    {
+      "property_id": "CL-GASPER-LIVE-001",
+      "text": "Verify that every network-fed queue, decompression sink, and recursive block traversal used before attestation or block processing has a pre-allocation bound and cannot starve canonical-chain work.",
+      "type": "invariant",
+      "assertion": "network_work before vote_or_block_processing is bounded and canonical_work eventually_runs despite invalid or side-branch input",
+      "severity": "MEDIUM",
+      "covers": "on_block",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [
+          "FunctionCall"
+        ],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/PlausibleLiveness.lean#plausible_liveness_construct_extension",
+      "label": "p2p-interface",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (qctx : QuorumContext τ stake vset), two_thirds_good τ stake vset st → ¬ q_intersection_slashed τ stake vset st → good_votes τ stake vset parent genesis st → votes_from_target_vset_property vset st → ∀ b b_h, highest_justified τ stake vset parent genesis st b b_h → blocks_exist_high_over parent b → ∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset parent genesis st' nf nh ∧ parent nf nc ∧ supermajority_link τ stake vset st' nf nc nh (nh + 1)",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "qctx",
+          "type": "QuorumContext τ stake vset",
+          "head": "GasperBeaconChain.Core.QuorumContext",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "htwothirds",
+          "type": "two_thirds_good τ stake vset st",
+          "head": "GasperBeaconChain.Core.two_thirds_good",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hunslashed",
+          "type": "¬ q_intersection_slashed τ stake vset st",
+          "head": "GasperBeaconChain.Core.q_intersection_slashed",
+          "class": "must-establish"
+        },
+        {
+          "name": "hgood",
+          "type": "good_votes τ stake vset parent genesis st",
+          "head": "GasperBeaconChain.Core.good_votes",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hwf_st",
+          "type": "votes_from_target_vset_property vset st",
+          "head": "GasperBeaconChain.Core.votes_from_target_vset_property",
+          "class": "must-establish"
+        },
+        {
+          "name": "hheight",
+          "type": "∀ b b_h, highest_justified τ stake vset parent genesis st b b_h → blocks_exist_high_over parent b",
+          "head": "GasperBeaconChain.Core.blocks_exist_high_over",
+          "class": "depend-allowed"
+        }
+      ],
+      "lean_must_establish": [
+        "¬ q_intersection_slashed τ stake vset st",
+        "votes_from_target_vset_property vset st"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.two_thirds_good",
+        "GasperBeaconChain.Core.q_intersection_slashed",
+        "GasperBeaconChain.Core.good_votes",
+        "GasperBeaconChain.Core.votes_from_target_vset_property",
+        "GasperBeaconChain.Core.highest_justified",
+        "GasperBeaconChain.Core.blocks_exist_high_over",
+        "GasperBeaconChain.Core.unslashed_can_extend",
+        "GasperBeaconChain.Core.no_new_slashed",
+        "GasperBeaconChain.Core.justified",
+        "GasperBeaconChain.Core.supermajority_link",
+        "GasperBeaconChain.Core.QuorumContext"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st qctx htwothirds hunslashed hgood hwf_st hheight => ⋯",
+      "lean_conclusion": "∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset parent genesis st' nf nh ∧ parent nf nc ∧ supermajority_link τ stake vset st' nf nc nh (nh + 1)",
+      "lean_proof_source": "theorem plausible_liveness_construct_extension\n    ... (model parameters elided in sample fixture) ... :\n    ∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset pare :=\n  fun τ stake vset parent genesis st qctx htwothirds hunslashed hgood hwf_st hheight => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+        "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+        "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+        "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum"
+      ],
+      "owned_inputs": [
+        "blocks_exist_high_over",
+        "good_votes",
+        "two_thirds_good",
+        "message processing progress"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+            "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+            "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+            "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "blocks_exist_high_over",
+            "good_votes",
+            "two_thirds_good",
+            "message processing progress"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "CL-GASPER-LIVE-001",
+          "status": "not-required"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "gossip validation",
+            "pending block queues",
+            "decompression",
+            "ancestor traversal"
+          ]
+        }
+      ],
+      "causal_rationale": "The liveness construction assumes honest votes and blocks remain processable; unbounded queues, decompression, or traversal can falsify that operational premise.",
+      "bridge_status": "not-required",
+      "spec_references": [
+        "consensus-specs:specs/phase0/p2p-interface.md"
+      ],
+      "implementation_surfaces": [
+        "gossip validation",
+        "pending block queues",
+        "decompression",
+        "ancestor traversal"
+      ],
+      "engine_methods": [],
+      "dataset_query": {
+        "labels": [
+          "p2p-interface",
+          "p2p",
+          "sync"
+        ],
+        "root_causes": [
+          "resource_exhaustion",
+          "missing_bounds_check",
+          "unhandled_error_or_nil"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-010",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-021",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "unhandled_error_or_nil",
+          "attack_path": "malicious_p2p_message"
+        },
+        {
+          "id": "evd-029",
+          "severity": "High",
+          "label": "sync",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-045",
+          "severity": "High",
+          "label": "p2p-interface",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "peer"
+        },
+        {
+          "id": "evd-092",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "malicious_p2p_message"
+        },
+        {
+          "id": "evd-093",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "unhandled_error_or_nil",
+          "attack_path": "malicious_p2p_message"
+        },
+        {
+          "id": "evd-094",
+          "severity": "High",
+          "label": "sync",
+          "root_cause": "missing_bounds_check",
+          "attack_path": "malicious_p2p_message"
+        },
+        {
+          "id": "evd-095",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "malicious_p2p_message"
+        }
+      ]
+    },
+    {
+      "property_id": "EL-GASPER-VALID-001",
+      "text": "Verify that a payload is returned VALID only after deterministic execution against its exact parent state, with all header, transaction, state-root, receipts-root, withdrawal, blob, and request commitments checked.",
+      "type": "invariant",
+      "assertion": "VALID(p,parent) -> execute_spec(parent,p)=ok and computed_commitments(p)=header_commitments(p)",
+      "severity": "CRITICAL",
+      "covers": "engine_newPayloadV*",
+      "reachability": {
+        "classification": "external-reachable",
+        "entry_points": [
+          "CallbackHandler"
+        ],
+        "attacker_controlled": true,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "external-attack",
+      "lean_status": "descends-from-proved-via-unproved-bridge",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
+      "label": "engine-api",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (b1 : Hash) (b2 : Hash) (k1 : Nat) (k2 : Nat), k_finalized τ stake vset parent genesis st b1 k1 → k_finalized τ stake vset parent genesis st b2 k2 → not_ancestor parent b1 b2 → not_ancestor parent b2 b1 → q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b1",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b2",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hfin1",
+          "type": "k_finalized τ stake vset parent genesis st b1 k1",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hfin2",
+          "type": "k_finalized τ stake vset parent genesis st b2 k2",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc1",
+          "type": "not_ancestor parent b1 b2",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc2",
+          "type": "not_ancestor parent b2 b1",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "k_finalized τ stake vset parent genesis st b1 k1",
+        "k_finalized τ stake vset parent genesis st b2 k2",
+        "not_ancestor parent b1 b2",
+        "not_ancestor parent b2 b1"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.k_finalized",
+        "GasperBeaconChain.Core.not_ancestor",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_referenced_defs_expanded": [
+        {
+          "name": "GasperBeaconChain.Core.k_finalized",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.k_finalized : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset parent genesis st b k => ⋯"
+        },
+        {
+          "name": "GasperBeaconChain.Core.State",
+          "kind": "structure",
+          "pp": "structure GasperBeaconChain.Core.State : Type u → Type v → Type (max u v)\n  justified : ... (field signatures elided in sample fixture) ...\n  votes : ... (field signatures elided in sample fixture) ..."
+        },
+        {
+          "name": "GasperBeaconChain.Core.q_intersection_slashed",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.q_intersection_slashed : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset st => ⋯"
+        }
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_conclusion": "q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+        "GasperBeaconChain.Core.no_two_justified_same_height",
+        "GasperBeaconChain.Executable.accountable_safety_witnessB",
+        "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+      ],
+      "owned_inputs": [
+        "eligible block DAG",
+        "execution validity predicate",
+        "payload parent state"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.k_safety'",
+            "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+            "GasperBeaconChain.Core.no_two_justified_same_height",
+            "GasperBeaconChain.Executable.accountable_safety_witnessB",
+            "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "eligible block DAG",
+            "execution validity predicate",
+            "payload parent state"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "EL-GASPER-VALID-001",
+          "status": "specified-unproved"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "engine_newPayloadV*",
+            "block execution",
+            "header validation",
+            "payload validity cache"
+          ]
+        }
+      ],
+      "causal_rationale": "If honest ELs disagree about payload validity, honest CLs instantiate different eligible block DAGs and Gasper accountable safety no longer transfers directly.",
+      "bridge_status": "specified-unproved",
+      "spec_references": [
+        "execution-apis:src/engine/paris.md#payload-validation",
+        "execution-specs:state-transition"
+      ],
+      "implementation_surfaces": [
+        "engine_newPayloadV*",
+        "block execution",
+        "header validation",
+        "payload validity cache"
+      ],
+      "engine_methods": [
+        "engine_newPayloadV1",
+        "engine_newPayloadV2",
+        "engine_newPayloadV3",
+        "engine_newPayloadV4"
+      ],
+      "dataset_query": {
+        "labels": [
+          "engine-api",
+          "block-processing",
+          "state-trie",
+          "transactions",
+          "evm",
+          "gas"
+        ],
+        "root_causes": [
+          "consensus_divergence",
+          "improper_state_update",
+          "incorrect_gas_accounting",
+          "serialization_bug"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-004",
+          "severity": "High",
+          "label": "transactions",
+          "root_cause": "consensus_divergence",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-014",
+          "severity": "High",
+          "label": "evm",
+          "root_cause": "incorrect_gas_accounting",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-016",
+          "severity": "High",
+          "label": "state-trie",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-020",
+          "severity": "High",
+          "label": "state-trie",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-024",
+          "severity": "High",
+          "label": "transactions",
+          "root_cause": "serialization_bug",
+          "attack_path": "malicious_tx"
+        },
+        {
+          "id": "evd-079",
+          "severity": "High",
+          "label": "engine-api",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-107",
+          "severity": "High",
+          "label": "block-processing",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malicious_block"
+        },
+        {
+          "id": "evd-108",
+          "severity": "High",
+          "label": "state-trie",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        }
+      ]
+    },
+    {
+      "property_id": "EL-GASPER-IDENTITY-001",
+      "text": "Verify that every Engine API status and latestValidHash is bound to the exact submitted payload and parent chain, and reject any blockHash or parentHash mismatch before caching or exposing the payload.",
+      "type": "invariant",
+      "assertion": "status[p].key=keccak(header(p)) and latestValidHash in ancestors(p) and parentHash(p)=hash(parent_state)",
+      "severity": "CRITICAL",
+      "covers": "engine_newPayloadV*",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [
+          "FunctionCall"
+        ],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved-via-unproved-bridge",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#finalization_fork_means_same_finalization_fork_one",
+      "label": "engine-api",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash), finalization_fork τ stake vset parent genesis st ↔ same_k_finalization_fork τ stake vset parent genesis st 1",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        }
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.finalization_fork",
+        "GasperBeaconChain.Core.same_k_finalization_fork"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st => Iff.intro (fun h => ⋯) (fun h => ⋯)",
+      "lean_conclusion": "finalization_fork τ stake vset parent genesis st ↔ same_k_finalization_fork τ stake vset parent genesis st 1",
+      "lean_proof_source": "theorem finalization_fork_means_same_finalization_fork_one\n    ... (model parameters elided in sample fixture) ... :\n    finalization_fork τ stake vset parent genesis st ↔ same_k_finalization_fork τ stake vset parent gene :=\n  fun τ stake vset parent genesis st => Iff.intro (fun h => ⋯) (fun h => ⋯)",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+        "GasperBeaconChain.Core.k_slash_surround_case_general",
+        "GasperBeaconChain.Core.k_non_equal_height_case"
+      ],
+      "owned_inputs": [
+        "HashParent",
+        "payload blockHash",
+        "parentHash",
+        "latestValidHash"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+            "GasperBeaconChain.Core.k_slash_surround_case_general",
+            "GasperBeaconChain.Core.k_non_equal_height_case"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "HashParent",
+            "payload blockHash",
+            "parentHash",
+            "latestValidHash"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "EL-GASPER-IDENTITY-001",
+          "status": "specified-unproved"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "payload hash validation",
+            "latest valid ancestor lookup",
+            "payload status cache"
+          ]
+        }
+      ],
+      "causal_rationale": "The Gasper fork cases reason over stable block identity and ancestry; accepting a payload under the wrong hash or parent changes those relations.",
+      "bridge_status": "specified-unproved",
+      "spec_references": [
+        "execution-apis:src/engine/paris.md#engine-newpayloadv1"
+      ],
+      "implementation_surfaces": [
+        "payload hash validation",
+        "latest valid ancestor lookup",
+        "payload status cache"
+      ],
+      "engine_methods": [
+        "engine_newPayloadV1",
+        "engine_newPayloadV2",
+        "engine_newPayloadV3",
+        "engine_newPayloadV4"
+      ],
+      "dataset_query": {
+        "labels": [
+          "engine-api",
+          "fork-choice",
+          "serialization"
+        ],
+        "root_causes": [
+          "consensus_divergence",
+          "serialization_bug",
+          "improper_state_update"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-039",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-040",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-046",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-058",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-079",
+          "severity": "High",
+          "label": "engine-api",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-143",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-147",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malicious_block"
+        },
+        {
+          "id": "evd-153",
+          "severity": "High",
+          "label": "serialization",
+          "root_cause": "serialization_bug",
+          "attack_path": "malformed_input"
+        }
+      ]
+    },
+    {
+      "property_id": "EL-GASPER-STATUS-001",
+      "text": "Verify that a payload recorded INVALID never becomes VALID after sync, restart, cache eviction, or fork-choice replay, and that descendants of an invalid payload cannot be selected as head, safe, or finalized.",
+      "type": "invariant",
+      "assertion": "status[p]=INVALID -> always status[p]!=VALID and descendants(p) excluded from {head,safe,finalized}",
+      "severity": "CRITICAL",
+      "covers": "payload validation status",
+      "reachability": {
+        "classification": "external-reachable",
+        "entry_points": [
+          "CallbackHandler"
+        ],
+        "attacker_controlled": true,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "external-attack",
+      "lean_status": "descends-from-proved-via-unproved-bridge",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
+      "label": "fork-choice",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (b1 : Hash) (b2 : Hash) (k1 : Nat) (k2 : Nat), k_finalized τ stake vset parent genesis st b1 k1 → k_finalized τ stake vset parent genesis st b2 k2 → not_ancestor parent b1 b2 → not_ancestor parent b2 b1 → q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b1",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b2",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hfin1",
+          "type": "k_finalized τ stake vset parent genesis st b1 k1",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hfin2",
+          "type": "k_finalized τ stake vset parent genesis st b2 k2",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc1",
+          "type": "not_ancestor parent b1 b2",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc2",
+          "type": "not_ancestor parent b2 b1",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "k_finalized τ stake vset parent genesis st b1 k1",
+        "k_finalized τ stake vset parent genesis st b2 k2",
+        "not_ancestor parent b1 b2",
+        "not_ancestor parent b2 b1"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.k_finalized",
+        "GasperBeaconChain.Core.not_ancestor",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_referenced_defs_expanded": [
+        {
+          "name": "GasperBeaconChain.Core.k_finalized",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.k_finalized : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset parent genesis st b k => ⋯"
+        },
+        {
+          "name": "GasperBeaconChain.Core.State",
+          "kind": "structure",
+          "pp": "structure GasperBeaconChain.Core.State : Type u → Type v → Type (max u v)\n  justified : ... (field signatures elided in sample fixture) ...\n  votes : ... (field signatures elided in sample fixture) ..."
+        },
+        {
+          "name": "GasperBeaconChain.Core.q_intersection_slashed",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.q_intersection_slashed : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset st => ⋯"
+        }
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_conclusion": "q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Executable.accountable_safety_witnessB",
+        "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+      ],
+      "owned_inputs": [
+        "execution validity predicate",
+        "payload status history",
+        "invalid descendant closure"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.k_safety'",
+            "GasperBeaconChain.Executable.accountable_safety_witnessB",
+            "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "execution validity predicate",
+            "payload status history",
+            "invalid descendant closure"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "EL-GASPER-STATUS-001",
+          "status": "specified-unproved"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "payload status cache",
+            "sync completion",
+            "database recovery",
+            "invalid ancestor propagation"
+          ]
+        }
+      ],
+      "causal_rationale": "An INVALID payload becoming VALID after sync, restart, or cache replay can reintroduce a block excluded from the Gasper DAG used by honest nodes.",
+      "bridge_status": "specified-unproved",
+      "spec_references": [
+        "execution-apis:src/engine/paris.md#payload-validation"
+      ],
+      "implementation_surfaces": [
+        "payload status cache",
+        "sync completion",
+        "database recovery",
+        "invalid ancestor propagation"
+      ],
+      "engine_methods": [
+        "engine_newPayloadV*",
+        "engine_forkchoiceUpdatedV*"
+      ],
+      "dataset_query": {
+        "labels": [
+          "fork-choice",
+          "engine-api",
+          "database",
+          "sync"
+        ],
+        "root_causes": [
+          "improper_state_update",
+          "consensus_divergence",
+          "race_condition"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-015",
+          "severity": "High",
+          "label": "database",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-017",
+          "severity": "High",
+          "label": "sync",
+          "root_cause": "race_condition",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-039",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-040",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-046",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-058",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-076",
+          "severity": "High",
+          "label": "sync",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malicious_block"
+        },
+        {
+          "id": "evd-079",
+          "severity": "High",
+          "label": "engine-api",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        }
+      ]
+    },
+    {
+      "property_id": "EL-GASPER-FCU-001",
+      "text": "Verify that forkchoiceUpdated validates head, safe, and finalized ancestry and payload validity before atomically changing canonical state, and never rolls back a previously accepted finalized prefix.",
+      "type": "invariant",
+      "assertion": "apply_fcu(h,s,f) -> VALID(h,s,f) and ancestor(f,s) and ancestor(s,h) and atomic and old_finalized<=f",
+      "severity": "CRITICAL",
+      "covers": "engine_forkchoiceUpdatedV*",
+      "reachability": {
+        "classification": "external-reachable",
+        "entry_points": [
+          "CallbackHandler"
+        ],
+        "attacker_controlled": true,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "external-attack",
+      "lean_status": "descends-from-proved-via-unproved-bridge",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
+      "label": "fork-choice",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (b1 : Hash) (b2 : Hash) (k1 : Nat) (k2 : Nat), k_finalized τ stake vset parent genesis st b1 k1 → k_finalized τ stake vset parent genesis st b2 k2 → not_ancestor parent b1 b2 → not_ancestor parent b2 b1 → q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b1",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b2",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hfin1",
+          "type": "k_finalized τ stake vset parent genesis st b1 k1",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hfin2",
+          "type": "k_finalized τ stake vset parent genesis st b2 k2",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc1",
+          "type": "not_ancestor parent b1 b2",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc2",
+          "type": "not_ancestor parent b2 b1",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "k_finalized τ stake vset parent genesis st b1 k1",
+        "k_finalized τ stake vset parent genesis st b2 k2",
+        "not_ancestor parent b1 b2",
+        "not_ancestor parent b2 b1"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.k_finalized",
+        "GasperBeaconChain.Core.not_ancestor",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_referenced_defs_expanded": [
+        {
+          "name": "GasperBeaconChain.Core.k_finalized",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.k_finalized : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset parent genesis st b k => ⋯"
+        },
+        {
+          "name": "GasperBeaconChain.Core.State",
+          "kind": "structure",
+          "pp": "structure GasperBeaconChain.Core.State : Type u → Type v → Type (max u v)\n  justified : ... (field signatures elided in sample fixture) ...\n  votes : ... (field signatures elided in sample fixture) ..."
+        },
+        {
+          "name": "GasperBeaconChain.Core.q_intersection_slashed",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.q_intersection_slashed : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset st => ⋯"
+        }
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_conclusion": "q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+        "GasperBeaconChain.Core.finalized_means_justified_child",
+        "GasperBeaconChain.Core.k_finalized_means_justified",
+        "GasperBeaconChain.Core.finalized_means_one_finalized"
+      ],
+      "owned_inputs": [
+        "canonical head",
+        "safe prefix",
+        "finalized prefix",
+        "HashParent"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.k_safety'",
+            "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+            "GasperBeaconChain.Core.finalized_means_justified_child",
+            "GasperBeaconChain.Core.k_finalized_means_justified",
+            "GasperBeaconChain.Core.finalized_means_one_finalized"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "canonical head",
+            "safe prefix",
+            "finalized prefix",
+            "HashParent"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "EL-GASPER-FCU-001",
+          "status": "specified-unproved"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "forkchoice state validation",
+            "canonical chain update",
+            "safe/finalized persistence"
+          ]
+        }
+      ],
+      "causal_rationale": "Gasper finality assumes a stable finalized prefix; non-atomic or ancestry-inconsistent EL forkchoice updates can violate the CL-to-EL refinement relation.",
+      "bridge_status": "specified-unproved",
+      "spec_references": [
+        "execution-apis:src/engine/paris.md#engine-forkchoiceupdatedv1"
+      ],
+      "implementation_surfaces": [
+        "forkchoice state validation",
+        "canonical chain update",
+        "safe/finalized persistence"
+      ],
+      "engine_methods": [
+        "engine_forkchoiceUpdatedV1",
+        "engine_forkchoiceUpdatedV2",
+        "engine_forkchoiceUpdatedV3"
+      ],
+      "dataset_query": {
+        "labels": [
+          "fork-choice",
+          "engine-api",
+          "database"
+        ],
+        "root_causes": [
+          "consensus_divergence",
+          "improper_state_update",
+          "race_condition"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-015",
+          "severity": "High",
+          "label": "database",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-039",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-040",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-046",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-058",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-079",
+          "severity": "High",
+          "label": "engine-api",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-143",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-147",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "consensus_divergence",
+          "attack_path": "malicious_block"
+        }
+      ]
+    },
+    {
+      "property_id": "EL-GASPER-REGISTRY-001",
+      "text": "Verify that EL-originated deposit and execution-request records are commitment-checked, uniquely typed, ordered, and applied exactly once before they affect validator membership or effective balance.",
+      "type": "invariant",
+      "assertion": "registry_delta = apply_once(ordered_unique(commitment_checked(execution_records)))",
+      "severity": "HIGH",
+      "covers": "execution requests and deposits",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [
+          "FunctionCall"
+        ],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved-via-unproved-bridge",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/SlashableBound.lean#slashable_bound",
+      "label": "beacon-chain:execution-payload",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash), conflicting_k_finalization τ stake vset parent genesis st → ∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR)",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hconf",
+          "type": "conflicting_k_finalization τ stake vset parent genesis st",
+          "head": "GasperBeaconChain.Core.conflicting_k_finalization",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "conflicting_k_finalization τ stake vset parent genesis st"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.conflicting_k_finalization",
+        "GasperBeaconChain.Core.weight"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st hconf => ⋯",
+      "lean_conclusion": "∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR)",
+      "lean_proof_source": "theorem slashable_bound\n    ... (model parameters elided in sample fixture) ... :\n    ∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR) :=\n  fun τ stake vset parent genesis st hconf => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_effective_balance_updates",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.slashable_bound",
+        "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+        "GasperBeaconChain.Core.validator_intersection_lower_bound",
+        "GasperBeaconChain.Core.two_justified_same_height_slashed",
+        "GasperBeaconChain.Core.quorum_2_upclosed",
+        "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+        "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"
+      ],
+      "owned_inputs": [
+        "EL-originated deposits",
+        "execution requests",
+        "validator-set delta",
+        "stake"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.slashable_bound",
+            "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+            "GasperBeaconChain.Core.validator_intersection_lower_bound",
+            "GasperBeaconChain.Core.two_justified_same_height_slashed",
+            "GasperBeaconChain.Core.quorum_2_upclosed",
+            "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+            "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "EL-originated deposits",
+            "execution requests",
+            "validator-set delta",
+            "stake"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "EL-GASPER-REGISTRY-001",
+          "status": "specified-unproved"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "execution request commitment",
+            "deposit log processing",
+            "request persistence"
+          ]
+        }
+      ],
+      "causal_rationale": "Quorum bounds depend on the validator set and stake; EL-originated deposits or requests must refine those abstract inputs without omission, duplication, reordering, or value corruption.",
+      "bridge_status": "specified-unproved",
+      "spec_references": [
+        "execution-apis:src/engine/prague.md#engine-newpayloadv4",
+        "consensus-specs:specs/phase0/deposit-contract.md"
+      ],
+      "implementation_surfaces": [
+        "execution request commitment",
+        "deposit log processing",
+        "request persistence"
+      ],
+      "engine_methods": [
+        "engine_newPayloadV4",
+        "engine_getPayloadV4"
+      ],
+      "dataset_query": {
+        "labels": [
+          "beacon-chain:execution-payload",
+          "engine-api",
+          "serialization"
+        ],
+        "root_causes": [
+          "missing_input_validation",
+          "serialization_bug",
+          "improper_state_update"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-056",
+          "severity": "High",
+          "label": "beacon-chain:execution-payload",
+          "root_cause": "missing_input_validation",
+          "attack_path": "malicious_p2p_message"
+        },
+        {
+          "id": "evd-072",
+          "severity": "High",
+          "label": "beacon-chain:execution-payload",
+          "root_cause": "missing_input_validation",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-153",
+          "severity": "High",
+          "label": "serialization",
+          "root_cause": "serialization_bug",
+          "attack_path": "malformed_input"
+        }
+      ]
+    },
+    {
+      "property_id": "EL-GASPER-LIVE-001",
+      "text": "Verify that canonical-branch payload validation and forkchoice requests have bounded resources and eventually complete even while side branches sync or peers submit malformed payloads.",
+      "type": "invariant",
+      "assertion": "canonical_payload_available -> eventually terminal_status and fcu_processed despite side_sync and bounded adversarial_input",
+      "severity": "MEDIUM",
+      "covers": "payload validation and sync scheduler",
+      "reachability": {
+        "classification": "internal",
+        "entry_points": [
+          "FunctionCall"
+        ],
+        "attacker_controlled": false,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": false,
+      "exploitability": "local-attack",
+      "lean_status": "descends-from-proved-via-unproved-bridge",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/PlausibleLiveness.lean#plausible_liveness_construct_extension",
+      "label": "sync",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (qctx : QuorumContext τ stake vset), two_thirds_good τ stake vset st → ¬ q_intersection_slashed τ stake vset st → good_votes τ stake vset parent genesis st → votes_from_target_vset_property vset st → ∀ b b_h, highest_justified τ stake vset parent genesis st b b_h → blocks_exist_high_over parent b → ∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset parent genesis st' nf nh ∧ parent nf nc ∧ supermajority_link τ stake vset st' nf nc nh (nh + 1)",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "qctx",
+          "type": "QuorumContext τ stake vset",
+          "head": "GasperBeaconChain.Core.QuorumContext",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "htwothirds",
+          "type": "two_thirds_good τ stake vset st",
+          "head": "GasperBeaconChain.Core.two_thirds_good",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hunslashed",
+          "type": "¬ q_intersection_slashed τ stake vset st",
+          "head": "GasperBeaconChain.Core.q_intersection_slashed",
+          "class": "must-establish"
+        },
+        {
+          "name": "hgood",
+          "type": "good_votes τ stake vset parent genesis st",
+          "head": "GasperBeaconChain.Core.good_votes",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hwf_st",
+          "type": "votes_from_target_vset_property vset st",
+          "head": "GasperBeaconChain.Core.votes_from_target_vset_property",
+          "class": "must-establish"
+        },
+        {
+          "name": "hheight",
+          "type": "∀ b b_h, highest_justified τ stake vset parent genesis st b b_h → blocks_exist_high_over parent b",
+          "head": "GasperBeaconChain.Core.blocks_exist_high_over",
+          "class": "depend-allowed"
+        }
+      ],
+      "lean_must_establish": [
+        "¬ q_intersection_slashed τ stake vset st",
+        "votes_from_target_vset_property vset st"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.two_thirds_good",
+        "GasperBeaconChain.Core.q_intersection_slashed",
+        "GasperBeaconChain.Core.good_votes",
+        "GasperBeaconChain.Core.votes_from_target_vset_property",
+        "GasperBeaconChain.Core.highest_justified",
+        "GasperBeaconChain.Core.blocks_exist_high_over",
+        "GasperBeaconChain.Core.unslashed_can_extend",
+        "GasperBeaconChain.Core.no_new_slashed",
+        "GasperBeaconChain.Core.justified",
+        "GasperBeaconChain.Core.supermajority_link",
+        "GasperBeaconChain.Core.QuorumContext"
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st qctx htwothirds hunslashed hgood hwf_st hheight => ⋯",
+      "lean_conclusion": "∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset parent genesis st' nf nh ∧ parent nf nc ∧ supermajority_link τ stake vset st' nf nc nh (nh + 1)",
+      "lean_proof_source": "theorem plausible_liveness_construct_extension\n    ... (model parameters elided in sample fixture) ... :\n    ∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset pare :=\n  fun τ stake vset parent genesis st qctx htwothirds hunslashed hgood hwf_st hheight => ⋯",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+        "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+        "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+        "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum"
+      ],
+      "owned_inputs": [
+        "eventual payload validation",
+        "canonical branch progress",
+        "Engine API availability"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+            "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+            "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+            "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "eventual payload validation",
+            "canonical branch progress",
+            "Engine API availability"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "EL-GASPER-LIVE-001",
+          "status": "specified-unproved"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "sync scheduler",
+            "payload validation queue",
+            "Engine API request limits",
+            "database IO"
+          ]
+        }
+      ],
+      "causal_rationale": "Plausible liveness requires processable extensions; EL starvation, resource exhaustion, or side-branch sync blocking canonical validation can remove that operational premise.",
+      "bridge_status": "specified-unproved",
+      "spec_references": [
+        "execution-apis:src/engine/paris.md#sync"
+      ],
+      "implementation_surfaces": [
+        "sync scheduler",
+        "payload validation queue",
+        "Engine API request limits",
+        "database IO"
+      ],
+      "engine_methods": [
+        "engine_newPayloadV*",
+        "engine_forkchoiceUpdatedV*"
+      ],
+      "dataset_query": {
+        "labels": [
+          "sync",
+          "engine-api",
+          "p2p",
+          "database"
+        ],
+        "root_causes": [
+          "resource_exhaustion",
+          "unhandled_error_or_nil",
+          "race_condition"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-010",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-017",
+          "severity": "High",
+          "label": "sync",
+          "root_cause": "race_condition",
+          "attack_path": "malformed_input"
+        },
+        {
+          "id": "evd-021",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "unhandled_error_or_nil",
+          "attack_path": "malicious_p2p_message"
+        },
+        {
+          "id": "evd-029",
+          "severity": "High",
+          "label": "sync",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-036",
+          "severity": "High",
+          "label": "database",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "malicious_block"
+        },
+        {
+          "id": "evd-088",
+          "severity": "High",
+          "label": "sync",
+          "root_cause": "race_condition",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-092",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "resource_exhaustion",
+          "attack_path": "malicious_p2p_message"
+        },
+        {
+          "id": "evd-093",
+          "severity": "High",
+          "label": "p2p",
+          "root_cause": "unhandled_error_or_nil",
+          "attack_path": "malicious_p2p_message"
+        }
+      ]
+    },
+    {
+      "property_id": "EL-GASPER-RECOVERY-001",
+      "text": "Verify that restart and database recovery reconstruct payload status, canonical hashes, and latest-valid ancestry consistently before serving Engine API requests, without defaulting missing records to VALID.",
+      "type": "invariant",
+      "assertion": "after_restart engine_view = durable_validated_view and missing_status != VALID and fcu waits_for_recovery",
+      "severity": "HIGH",
+      "covers": "Engine API recovery",
+      "reachability": {
+        "classification": "external-reachable",
+        "entry_points": [
+          "CallbackHandler"
+        ],
+        "attacker_controlled": true,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "external-attack",
+      "lean_status": "descends-from-proved-via-unproved-bridge",
+      "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
+      "label": "database",
+      "lean_statement": "∀ {Validator : Type u} {Hash : Type v} [DecidableEq Validator] [DecidableEq Hash] [Fintype Validator] (τ : Threshold) (stake : Validator → Nat) (vset : Hash → Finset Validator) (parent : HashParent Hash) (genesis : Hash) (st : State Validator Hash) (b1 : Hash) (b2 : Hash) (k1 : Nat) (k2 : Nat), k_finalized τ stake vset parent genesis st b1 k1 → k_finalized τ stake vset parent genesis st b2 k2 → not_ancestor parent b1 b2 → not_ancestor parent b2 b1 → q_intersection_slashed τ stake vset st",
+      "lean_hypotheses": [
+        {
+          "name": "Validator",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "Hash",
+          "type": "Type v",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝²",
+          "type": "DecidableEq Validator",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝¹",
+          "type": "DecidableEq Hash",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst✝",
+          "type": "Fintype Validator",
+          "head": "Fintype",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "τ",
+          "type": "Threshold",
+          "head": "GasperBeaconChain.Core.Threshold",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "stake",
+          "type": "Validator → Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "vset",
+          "type": "Hash → Finset Validator",
+          "head": "Finset",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "parent",
+          "type": "HashParent Hash",
+          "head": "GasperBeaconChain.Core.HashParent",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "genesis",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "st",
+          "type": "State Validator Hash",
+          "head": "GasperBeaconChain.Core.State",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b1",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "b2",
+          "type": "Hash",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k1",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "k2",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "hfin1",
+          "type": "k_finalized τ stake vset parent genesis st b1 k1",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hfin2",
+          "type": "k_finalized τ stake vset parent genesis st b2 k2",
+          "head": "GasperBeaconChain.Core.k_finalized",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc1",
+          "type": "not_ancestor parent b1 b2",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        },
+        {
+          "name": "hnc2",
+          "type": "not_ancestor parent b2 b1",
+          "head": "GasperBeaconChain.Core.not_ancestor",
+          "class": "must-establish"
+        }
+      ],
+      "lean_must_establish": [
+        "k_finalized τ stake vset parent genesis st b1 k1",
+        "k_finalized τ stake vset parent genesis st b2 k2",
+        "not_ancestor parent b1 b2",
+        "not_ancestor parent b2 b1"
+      ],
+      "lean_referenced_defs": [
+        "GasperBeaconChain.Core.k_finalized",
+        "GasperBeaconChain.Core.not_ancestor",
+        "GasperBeaconChain.Core.q_intersection_slashed"
+      ],
+      "lean_referenced_defs_expanded": [
+        {
+          "name": "GasperBeaconChain.Core.k_finalized",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.k_finalized : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset parent genesis st b k => ⋯"
+        },
+        {
+          "name": "GasperBeaconChain.Core.State",
+          "kind": "structure",
+          "pp": "structure GasperBeaconChain.Core.State : Type u → Type v → Type (max u v)\n  justified : ... (field signatures elided in sample fixture) ...\n  votes : ... (field signatures elided in sample fixture) ..."
+        },
+        {
+          "name": "GasperBeaconChain.Core.q_intersection_slashed",
+          "kind": "def",
+          "pp": "def GasperBeaconChain.Core.q_intersection_slashed : ... (signature elided in sample fixture) ... :=\n  fun τ stake vset st => ⋯"
+        }
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_conclusion": "q_intersection_slashed τ stake vset st",
+      "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
+      "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Core.plausible_liveness_construct_extension"
+      ],
+      "owned_inputs": [
+        "persistent payload status",
+        "canonical mapping",
+        "latest valid ancestor"
+      ],
+      "causal_chain": [
+        {
+          "kind": "lean-theorem",
+          "refs": [
+            "GasperBeaconChain.Core.k_safety'",
+            "GasperBeaconChain.Core.plausible_liveness_construct_extension"
+          ]
+        },
+        {
+          "kind": "owned-input",
+          "refs": [
+            "persistent payload status",
+            "canonical mapping",
+            "latest valid ancestor"
+          ]
+        },
+        {
+          "kind": "bridge-obligation",
+          "ref": "EL-GASPER-RECOVERY-001",
+          "status": "specified-unproved"
+        },
+        {
+          "kind": "implementation-surface",
+          "refs": [
+            "database migrations",
+            "payload status reload",
+            "canonical hash index",
+            "startup sequencing"
+          ]
+        }
+      ],
+      "causal_rationale": "Restart recovery must reconstruct the same block-validity and ancestry view used before the crash or honest CLs can observe a different Gasper model.",
+      "bridge_status": "specified-unproved",
+      "spec_references": [
+        "execution-apis:src/engine/paris.md#payload-validation"
+      ],
+      "implementation_surfaces": [
+        "database migrations",
+        "payload status reload",
+        "canonical hash index",
+        "startup sequencing"
+      ],
+      "engine_methods": [
+        "engine_newPayloadV*",
+        "engine_forkchoiceUpdatedV*"
+      ],
+      "dataset_query": {
+        "labels": [
+          "database",
+          "fork-choice",
+          "engine-api"
+        ],
+        "root_causes": [
+          "improper_state_update",
+          "unhandled_error_or_nil",
+          "race_condition"
+        ]
+      },
+      "dataset_evidence": [
+        {
+          "id": "evd-015",
+          "severity": "High",
+          "label": "database",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        },
+        {
+          "id": "evd-046",
+          "severity": "High",
+          "label": "fork-choice",
+          "root_cause": "improper_state_update",
+          "attack_path": "crafted_state"
+        }
+      ]
+    }
+  ]
+}

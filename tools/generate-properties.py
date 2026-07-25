@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-"""Define NEW critical/high checklist properties from Lean theorems (speca#88).
+"""Refine causally selected Lean -> implementation obligations into 01e text.
 
-The improve loop only sharpens the existing CHK-* items. This step is the other
-half of "since we formalized it in Lean, define NEW critical/high properties":
-it pairs each proved gasper theorem with a critical/high *defect class* from
-ethereum-vuln-dataset that no existing CHK targets, and asks the model to write
-one NEW concrete, general, DEFENSIVE checklist item guarding that invariant
-against that defect class. The Lean theorem gives "what must hold", the dataset
-class gives "how real clients concretely break", and the pairing yields a novel
-critical/high check — NOT a reproduction of a specific past bug.
+Candidate selection now defaults to ``data/projection_map.json``.  The reviewed
+map supplies the causal chain from theorem to owned input/boundary obligation;
+the LLM only rewrites that selected obligation into concise audit text.  The old
+label-prevalence pairing remains behind ``--legacy-label-pairing`` for historical
+reproduction and must not be used for production checklist generation.
 
 Same guards as the improve loop: defensive framing + class-only evidence
 (speca#143 safeguard), generality lint (no client names), length/granularity
@@ -33,6 +30,7 @@ from speca_lean4.judge import (
     ASSERTION_MAX, EF_BOUNTY_SEVERITY, TEXT_MAX, _CLIENT_RE, _extract_json,
     build_judge_prompt, split_cmd, subprocess_llm, statistics as _stats,
 )
+from speca_lean4.projection import load_projection_map
 
 _ROOT = Path(__file__).resolve().parents[1]
 
@@ -142,9 +140,47 @@ def candidates(theorems: dict[str, dict], vulns: list[dict], max_new: int) -> li
     return uniq[:max_new]
 
 
+def causal_candidates(projection_map: dict, target_layer: str) -> list[dict]:
+    """Reviewed obligations, never inferred from dataset prevalence."""
+    out = []
+    for item in projection_map["obligations"]:
+        if item.get("target_layer") != target_layer:
+            continue
+        query = item.get("dataset_match", {})
+        out.append({
+            "obligation_id": item["obligation_id"],
+            "theorem": item["source_theorems"][0],
+            "source_theorems": list(item["source_theorems"]),
+            "owned_inputs": list(item["owned_inputs"]),
+            "causal_rationale": item["causal_rationale"],
+            "implementation_surfaces": list(item.get("implementation_surfaces", [])),
+            "spec_references": list(item["spec_references"]),
+            "label": item.get("label", ""),
+            "root_cause": (query.get("root_causes") or ["logic_error_invariant_violation"])[0],
+            "severity": str(item["severity"]).title(),
+            "prevalence": 0,
+            "covers_hint": list(item.get("implementation_surfaces", [])),
+            "x_layer": target_layer,
+            "seed_text": item["text"],
+            "seed_assertion": item["assertion"],
+        })
+    return out
+
+
 def build_generate_prompt(c: dict) -> str:
     thm = c["theorem"].split(".")[-1]
     hints = ", ".join(c["covers_hint"][:6]) or "the relevant handlers"
+    causal = ""
+    if c.get("obligation_id"):
+        causal = (
+            f"Causal obligation: {c['obligation_id']}\n"
+            f"Source theorems: {', '.join(c['source_theorems'])}\n"
+            f"Owned model inputs: {', '.join(c['owned_inputs'])}\n"
+            f"Why this affects the theorem: {c['causal_rationale']}\n"
+            f"Specification anchors: {', '.join(c['spec_references'])}\n"
+            f"Reviewed seed check: {c['seed_text']}\n"
+            f"Reviewed seed assertion: {c['seed_assertion']}\n"
+        )
     return (
         "You are DEFINING one NEW DEFENSIVE security audit-checklist item for a "
         "protocol implementation. It must let an auditor confirm a machine-proved "
@@ -152,6 +188,7 @@ def build_generate_prompt(c: dict) -> str:
         f"Proved invariant (Lean theorem): {thm}\n"
         f"Protocol area (label): {c['label']}\n"
         f"Relevant code surface: {hints}\n"
+        f"{causal}"
         f"Implementation defect CLASS to guard against (category only): "
         f"{c['root_cause']} (bug-bounty severity: {c['severity']})\n\n"
         f"{EF_BOUNTY_SEVERITY}\n\n"
@@ -185,6 +222,18 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--map", default=str(_ROOT / "theorem_map.json"))
     ap.add_argument("--vulns-csv", default=str(_ROOT / "data" / "ethereum_vulns_high.csv"))
+    ap.add_argument(
+        "--projection-map", default=str(_ROOT / "data" / "projection_map.json"),
+        help="reviewed causal projection map (default: data/projection_map.json)",
+    )
+    ap.add_argument(
+        "--target-layer", choices=("cl", "el"), default="cl",
+        help="projection layer used for causal candidate selection (default: cl)",
+    )
+    ap.add_argument(
+        "--legacy-label-pairing", action="store_true",
+        help="reproduce the deprecated theorem-label x prevalent-defect heuristic",
+    )
     ap.add_argument("--gen-cmd", required=True, help="LLM adapter for generation")
     ap.add_argument("--judge-cmd", required=True, help="LLM adapter for judging")
     ap.add_argument("--max-new", type=int, default=6)
@@ -199,9 +248,17 @@ def main() -> int:
     theorems = load_theorems(tmap)
     with open(args.vulns_csv, encoding="utf-8-sig") as f:
         vulns = list(csv.DictReader(f))
-    if args.cover_all:
+    if not args.legacy_label_pairing:
+        cands = causal_candidates(
+            load_projection_map(args.projection_map), args.target_layer
+        )
+        print(
+            f"{len(cands)} reviewed causal obligation(s) for "
+            f"target_layer={args.target_layer}"
+        )
+    elif args.cover_all:
         cands = coverage_candidates(theorems, vulns)
-        print(f"{len(cands)} critical/high theorem(s) with no concrete CHK twin -> concretizing all")
+        print(f"{len(cands)} critical/high theorem(s) with no concrete CHK twin -> concretizing all (legacy)")
     else:
         cands = candidates(theorems, vulns, args.max_new)
         print(f"{len(cands)} candidate (theorem x uncovered critical/high class) pairs")
@@ -245,17 +302,26 @@ def main() -> int:
         print(f"  {status} CHK-GEN-{seq:02d} [{thm}/{c['root_cause']}] overall={overall}")
         if overall < args.floor:
             continue
+        prop_id = c.get("obligation_id") or f"CHK-GEN-{seq:02d}"
         kept.append({
-            "property_id": f"CHK-GEN-{seq:02d}",
+            "property_id": prop_id,
             "theorem": c["theorem"], "label": c["label"],
             "x_layer": c["x_layer"], "lowering": "verbatim",
             "text": prop["text"], "type": "invariant", "assertion": prop["assertion"],
-            "severity": _SEV_FROM_CLASS[c["severity"]],
+            "severity": _SEV_FROM_CLASS.get(c["severity"], c["severity"].upper()),
             "x_origin": "generated (stage-2 new-property step, tools/generate-properties.py)",
             "x_defect_class": c["root_cause"],
             "x_judged_overall": overall,
             "shard": "checklist-generated",
         })
+        if c.get("obligation_id"):
+            kept[-1].update({
+                "target_layer": args.target_layer,
+                "source_theorems": c["source_theorems"],
+                "owned_inputs": c["owned_inputs"],
+                "causal_rationale": c["causal_rationale"],
+                "spec_references": c["spec_references"],
+            })
         seq += 1
 
     Path(args.out).write_text(json.dumps({"properties": kept}, indent=2, ensure_ascii=False) + "\n",

@@ -87,6 +87,24 @@ Proof-health source (Stage B) is one of:
 - neither — every property is emitted `lean_status=unknown` (with a warning);
   useful for a dry mapping check without Lean.
 
+For implementation-facing CL obligations and cross-layer EL obligations, use
+the causal projection path:
+
+```bash
+speca-lean4 emit-projected-01e \
+    --scope outputs/BUG_BOUNTY_SCOPE.json \
+    --health-json health.json \
+    --target-layer both \
+    --out outputs/01e_PARTIAL_gasper_projected.json
+```
+
+Its reviewed [`data/projection_map.json`](data/projection_map.json) makes the
+theorem -> owned input -> boundary obligation -> code surface chain explicit.
+It fails on unclassified theorems, records reviewed EL `not-applicable`
+decisions, and keeps EL properties at
+`descends-from-proved-via-unproved-bridge` until the composition theorem is
+proved. See [`docs/causal-projection.md`](docs/causal-projection.md).
+
 Output is exactly the `01e` property schema. Lean-specific data is **additive
 only**, never mutating a core field — per speca#88's contract: `lean_status`,
 `lean_artifact`, `kurtosis_test`, `label`, `lean_statement`,

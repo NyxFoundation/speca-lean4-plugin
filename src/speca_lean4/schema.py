@@ -45,7 +45,12 @@ ENTRY_POINTS = {"CallbackHandler", "FunctionCall", "ProgramEntry", "Initializati
 # disjoint, so verbatim vs mechanical is decidable from `lean_status` alone.
 DIRECT_LEAN_STATUSES = {"proved", "unknown", "counterexample"}
 DESCENDED_LEAN_STATUSES = {f"descends-from-{s}" for s in DIRECT_LEAN_STATUSES}
-LEAN_STATUSES = DIRECT_LEAN_STATUSES | DESCENDED_LEAN_STATUSES
+BRIDGED_LEAN_STATUSES = {
+    f"descends-from-{s}-via-{bridge}-bridge"
+    for s in DIRECT_LEAN_STATUSES
+    for bridge in ("proved", "unproved")
+}
+LEAN_STATUSES = DIRECT_LEAN_STATUSES | DESCENDED_LEAN_STATUSES | BRIDGED_LEAN_STATUSES
 PROOF_PROVENANCES = {"automated", "hand-written", "unknown"}
 TYPE_CONSISTENCY = {"ok", "mismatch", "unchecked"}
 

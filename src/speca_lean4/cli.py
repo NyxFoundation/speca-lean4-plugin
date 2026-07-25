@@ -205,6 +205,83 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_emit_projected_01e(args: argparse.Namespace) -> int:
+    """Emit causally projected CL and/or EL implementation obligations."""
+    from .projection import (
+        build_projected_properties,
+        load_evidence,
+        load_projection_map,
+    )
+
+    theorem_map = _load_json(args.map)
+    scope = _load_json(args.scope)
+    projection_map = load_projection_map(args.projection_map)
+    evidence = load_evidence(args.vulns_csv)
+    if args.health_json:
+        health = load_health(args.health_json)
+    elif args.run_lean:
+        health = index_health(_run_lean(theorem_map))
+    else:
+        print(
+            "warning: no --health-json and no --run-lean; parent proof status "
+            "will be unknown",
+            file=sys.stderr,
+        )
+        health = {}
+
+    layers = ("cl", "el") if args.target_layer == "both" else (args.target_layer,)
+    properties: list[dict[str, Any]] = []
+    reports: dict[str, Any] = {}
+    for layer in layers:
+        projected, report = build_projected_properties(
+            theorem_map, health, scope, projection_map, layer, evidence,
+            args.gasper_ref,
+        )
+        properties.extend(projected)
+        reports[layer] = report
+
+    unclassified = {
+        layer: report["unclassified"]
+        for layer, report in reports.items()
+        if report["unclassified"]
+    }
+    stale = {
+        layer: report["stale_exclusions"]
+        for layer, report in reports.items()
+        if report["stale_exclusions"]
+    }
+    doc = {
+        "phase": "01e",
+        "provider": "lean",
+        "projection": "gasper-causal",
+        "target_layer": args.target_layer,
+        "gasper_source": theorem_map.get("gasper_source"),
+        "gasper_ref": args.gasper_ref or theorem_map.get("gasper_ref"),
+        "projection_report": reports,
+        "properties": properties,
+    }
+    Path(args.out).write_text(
+        json.dumps(doc, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    print(
+        f"wrote {args.out}: {len(properties)} causal properties "
+        f"for {', '.join(layers)}"
+    )
+    for layer, report in reports.items():
+        print(
+            f"  {layer}: {report['property_count']} properties; "
+            f"{len(report['not_applicable'])} not-applicable; "
+            f"{len(report['unclassified'])} unclassified"
+        )
+    if stale:
+        print(f"error: stale not-applicable entries: {stale}", file=sys.stderr)
+        return 1
+    if unclassified:
+        print(f"error: unclassified theorem(s): {unclassified}", file=sys.stderr)
+        return 1
+    return 0
+
+
 def _maybe_concrete_only(properties: list, args: argparse.Namespace) -> list:
     """--concrete-only: keep only the sharpened/concrete checklist (CHK-* and
     CHK-GEN-*), dropping the abstract theorem `-me*` must-establish decompositions.
@@ -499,6 +576,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="sharded output: write one 01e_PARTIAL_<shard>.json per theorem_map shard here",
     )
     e.set_defaults(func=cmd_emit_01e)
+
+    pe = sub.add_parser(
+        "emit-projected-01e",
+        help="emit causally projected CL/EL obligations from Gasper theorems; "
+             "candidate selection is deterministic and bridge-aware",
+    )
+    pe.add_argument("--scope", required=True, help="path to BUG_BOUNTY_SCOPE.json")
+    pe.add_argument("--map", default=str(_DEFAULT_MAP), help="theorem_map.json")
+    pe.add_argument(
+        "--projection-map",
+        default=str(_REPO_ROOT / "data" / "projection_map.json"),
+        help="reviewed theorem -> owned input -> obligation map",
+    )
+    pe.add_argument(
+        "--vulns-csv",
+        default=str(_REPO_ROOT / "data" / "ethereum_vulns_high.csv"),
+        help="dataset evidence used after causal candidate selection",
+    )
+    pe.add_argument(
+        "--target-layer", choices=("cl", "el", "both"), default="both",
+        help="implementation layer to project onto (default: both)",
+    )
+    pe.add_argument("--gasper-ref", help="gasper-lean4 git ref override")
+    pesrc = pe.add_mutually_exclusive_group()
+    pesrc.add_argument("--health-json", help="precomputed speca-export health JSON")
+    pesrc.add_argument("--run-lean", action="store_true", help="run Lean exporter now")
+    pe.add_argument("--out", required=True, help="output 01e_PARTIAL JSON path")
+    pe.set_defaults(func=cmd_emit_projected_01e)
 
     k = sub.add_parser(
         "emit-kurtosis",

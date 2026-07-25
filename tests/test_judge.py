@@ -516,9 +516,13 @@ def test_cli_judge_end_to_end_with_mock(chk_01e, tmp_path, capsys):
     ])
     assert rc == 0
     report = json.loads(out.read_text(encoding="utf-8"))
-    assert report["ours"]["n"] == 20                  # the CHK-15 checklist
+    expected = sum(
+        1 for p in json.loads(chk_01e.read_text(encoding="utf-8"))["properties"]
+        if p["property_id"].startswith("CHK-")
+    )
+    assert report["ours"]["n"] == expected
     assert report["reference"]["n"] == 52             # the solodit bar
-    assert len(report["items"]) == 20
+    assert len(report["items"]) == expected
     assert len(report["reference_items"]) == 52
     assert isinstance(report["meets_reference_bar"], bool)
     for s in report["items"]:
@@ -555,7 +559,11 @@ def test_cli_improve_end_to_end_with_mock(chk_01e, tmp_path):
     assert log["reference"]["n"] == 52
     improved = json.loads((out_dir / "improved_01e.json").read_text(encoding="utf-8"))
     props = improved["properties"]
-    assert len(props) == 20
+    expected = sum(
+        1 for p in json.loads(chk_01e.read_text(encoding="utf-8"))["properties"]
+        if p["property_id"].startswith("CHK-")
+    )
+    assert len(props) == expected
     assert "x_improve_note" in improved
     # immutables survived the loop; only text/assertion may differ
     orig = {p["property_id"]: p for p in

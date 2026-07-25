@@ -76,6 +76,7 @@ Data inputs (all versioned in-repo):
 | `data/ethereum_vulns.csv` (+ `.meta.json`) | vendored dataset slice — the recall denominator source, revision pinned |
 | `data/label_match_rules.json` | D1 structural domain filter + per-(label, root_cause) coverage rules |
 | `data/recall_gaps.json` | D2 gap triage (`new_target` / `out_of_model`) |
+| `data/projection_map.json` | Reviewed theorem -> owned input -> CL/EL obligation projection; production candidate-selection source |
 | `data/findings_map.json` | DEPRECATED prose recall table, reported as `recall_prose_deprecated` only |
 | `tests/fixtures/bug_bounty_scope.sample.json` | sample `BUG_BOUNTY_SCOPE.json` (real one comes from the speca run) |
 | `tests/fixtures/theorem_health.sample.json` | sample exporter output for Lean-free tests |
@@ -95,3 +96,6 @@ extract to a directory passed as `--benchmark-dir`.
   over.
 - `lean_status` can only degrade downstream (unresolved -> `unknown`), never
   upgrade; kurtosis fixtures are explicit scaffolds with `verdict: null`.
+- Cross-layer properties use `emit-projected-01e`; EL obligations stay
+  `descends-from-*-via-unproved-bridge` until their Lean composition theorem is
+  proved. See `docs/causal-projection.md`.

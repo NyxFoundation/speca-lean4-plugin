@@ -690,6 +690,90 @@
         "resolution": "label",
         "note": "per-def client-code mapping is TODO (see issue #9 G2); resolve via labels[label].client_code"
       }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+      "property_id": "CHK-GEN-06",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO; resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.k_non_equal_height_case",
+      "property_id": "CHK-GEN-07",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO; resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.k_slash_surround_case_general",
+      "property_id": "CHK-GEN-08",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO; resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+      "property_id": "CHK-GEN-09",
+      "source_file": "Core/Theories/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO; resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.no_two_justified_same_height",
+      "property_id": "CHK-GEN-10",
+      "source_file": "Core/Lemmas/AccountableSafety.lean",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO; resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Core.two_justified_same_height_slashed",
+      "property_id": "CHK-GEN-11",
+      "source_file": "Core/Lemmas/AccountableSafety.lean",
+      "label": "beacon-chain:slashing",
+      "spec_symbol": "process_slashings",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_slashings",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO; resolve via labels[label].client_code"
+      }
+    },
+    {
+      "lean_def": "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness",
+      "property_id": "CHK-GEN-12",
+      "source_file": "Executable/Quorums.lean (decidable checker)",
+      "label": "beacon-chain:justification-and-finality",
+      "spec_symbol": "process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "client_code": {
+        "resolution": "label",
+        "note": "per-def client-code mapping is TODO; resolve via labels[label].client_code"
+      }
     }
   ]
 }

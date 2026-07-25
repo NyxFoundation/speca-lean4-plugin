@@ -21,6 +21,13 @@ from .kurtosis import (
     load_checker_map,
     load_evidence_seeds,
 )
+from .projection import (
+    ProjectionError,
+    build_projected_properties,
+    load_evidence,
+    load_projection_map,
+    match_evidence,
+)
 
 __all__ = [
     "build_properties",
@@ -39,6 +46,11 @@ __all__ = [
     "emit_kurtosis",
     "load_checker_map",
     "load_evidence_seeds",
+    "ProjectionError",
+    "build_projected_properties",
+    "load_evidence",
+    "load_projection_map",
+    "match_evidence",
 ]
 
 __version__ = "0.1.0"

@@ -1,0 +1,317 @@
+{
+  "version": 1,
+  "note": "Reviewed causal projection map. Candidate applicability is deterministic; dataset rows may refine implementation wording but never select an obligation.",
+  "obligations": [
+    {
+      "obligation_id": "CL-GASPER-FIN-001",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+        "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+        "GasperBeaconChain.Core.k_slash_surround_case_general",
+        "GasperBeaconChain.Core.k_non_equal_height_case",
+        "GasperBeaconChain.Core.no_two_justified_same_height",
+        "GasperBeaconChain.Core.two_justified_same_height_slashed",
+        "GasperBeaconChain.Executable.accountable_safety_witnessB",
+        "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+      ],
+      "owned_inputs": ["State.justified", "State.votes", "HashParent", "k_finalized", "not_ancestor"],
+      "causal_rationale": "The accountable-safety theorems transfer only when every honest CL computes finalization, justification, and ancestry over one validated block DAG.",
+      "text": "Verify that justification and finalization updates use one atomic fork-choice snapshot and reject any checkpoint whose root is absent, invalid, or not an ancestor of the candidate head.",
+      "assertion": "accept_finalized(c,h) -> known_valid(c.root) and ancestor(c.root,h) and atomic_snapshot(justified,votes,parent)",
+      "covers": "process_justification_and_finalization",
+      "label": "beacon-chain:justification-and-finality",
+      "severity": "CRITICAL",
+      "bridge_status": "not-required",
+      "spec_references": ["consensus-specs:specs/phase0/beacon-chain.md#process-justification-and-finalization"],
+      "implementation_surfaces": ["process_justification_and_finalization", "fork-choice store", "checkpoint persistence"],
+      "dataset_match": {
+        "labels": ["beacon-chain:justification-and-finality", "fork-choice"],
+        "root_causes": ["consensus_divergence", "improper_state_update", "race_condition"]
+      }
+    },
+    {
+      "obligation_id": "CL-GASPER-QUORUM-001",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Core.slashable_bound",
+        "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+        "GasperBeaconChain.Core.validator_intersection_lower_bound",
+        "GasperBeaconChain.Core.quorum_2_upclosed",
+        "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+        "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"
+      ],
+      "owned_inputs": ["Threshold", "stake", "validator set", "quorum_2", "weight sums"],
+      "causal_rationale": "The quorum and slashable-bound results assume exact validator membership and arithmetic; representation loss or duplicate membership changes the proved lower bound.",
+      "text": "Verify that quorum membership is deduplicated and every effective-balance sum and two-thirds threshold comparison is exact, overflow-checked, and computed from the same validator-set snapshot.",
+      "assertion": "quorum_weight(q)=sum_exact(unique(q) intersect active_snapshot) and no_overflow and 3*weight(q)>=2*total_active",
+      "covers": "get_total_active_balance",
+      "label": "beacon-chain:effective-balance-updates",
+      "severity": "HIGH",
+      "bridge_status": "not-required",
+      "spec_references": ["consensus-specs:specs/phase0/beacon-chain.md#get-total-active-balance"],
+      "implementation_surfaces": ["effective balance aggregation", "committee deduplication", "quorum threshold comparison"],
+      "dataset_match": {
+        "labels": ["beacon-chain:effective-balance-updates", "beacon-chain:attestation"],
+        "root_causes": ["integer_overflow_underflow", "missing_bounds_check", "consensus_divergence"]
+      }
+    },
+    {
+      "obligation_id": "CL-GASPER-SLASH-001",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
+        "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex"
+      ],
+      "owned_inputs": ["attestation source", "attestation target", "target epoch", "validator index"],
+      "causal_rationale": "The executable iff theorems are implementation oracles: a CL checker must accept exactly the S1/S2 witnesses represented by the model.",
+      "text": "Verify that slashing detection compares exact source and target checkpoints and implements double-vote and strict surround-vote predicates in both attestation orderings without lossy numeric conversion.",
+      "assertion": "slashed(v) iff double_vote_exact(v,a,b) or strict_surround_either_direction(v,a,b)",
+      "covers": "is_slashable_attestation_data",
+      "label": "beacon-chain:slashing",
+      "severity": "HIGH",
+      "bridge_status": "not-required",
+      "spec_references": ["consensus-specs:specs/phase0/beacon-chain.md#is-slashable-attestation-data"],
+      "implementation_surfaces": ["attester slashing validation", "slashing protection storage", "checkpoint comparison"],
+      "dataset_match": {
+        "labels": ["beacon-chain:slashing"],
+        "root_causes": ["integer_overflow_underflow", "missing_input_validation", "improper_state_update"]
+      }
+    },
+    {
+      "obligation_id": "CL-GASPER-JUST-001",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Core.finalized_means_justified_child",
+        "GasperBeaconChain.Core.k_finalized_means_justified",
+        "GasperBeaconChain.Core.finalized_means_one_finalized",
+        "GasperBeaconChain.Executable.justified_iff_bounded"
+      ],
+      "owned_inputs": ["justified", "supermajority links", "bounded ancestor traversal", "justification bits"],
+      "causal_rationale": "Finalization lemmas depend on the implementation preserving the exact justified-link chain and its bounded traversal.",
+      "text": "Verify that every justified checkpoint is backed by a bounded, cycle-free chain of validated supermajority links and that justification-bit shifts reject negative or out-of-range epoch deltas.",
+      "assertion": "justified(c) -> exists bounded_cycle_free_links(anchor,c) and every epoch_delta in justification_bits is in_range",
+      "covers": "process_justification_and_finalization",
+      "label": "beacon-chain:justification-and-finality",
+      "severity": "HIGH",
+      "bridge_status": "not-required",
+      "spec_references": ["consensus-specs:specs/phase0/beacon-chain.md#process-justification-and-finalization"],
+      "implementation_surfaces": ["justification bits", "checkpoint ancestry traversal", "supermajority link construction"],
+      "dataset_match": {
+        "labels": ["beacon-chain:justification-and-finality", "beacon-chain:block-processing"],
+        "root_causes": ["integer_overflow_underflow", "missing_bounds_check", "consensus_divergence"]
+      }
+    },
+    {
+      "obligation_id": "CL-GASPER-LIVE-001",
+      "target_layer": "cl",
+      "source_theorems": [
+        "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+        "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+        "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+        "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum"
+      ],
+      "owned_inputs": ["blocks_exist_high_over", "good_votes", "two_thirds_good", "message processing progress"],
+      "causal_rationale": "The liveness construction assumes honest votes and blocks remain processable; unbounded queues, decompression, or traversal can falsify that operational premise.",
+      "text": "Verify that every network-fed queue, decompression sink, and recursive block traversal used before attestation or block processing has a pre-allocation bound and cannot starve canonical-chain work.",
+      "assertion": "network_work before vote_or_block_processing is bounded and canonical_work eventually_runs despite invalid or side-branch input",
+      "covers": "on_block",
+      "label": "p2p-interface",
+      "severity": "MEDIUM",
+      "bridge_status": "not-required",
+      "liveness_only": true,
+      "spec_references": ["consensus-specs:specs/phase0/p2p-interface.md"],
+      "implementation_surfaces": ["gossip validation", "pending block queues", "decompression", "ancestor traversal"],
+      "dataset_match": {
+        "labels": ["p2p-interface", "p2p", "sync"],
+        "root_causes": ["resource_exhaustion", "missing_bounds_check", "unhandled_error_or_nil"]
+      }
+    },
+    {
+      "obligation_id": "EL-GASPER-VALID-001",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Core.no_k_finalized_justified_same_height",
+        "GasperBeaconChain.Core.no_two_justified_same_height",
+        "GasperBeaconChain.Executable.accountable_safety_witnessB",
+        "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+      ],
+      "owned_inputs": ["eligible block DAG", "execution validity predicate", "payload parent state"],
+      "causal_rationale": "If honest ELs disagree about payload validity, honest CLs instantiate different eligible block DAGs and Gasper accountable safety no longer transfers directly.",
+      "text": "Verify that a payload is returned VALID only after deterministic execution against its exact parent state, with all header, transaction, state-root, receipts-root, withdrawal, blob, and request commitments checked.",
+      "assertion": "VALID(p,parent) -> execute_spec(parent,p)=ok and computed_commitments(p)=header_commitments(p)",
+      "covers": "engine_newPayloadV*",
+      "label": "engine-api",
+      "severity": "CRITICAL",
+      "bridge_status": "specified-unproved",
+      "spec_references": ["execution-apis:src/engine/paris.md#payload-validation", "execution-specs:state-transition"],
+      "implementation_surfaces": ["engine_newPayloadV*", "block execution", "header validation", "payload validity cache"],
+      "engine_methods": ["engine_newPayloadV1", "engine_newPayloadV2", "engine_newPayloadV3", "engine_newPayloadV4"],
+      "dataset_match": {
+        "labels": ["engine-api", "block-processing", "state-trie", "transactions", "evm", "gas"],
+        "root_causes": ["consensus_divergence", "improper_state_update", "incorrect_gas_accounting", "serialization_bug"]
+      }
+    },
+    {
+      "obligation_id": "EL-GASPER-IDENTITY-001",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+        "GasperBeaconChain.Core.k_slash_surround_case_general",
+        "GasperBeaconChain.Core.k_non_equal_height_case"
+      ],
+      "owned_inputs": ["HashParent", "payload blockHash", "parentHash", "latestValidHash"],
+      "causal_rationale": "The Gasper fork cases reason over stable block identity and ancestry; accepting a payload under the wrong hash or parent changes those relations.",
+      "text": "Verify that every Engine API status and latestValidHash is bound to the exact submitted payload and parent chain, and reject any blockHash or parentHash mismatch before caching or exposing the payload.",
+      "assertion": "status[p].key=keccak(header(p)) and latestValidHash in ancestors(p) and parentHash(p)=hash(parent_state)",
+      "covers": "engine_newPayloadV*",
+      "label": "engine-api",
+      "severity": "CRITICAL",
+      "bridge_status": "specified-unproved",
+      "spec_references": ["execution-apis:src/engine/paris.md#engine-newpayloadv1"],
+      "implementation_surfaces": ["payload hash validation", "latest valid ancestor lookup", "payload status cache"],
+      "engine_methods": ["engine_newPayloadV1", "engine_newPayloadV2", "engine_newPayloadV3", "engine_newPayloadV4"],
+      "dataset_match": {
+        "labels": ["engine-api", "fork-choice", "serialization"],
+        "root_causes": ["consensus_divergence", "serialization_bug", "improper_state_update"]
+      }
+    },
+    {
+      "obligation_id": "EL-GASPER-STATUS-001",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Executable.accountable_safety_witnessB",
+        "GasperBeaconChain.Executable.k_accountable_safety_witnessB"
+      ],
+      "owned_inputs": ["execution validity predicate", "payload status history", "invalid descendant closure"],
+      "causal_rationale": "An INVALID payload becoming VALID after sync, restart, or cache replay can reintroduce a block excluded from the Gasper DAG used by honest nodes.",
+      "text": "Verify that a payload recorded INVALID never becomes VALID after sync, restart, cache eviction, or fork-choice replay, and that descendants of an invalid payload cannot be selected as head, safe, or finalized.",
+      "assertion": "status[p]=INVALID -> always status[p]!=VALID and descendants(p) excluded from {head,safe,finalized}",
+      "covers": "payload validation status",
+      "label": "fork-choice",
+      "severity": "CRITICAL",
+      "bridge_status": "specified-unproved",
+      "spec_references": ["execution-apis:src/engine/paris.md#payload-validation"],
+      "implementation_surfaces": ["payload status cache", "sync completion", "database recovery", "invalid ancestor propagation"],
+      "engine_methods": ["engine_newPayloadV*", "engine_forkchoiceUpdatedV*"],
+      "dataset_match": {
+        "labels": ["fork-choice", "engine-api", "database", "sync"],
+        "root_causes": ["improper_state_update", "consensus_divergence", "race_condition"]
+      }
+    },
+    {
+      "obligation_id": "EL-GASPER-FCU-001",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
+        "GasperBeaconChain.Core.finalized_means_justified_child",
+        "GasperBeaconChain.Core.k_finalized_means_justified",
+        "GasperBeaconChain.Core.finalized_means_one_finalized"
+      ],
+      "owned_inputs": ["canonical head", "safe prefix", "finalized prefix", "HashParent"],
+      "causal_rationale": "Gasper finality assumes a stable finalized prefix; non-atomic or ancestry-inconsistent EL forkchoice updates can violate the CL-to-EL refinement relation.",
+      "text": "Verify that forkchoiceUpdated validates head, safe, and finalized ancestry and payload validity before atomically changing canonical state, and never rolls back a previously accepted finalized prefix.",
+      "assertion": "apply_fcu(h,s,f) -> VALID(h,s,f) and ancestor(f,s) and ancestor(s,h) and atomic and old_finalized<=f",
+      "covers": "engine_forkchoiceUpdatedV*",
+      "label": "fork-choice",
+      "severity": "CRITICAL",
+      "bridge_status": "specified-unproved",
+      "spec_references": ["execution-apis:src/engine/paris.md#engine-forkchoiceupdatedv1"],
+      "implementation_surfaces": ["forkchoice state validation", "canonical chain update", "safe/finalized persistence"],
+      "engine_methods": ["engine_forkchoiceUpdatedV1", "engine_forkchoiceUpdatedV2", "engine_forkchoiceUpdatedV3"],
+      "dataset_match": {
+        "labels": ["fork-choice", "engine-api", "database"],
+        "root_causes": ["consensus_divergence", "improper_state_update", "race_condition"]
+      }
+    },
+    {
+      "obligation_id": "EL-GASPER-REGISTRY-001",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.slashable_bound",
+        "GasperBeaconChain.Core.quorum_intersection_weight_lower",
+        "GasperBeaconChain.Core.validator_intersection_lower_bound",
+        "GasperBeaconChain.Core.two_justified_same_height_slashed",
+        "GasperBeaconChain.Core.quorum_2_upclosed",
+        "GasperBeaconChain.Core.quorum_2_nonempty_of_threshold_pos",
+        "GasperBeaconChain.Executable.q_intersection_slashed_iff_exists_witness"
+      ],
+      "owned_inputs": ["EL-originated deposits", "execution requests", "validator-set delta", "stake"],
+      "causal_rationale": "Quorum bounds depend on the validator set and stake; EL-originated deposits or requests must refine those abstract inputs without omission, duplication, reordering, or value corruption.",
+      "text": "Verify that EL-originated deposit and execution-request records are commitment-checked, uniquely typed, ordered, and applied exactly once before they affect validator membership or effective balance.",
+      "assertion": "registry_delta = apply_once(ordered_unique(commitment_checked(execution_records)))",
+      "covers": "execution requests and deposits",
+      "label": "beacon-chain:execution-payload",
+      "severity": "HIGH",
+      "bridge_status": "specified-unproved",
+      "spec_references": ["execution-apis:src/engine/prague.md#engine-newpayloadv4", "consensus-specs:specs/phase0/deposit-contract.md"],
+      "implementation_surfaces": ["execution request commitment", "deposit log processing", "request persistence"],
+      "engine_methods": ["engine_newPayloadV4", "engine_getPayloadV4"],
+      "dataset_match": {
+        "labels": ["beacon-chain:execution-payload", "engine-api", "serialization"],
+        "root_causes": ["missing_input_validation", "serialization_bug", "improper_state_update"]
+      }
+    },
+    {
+      "obligation_id": "EL-GASPER-LIVE-001",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.plausible_liveness_construct_extension",
+        "GasperBeaconChain.Core.plausible_liveness_from_coq_blocks_exist",
+        "GasperBeaconChain.Core.no_new_slashed_two_link_extension",
+        "GasperBeaconChain.Executable.two_thirds_good_iff_forall_exists_goodQuorum"
+      ],
+      "owned_inputs": ["eventual payload validation", "canonical branch progress", "Engine API availability"],
+      "causal_rationale": "Plausible liveness requires processable extensions; EL starvation, resource exhaustion, or side-branch sync blocking canonical validation can remove that operational premise.",
+      "text": "Verify that canonical-branch payload validation and forkchoice requests have bounded resources and eventually complete even while side branches sync or peers submit malformed payloads.",
+      "assertion": "canonical_payload_available -> eventually terminal_status and fcu_processed despite side_sync and bounded adversarial_input",
+      "covers": "payload validation and sync scheduler",
+      "label": "sync",
+      "severity": "MEDIUM",
+      "bridge_status": "specified-unproved",
+      "liveness_only": true,
+      "spec_references": ["execution-apis:src/engine/paris.md#sync"],
+      "implementation_surfaces": ["sync scheduler", "payload validation queue", "Engine API request limits", "database IO"],
+      "engine_methods": ["engine_newPayloadV*", "engine_forkchoiceUpdatedV*"],
+      "dataset_match": {
+        "labels": ["sync", "engine-api", "p2p", "database"],
+        "root_causes": ["resource_exhaustion", "unhandled_error_or_nil", "race_condition"]
+      }
+    },
+    {
+      "obligation_id": "EL-GASPER-RECOVERY-001",
+      "target_layer": "el",
+      "source_theorems": [
+        "GasperBeaconChain.Core.k_safety'",
+        "GasperBeaconChain.Core.plausible_liveness_construct_extension"
+      ],
+      "owned_inputs": ["persistent payload status", "canonical mapping", "latest valid ancestor"],
+      "causal_rationale": "Restart recovery must reconstruct the same block-validity and ancestry view used before the crash or honest CLs can observe a different Gasper model.",
+      "text": "Verify that restart and database recovery reconstruct payload status, canonical hashes, and latest-valid ancestry consistently before serving Engine API requests, without defaulting missing records to VALID.",
+      "assertion": "after_restart engine_view = durable_validated_view and missing_status != VALID and fcu waits_for_recovery",
+      "covers": "Engine API recovery",
+      "label": "database",
+      "severity": "HIGH",
+      "bridge_status": "specified-unproved",
+      "spec_references": ["execution-apis:src/engine/paris.md#payload-validation"],
+      "implementation_surfaces": ["database migrations", "payload status reload", "canonical hash index", "startup sequencing"],
+      "engine_methods": ["engine_newPayloadV*", "engine_forkchoiceUpdatedV*"],
+      "dataset_match": {
+        "labels": ["database", "fork-choice", "engine-api"],
+        "root_causes": ["improper_state_update", "unhandled_error_or_nil", "race_condition"]
+      }
+    }
+  ],
+  "not_applicable": {
+    "cl": {},
+    "el": {
+      "GasperBeaconChain.Executable.slashed_double_vote_iff_bex": "Double-vote classification is computed solely from CL attestations; the current Gasper model exposes no EL-owned input to this checker.",
+      "GasperBeaconChain.Executable.slashed_surround_vote_iff_bex": "Surround-vote classification is computed solely from CL attestations; the current Gasper model exposes no EL-owned input to this checker.",
+      "GasperBeaconChain.Executable.justified_iff_bounded": "The bounded justification checker is CL-local. EL validity affects its input DAG through other obligations, not the checker algorithm itself."
+    }
+  }
+}
