@@ -282,6 +282,34 @@ def cmd_emit_projected_01e(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_refine_projected_01e(args: argparse.Namespace) -> int:
+    """Recursively split broad projected obligations into atomic checks."""
+    from .projection import load_evidence
+    from .refinement import load_refinement_rules, recursive_refine
+
+    doc = _load_json(args.input)
+    rules = load_refinement_rules(args.rules)
+    evidence = load_evidence(args.vulns_csv)
+    refined, report = recursive_refine(
+        list(doc.get("properties", [])), rules, evidence, args.max_rounds
+    )
+    out_doc = {k: v for k, v in doc.items() if k != "properties"}
+    out_doc["projection_refinement"] = report
+    out_doc["properties"] = refined
+    Path(args.out).write_text(
+        json.dumps(out_doc, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    final_diag = report["rounds"][-1]["diagnostics"]
+    print(
+        f"wrote {args.out}: {len(refined)} refined properties; "
+        f"rounds={len(report['rounds']) - 1}; "
+        f"bundled={len(final_diag['bundled'])}; "
+        f"wildcard-covers={len(final_diag['wildcard_covers'])}; "
+        f"converged={report['converged']}"
+    )
+    return 0 if report["converged"] else 1
+
+
 def _maybe_concrete_only(properties: list, args: argparse.Namespace) -> list:
     """--concrete-only: keep only the sharpened/concrete checklist (CHK-* and
     CHK-GEN-*), dropping the abstract theorem `-me*` must-establish decompositions.
@@ -604,6 +632,26 @@ def build_parser() -> argparse.ArgumentParser:
     pesrc.add_argument("--run-lean", action="store_true", help="run Lean exporter now")
     pe.add_argument("--out", required=True, help="output 01e_PARTIAL JSON path")
     pe.set_defaults(func=cmd_emit_projected_01e)
+
+    pr = sub.add_parser(
+        "refine-projected-01e",
+        help="recursively decompose broad projected obligations into reviewed "
+             "atomic checks while preserving causal provenance",
+    )
+    pr.add_argument("--input", required=True, help="projected 01e JSON")
+    pr.add_argument(
+        "--rules",
+        default=str(_REPO_ROOT / "data" / "projection_refinements.json"),
+        help="reviewed recursive split rules",
+    )
+    pr.add_argument(
+        "--vulns-csv",
+        default=str(_REPO_ROOT / "data" / "ethereum_vulns_high.csv"),
+        help="dataset evidence rematched for each refined child",
+    )
+    pr.add_argument("--max-rounds", type=int, default=6)
+    pr.add_argument("--out", required=True, help="refined 01e JSON path")
+    pr.set_defaults(func=cmd_refine_projected_01e)
 
     k = sub.add_parser(
         "emit-kurtosis",

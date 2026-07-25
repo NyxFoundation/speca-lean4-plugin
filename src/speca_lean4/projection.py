@@ -110,6 +110,37 @@ def _entry_index(theorem_map: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return out
 
 
+def _scope_mentions(scope: dict[str, Any], token: str) -> bool:
+    def strings(value: Any) -> list[str]:
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, dict):
+            return [s for v in value.values() for s in strings(v)]
+        if isinstance(value, list):
+            return [s for v in value for s in strings(v)]
+        return []
+
+    return token.lower() in " ".join(strings(scope)).lower()
+
+
+def _apply_projection_scope(base: dict[str, Any], target_layer: str) -> None:
+    """Do not inherit CL scope/references when projecting onto the EL."""
+    scope = base.pop("_projection_scope", {})
+    if target_layer != "el":
+        return
+    # The caller's scope may be a CL-only audit scope. EL findings cannot be
+    # labelled in-scope merely because their source theorem is in scope.
+    in_scope = _scope_mentions(scope, "execution")
+    reach = dict(base["reachability"])
+    reach["classification"] = "external-reachable"
+    reach["entry_points"] = ["CallbackHandler"]
+    reach["attacker_controlled"] = True
+    reach["bug_bounty_scope"] = "in-scope" if in_scope else "conditional"
+    base["reachability"] = reach
+    base["bug_bounty_eligible"] = in_scope
+    base["exploitability"] = "external-attack"
+
+
 def _validate_obligation(
     obligation: dict[str, Any], entries: dict[str, dict[str, Any]]
 ) -> None:
@@ -213,6 +244,9 @@ def build_projected_properties(
             "dataset_query": dict(obligation.get("dataset_match", {})),
             "dataset_evidence": match_evidence(obligation, evidence),
         })
+        base["_projection_scope"] = scope
+        _apply_projection_scope(base, target_layer)
+        base["spec_reference"] = obligation["spec_references"][0]
         # The primary theorem's single label is not a valid layer-crossing
         # anchor.  The projection map owns this field explicitly.
         if obligation.get("label"):

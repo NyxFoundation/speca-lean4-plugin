@@ -1,0 +1,296 @@
+{
+  "version": 1,
+  "note": "Round-1 reviewed decomposition of broad Gasper causal obligations into atomic implementation checks.",
+  "rules": [
+    {
+      "parent_property_id": "CL-GASPER-FIN-001",
+      "children": [
+        {
+          "property_id": "CL-GASPER-FIN-ANCESTRY-001",
+          "text": "Reject a justified or finalized checkpoint unless its root is known and is an ancestor of the candidate head in the validated fork-choice block DAG.",
+          "assertion": "accept_checkpoint(c,h) -> known_valid(c.root) and is_ancestor(c.root,h)",
+          "covers": "process_justification_and_finalization",
+          "implementation_surfaces": ["checkpoint root lookup", "fork-choice ancestry validation"]
+        },
+        {
+          "property_id": "CL-GASPER-FIN-SNAPSHOT-001",
+          "text": "Compute each justification and finalization update from one immutable fork-choice snapshot so votes, checkpoints, and parent links cannot be observed at different revisions.",
+          "assertion": "revision(votes)=revision(checkpoints)=revision(parent_links) during finality_update",
+          "covers": "process_justification_and_finalization",
+          "implementation_surfaces": ["fork-choice snapshot", "finality update synchronization"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "CL-GASPER-QUORUM-001",
+      "children": [
+        {
+          "property_id": "CL-GASPER-QUORUM-MEMBERSHIP-001",
+          "text": "Deduplicate attesting validator indices and reject any index outside the active-set snapshot before adding its effective balance to quorum weight.",
+          "assertion": "quorum_members = unique(valid_indices(attesters,active_snapshot))",
+          "covers": "get_unslashed_attesting_indices",
+          "implementation_surfaces": ["attester index validation", "quorum membership deduplication"]
+        },
+        {
+          "property_id": "CL-GASPER-QUORUM-ARITH-001",
+          "text": "Evaluate the two-thirds quorum comparison with exact or checked wide arithmetic so multiplying weight or total active balance cannot overflow or round.",
+          "assertion": "quorum(q) iff wide_exact(3*weight(q)) >= wide_exact(2*total_active)",
+          "covers": "get_total_active_balance",
+          "implementation_surfaces": ["effective balance sum", "two-thirds threshold comparison"]
+        },
+        {
+          "property_id": "CL-GASPER-QUORUM-SNAPSHOT-001",
+          "text": "Compute attesting weight and total active balance from the same validator-set and effective-balance snapshot.",
+          "assertion": "snapshot(attesting_weight)=snapshot(total_active_balance)",
+          "covers": "get_total_active_balance",
+          "implementation_surfaces": ["validator-set snapshot", "effective balance cache"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "CL-GASPER-SLASH-001",
+      "children": [
+        {
+          "property_id": "CL-GASPER-SLASH-DOUBLE-001",
+          "text": "Flag a double vote exactly when one validator signs distinct target roots for the same target epoch.",
+          "assertion": "double_vote(a,b) iff a.target.epoch=b.target.epoch and a.target.root!=b.target.root",
+          "covers": "is_slashable_attestation_data",
+          "implementation_surfaces": ["double-vote predicate"]
+        },
+        {
+          "property_id": "CL-GASPER-SLASH-SURROUND-001",
+          "text": "Flag a surround vote only for strict source-target containment, checking both attestation orderings and excluding equal endpoints.",
+          "assertion": "surround(a,b) iff strict_contains(a,b) or strict_contains(b,a)",
+          "covers": "is_slashable_attestation_data",
+          "implementation_surfaces": ["surround-vote predicate"]
+        },
+        {
+          "property_id": "CL-GASPER-SLASH-REPRESENTATION-001",
+          "text": "Decode and compare slashing epochs, validator indices, and checkpoint roots without lossy numeric or byte conversion.",
+          "assertion": "decode_encode(x)=x for every field used by is_slashable_attestation_data",
+          "covers": "is_slashable_attestation_data",
+          "implementation_surfaces": ["attestation decoding", "slashing field comparison"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "CL-GASPER-JUST-001",
+      "children": [
+        {
+          "property_id": "CL-GASPER-JUST-LINKS-001",
+          "text": "Accept a justified checkpoint only when a bounded, cycle-free chain of validated supermajority links connects it to the anchor.",
+          "assertion": "justified(c) -> exists links: bounded(links) and acyclic(links) and connects(anchor,c)",
+          "covers": "process_justification_and_finalization",
+          "implementation_surfaces": ["supermajority link traversal", "checkpoint ancestry"]
+        },
+        {
+          "property_id": "CL-GASPER-JUST-BITS-001",
+          "text": "Validate the epoch distance against the justification-bit width before indexing or shifting the bitfield, rejecting negative or out-of-range distances.",
+          "assertion": "use_justification_bits(delta) -> 0<=delta and delta<BITS_LEN",
+          "covers": "process_justification_and_finalization",
+          "implementation_surfaces": ["justification bitfield shift", "epoch-distance calculation"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "CL-GASPER-LIVE-001",
+      "children": [
+        {
+          "property_id": "CL-GASPER-LIVE-QUEUE-001",
+          "text": "Bound every network-fed pending block or attestation queue before insertion and preserve capacity for canonical-chain work.",
+          "assertion": "enqueue(x,q) -> size(q)<Q_CAP and canonical_reserve(q)>=MIN_RESERVE",
+          "covers": "gossip validation queue",
+          "implementation_surfaces": ["pending block queue", "attestation reprocessing queue"],
+          "derivation_kind": "operational-assumption"
+        },
+        {
+          "property_id": "CL-GASPER-LIVE-DECOMPRESS-001",
+          "text": "Abort gossip decompression as soon as the cumulative output exceeds the protocol cap, before allocating or retaining the complete output.",
+          "assertion": "decompressed_total>MAX_PAYLOAD_SIZE -> abort_before_full_allocation",
+          "covers": "gossip decompression",
+          "implementation_surfaces": ["snappy decompression", "gossip payload allocation"],
+          "derivation_kind": "operational-assumption"
+        },
+        {
+          "property_id": "CL-GASPER-LIVE-TRAVERSAL-001",
+          "text": "Bound recursive or iterative ancestor traversal and detect cycles before processing attacker-supplied block trees.",
+          "assertion": "traverse(parent,x) -> steps<=MAX_DEPTH and no_revisited_hash",
+          "covers": "fork-choice ancestor traversal",
+          "implementation_surfaces": ["ancestor lookup", "fork-choice block-tree traversal"],
+          "derivation_kind": "operational-assumption"
+        }
+      ]
+    },
+    {
+      "parent_property_id": "EL-GASPER-VALID-001",
+      "children": [
+        {
+          "property_id": "EL-GASPER-VALID-EXECUTION-001",
+          "text": "Return VALID for a payload only after executing it against the exact parent state and confirming the resulting state and receipts roots.",
+          "assertion": "status(p)=VALID -> execute(parent_state(p),p.txs).roots=(p.stateRoot,p.receiptsRoot)",
+          "covers": "engine_newPayload",
+          "implementation_surfaces": ["payload execution", "state-root validation", "receipts-root validation"]
+        },
+        {
+          "property_id": "EL-GASPER-VALID-FORK-FIELDS-001",
+          "text": "Validate every fork-specific payload commitment required by the selected Engine API version before returning VALID.",
+          "assertion": "status(p)=VALID -> validate_commitments(p, fork_at(p.timestamp), engine_version)",
+          "covers": "engine_newPayload",
+          "implementation_surfaces": ["Engine API version dispatch", "withdrawal/blob/request commitment validation"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "EL-GASPER-IDENTITY-001",
+      "children": [
+        {
+          "property_id": "EL-GASPER-IDENTITY-HASH-001",
+          "text": "Recompute the execution block hash from the submitted payload header and reject a mismatch before storing the payload or its validation status.",
+          "assertion": "keccak(rlp(header(p)))!=p.blockHash -> reject_before_store(p)",
+          "covers": "engine_newPayload",
+          "implementation_surfaces": ["execution block-hash validation", "payload insertion"]
+        },
+        {
+          "property_id": "EL-GASPER-IDENTITY-LATEST-VALID-001",
+          "text": "For an INVALID response, return the highest fully validated ancestor as latestValidHash, using null or zero only in the specification-defined cases.",
+          "assertion": "INVALID(p) -> latestValidHash=highest_fully_VALID_ancestor(p) or allowed_null_or_zero(p)",
+          "covers": "engine_newPayload",
+          "implementation_surfaces": ["latest-valid ancestor lookup", "PayloadStatus construction"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "EL-GASPER-STATUS-001",
+      "children": [
+        {
+          "property_id": "EL-GASPER-STATUS-MONOTONE-001",
+          "text": "Never change a terminal INVALID payload status to VALID after sync completion, restart, cache eviction, or revalidation.",
+          "assertion": "ever_terminal_INVALID(p) -> always not terminal_VALID(p)",
+          "covers": "payload status cache",
+          "implementation_surfaces": ["payload status transition", "sync completion", "status reload"]
+        },
+        {
+          "property_id": "EL-GASPER-STATUS-DESCENDANTS-001",
+          "text": "Exclude every descendant of a known invalid payload from canonical head, safe, and finalized selection.",
+          "assertion": "ancestor_invalid(p) -> p notin {canonical_head,safe_head,finalized_head}",
+          "covers": "invalid ancestor propagation",
+          "implementation_surfaces": ["invalid chain cache", "canonical selection"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "EL-GASPER-FCU-001",
+      "children": [
+        {
+          "property_id": "EL-GASPER-FCU-ANCESTRY-001",
+          "text": "Reject forkchoiceUpdated when nonzero finalized, safe, and head hashes are not on one ancestor chain in that order.",
+          "assertion": "apply_fcu(h,s,f) -> zero_or_ancestor(f,s) and zero_or_ancestor(s,h)",
+          "covers": "engine_forkchoiceUpdated",
+          "implementation_surfaces": ["forkchoice state validation", "safe/finalized ancestry"]
+        },
+        {
+          "property_id": "EL-GASPER-FCU-ATOMIC-001",
+          "text": "Apply canonical head, safe, and finalized mappings atomically so readers cannot observe a partially updated forkchoice state.",
+          "assertion": "visible_fcu_revision(head)=visible_fcu_revision(safe)=visible_fcu_revision(finalized)",
+          "covers": "engine_forkchoiceUpdated",
+          "implementation_surfaces": ["canonical mapping transaction", "forkchoice synchronization"]
+        },
+        {
+          "property_id": "EL-GASPER-FCU-FINALIZED-001",
+          "text": "Reject a forkchoice update that moves the finalized hash outside the descendant chain of the previously accepted nonzero finalized hash.",
+          "assertion": "old_f!=ZERO and new_f!=ZERO -> is_ancestor(old_f,new_f)",
+          "covers": "engine_forkchoiceUpdated",
+          "implementation_surfaces": ["finalized hash persistence", "finalized rollback guard"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "EL-GASPER-REGISTRY-001",
+      "children": [
+        {
+          "property_id": "EL-GASPER-REGISTRY-DEPOSITS-001",
+          "text": "Expose deposit data only from canonical, fully validated execution history and preserve log order and exact field values.",
+          "assertion": "deposit_stream = ordered_exact_logs(canonical_fully_validated_blocks)",
+          "covers": "deposit log ingestion",
+          "implementation_surfaces": ["deposit log retrieval", "canonical receipt filtering"]
+        },
+        {
+          "property_id": "EL-GASPER-REGISTRY-REQUESTS-001",
+          "text": "Validate execution requests as uniquely typed, strictly ordered commitment members before returning or accepting them through the Engine API.",
+          "assertion": "requests = unique_by_type(sort_by_type(commitment_members)) and every len(request)>1",
+          "covers": "engine_newPayloadV4",
+          "implementation_surfaces": ["execution request decoding", "request commitment validation"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "EL-GASPER-LIVE-001",
+      "children": [
+        {
+          "property_id": "EL-GASPER-LIVE-BOUNDS-001",
+          "text": "Apply explicit size, queue, and work limits before allocating or scheduling attacker-controlled payload validation input.",
+          "assertion": "schedule_validation(p) -> size(p)<=PAYLOAD_CAP and queue_size<QUEUE_CAP and work(p)<=WORK_CAP",
+          "covers": "payload validation scheduler",
+          "implementation_surfaces": ["Engine API request admission", "payload validation queue"],
+          "derivation_kind": "operational-assumption"
+        },
+        {
+          "property_id": "EL-GASPER-LIVE-CANONICAL-001",
+          "text": "Allow canonical-branch payload validation to progress when unrelated side branches are syncing or awaiting data.",
+          "assertion": "canonical_data_available(p) -> validation(p) not_blocked_by side_branch_sync",
+          "covers": "payload validation scheduler",
+          "implementation_surfaces": ["sync scheduler", "canonical validation priority"],
+          "derivation_kind": "operational-assumption"
+        }
+      ]
+    },
+    {
+      "parent_property_id": "EL-GASPER-RECOVERY-001",
+      "children": [
+        {
+          "property_id": "EL-GASPER-RECOVERY-STATE-001",
+          "text": "Reconstruct payload status, canonical hashes, and latest-valid ancestry from one durable database revision during restart.",
+          "assertion": "recovered_revision(status)=recovered_revision(canonical)=recovered_revision(ancestry)",
+          "covers": "Engine API startup recovery",
+          "implementation_surfaces": ["payload status reload", "canonical hash index", "latest-valid index"]
+        },
+        {
+          "property_id": "EL-GASPER-RECOVERY-GATE-001",
+          "text": "Do not serve Engine API forkchoice or payload-status results until recovery completes, and never treat a missing status record as VALID.",
+          "assertion": "serve_engine_request -> recovery_complete and missing_status!=VALID",
+          "covers": "Engine API startup gate",
+          "implementation_surfaces": ["startup sequencing", "missing status handling"]
+        }
+      ]
+    },
+    {
+      "parent_property_id": "EL-GASPER-LIVE-BOUNDS-001",
+      "children": [
+        {
+          "property_id": "EL-GASPER-LIVE-ADMISSION-001",
+          "text": "Reject an Engine API payload whose encoded or decoded size exceeds the configured validation limit before allocating payload-sized validation state.",
+          "assertion": "admit_payload(p) -> encoded_size(p)<=PAYLOAD_CAP and decoded_size(p)<=DECODED_PAYLOAD_CAP",
+          "covers": "Engine API payload admission",
+          "implementation_surfaces": ["Engine API request admission", "payload decoding"],
+          "derivation_kind": "operational-assumption"
+        },
+        {
+          "property_id": "EL-GASPER-LIVE-QUEUE-001",
+          "text": "Reject or backpressure new payload validation work before the bounded validation queue reaches an over-capacity state.",
+          "assertion": "enqueue_validation(p) -> queue_size<QUEUE_CAP",
+          "covers": "payload validation queue admission",
+          "implementation_surfaces": ["payload validation queue", "Engine API backpressure"],
+          "derivation_kind": "operational-assumption"
+        },
+        {
+          "property_id": "EL-GASPER-LIVE-WORK-001",
+          "text": "Do not schedule a payload when its precomputed validation-cost estimate exceeds the per-request work budget.",
+          "assertion": "schedule_validation(p) -> estimated_work(p)<=WORK_CAP",
+          "covers": "payload validation scheduler",
+          "implementation_surfaces": ["validation cost accounting", "payload validation scheduler"],
+          "derivation_kind": "operational-assumption"
+        }
+      ]
+    }
+  ]
+}

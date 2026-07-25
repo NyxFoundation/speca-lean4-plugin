@@ -92,6 +92,11 @@ def test_cl_and_el_proof_status_are_honest(
     }
     assert {p["bridge_status"] for p in cl} == {"not-required"}
     assert {p["bridge_status"] for p in el} == {"specified-unproved"}
+    assert {
+        p["reachability"]["bug_bounty_scope"] for p in el
+    } == {"conditional"}
+    assert not any(p["bug_bounty_eligible"] for p in el)
+    assert all(p["spec_reference"].startswith("execution-") for p in el)
 
 
 def test_missing_health_never_upgrades_projection(

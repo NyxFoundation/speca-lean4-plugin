@@ -99,3 +99,6 @@ extract to a directory passed as `--benchmark-dir`.
 - Cross-layer properties use `emit-projected-01e`; EL obligations stay
   `descends-from-*-via-unproved-bridge` until their Lean composition theorem is
   proved. See `docs/causal-projection.md`.
+- Broad causal projections pass through `refine-projected-01e`, which applies
+  reviewed one-to-many rules recursively to a fixed point. Source theorems,
+  owned inputs, scope, and proof/bridge status are immutable during refinement.

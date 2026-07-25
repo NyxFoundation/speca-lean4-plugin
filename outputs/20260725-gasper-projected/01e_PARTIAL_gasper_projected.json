@@ -359,7 +359,7 @@
       "lean_conclusion": "q_intersection_slashed τ stake vset st",
       "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
       "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process-justification-and-finalization",
       "target_layer": "cl",
       "source_theorems": [
         "GasperBeaconChain.Core.k_safety'",
@@ -598,7 +598,7 @@
       "lean_proof_code": "fun τ stake vset parent genesis st hconf => ⋯",
       "lean_conclusion": "∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR)",
       "lean_proof_source": "theorem slashable_bound\n    ... (model parameters elided in sample fixture) ... :\n    ∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR) :=\n  fun τ stake vset parent genesis st hconf => ⋯",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_effective_balance_updates",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#get-total-active-balance",
       "target_layer": "cl",
       "source_theorems": [
         "GasperBeaconChain.Core.slashable_bound",
@@ -786,7 +786,7 @@
       "lean_proof_code": "fun st v => of_decide_eq_true ⋯",
       "lean_conclusion": "slashedB st v = true ↔ ∃ a1 ∈ st.votes, ∃ a2 ∈ st.votes, double_vote v a1 a2",
       "lean_proof_source": "theorem slashed_double_vote_iff_bex\n    ... (model parameters elided in sample fixture) ... :\n    slashedB st v = true ↔ ∃ a1 ∈ st.votes, ∃ a2 ∈ st.votes, double_vote v a1 a2 :=\n  fun st v => of_decide_eq_true ⋯",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_slashings",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#is-slashable-attestation-data",
       "target_layer": "cl",
       "source_theorems": [
         "GasperBeaconChain.Executable.slashed_double_vote_iff_bex",
@@ -999,7 +999,7 @@
       "lean_proof_code": "fun τ stake vset parent genesis st p h hfin => ⋯",
       "lean_conclusion": "∃ c, parent p c ∧ justified τ stake vset parent genesis st c (h + 1)",
       "lean_proof_source": "theorem finalized_means_justified_child\n    ... (model parameters elided in sample fixture) ... :\n    ∃ c, parent p c ∧ justified τ stake vset parent genesis st c (h + 1) :=\n  fun τ stake vset parent genesis st p h hfin => ⋯",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process-justification-and-finalization",
       "target_layer": "cl",
       "source_theorems": [
         "GasperBeaconChain.Core.finalized_means_justified_child",
@@ -1245,7 +1245,7 @@
       "lean_proof_code": "fun τ stake vset parent genesis st qctx htwothirds hunslashed hgood hwf_st hheight => ⋯",
       "lean_conclusion": "∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset parent genesis st' nf nh ∧ parent nf nc ∧ supermajority_link τ stake vset st' nf nc nh (nh + 1)",
       "lean_proof_source": "theorem plausible_liveness_construct_extension\n    ... (model parameters elided in sample fixture) ... :\n    ∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset pare :=\n  fun τ stake vset parent genesis st qctx htwothirds hunslashed hgood hwf_st hheight => ⋯",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "consensus-specs:specs/phase0/p2p-interface.md",
       "target_layer": "cl",
       "source_theorems": [
         "GasperBeaconChain.Core.plausible_liveness_construct_extension",
@@ -1389,9 +1389,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "in-scope"
+        "bug_bounty_scope": "conditional"
       },
-      "bug_bounty_eligible": true,
+      "bug_bounty_eligible": false,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
@@ -1546,7 +1546,7 @@
       "lean_conclusion": "q_intersection_slashed τ stake vset st",
       "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
       "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "execution-apis:src/engine/paris.md#payload-validation",
       "target_layer": "el",
       "source_theorems": [
         "GasperBeaconChain.Core.k_safety'",
@@ -1695,15 +1695,15 @@
       "severity": "CRITICAL",
       "covers": "engine_newPayloadV*",
       "reachability": {
-        "classification": "internal",
+        "classification": "external-reachable",
         "entry_points": [
-          "FunctionCall"
+          "CallbackHandler"
         ],
-        "attacker_controlled": false,
-        "bug_bounty_scope": "in-scope"
+        "attacker_controlled": true,
+        "bug_bounty_scope": "conditional"
       },
-      "bug_bounty_eligible": true,
-      "exploitability": "local-attack",
+      "bug_bounty_eligible": false,
+      "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#finalization_fork_means_same_finalization_fork_one",
       "label": "engine-api",
@@ -1784,7 +1784,7 @@
       "lean_proof_code": "fun τ stake vset parent genesis st => Iff.intro (fun h => ⋯) (fun h => ⋯)",
       "lean_conclusion": "finalization_fork τ stake vset parent genesis st ↔ same_k_finalization_fork τ stake vset parent genesis st 1",
       "lean_proof_source": "theorem finalization_fork_means_same_finalization_fork_one\n    ... (model parameters elided in sample fixture) ... :\n    finalization_fork τ stake vset parent genesis st ↔ same_k_finalization_fork τ stake vset parent gene :=\n  fun τ stake vset parent genesis st => Iff.intro (fun h => ⋯) (fun h => ⋯)",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "execution-apis:src/engine/paris.md#engine-newpayloadv1",
       "target_layer": "el",
       "source_theorems": [
         "GasperBeaconChain.Core.finalization_fork_means_same_finalization_fork_one",
@@ -1929,9 +1929,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "in-scope"
+        "bug_bounty_scope": "conditional"
       },
-      "bug_bounty_eligible": true,
+      "bug_bounty_eligible": false,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
@@ -2086,7 +2086,7 @@
       "lean_conclusion": "q_intersection_slashed τ stake vset st",
       "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
       "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "execution-apis:src/engine/paris.md#payload-validation",
       "target_layer": "el",
       "source_theorems": [
         "GasperBeaconChain.Core.k_safety'",
@@ -2230,9 +2230,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "in-scope"
+        "bug_bounty_scope": "conditional"
       },
-      "bug_bounty_eligible": true,
+      "bug_bounty_eligible": false,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
@@ -2387,7 +2387,7 @@
       "lean_conclusion": "q_intersection_slashed τ stake vset st",
       "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
       "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "execution-apis:src/engine/paris.md#engine-forkchoiceupdatedv1",
       "target_layer": "el",
       "source_theorems": [
         "GasperBeaconChain.Core.k_safety'",
@@ -2530,15 +2530,15 @@
       "severity": "HIGH",
       "covers": "execution requests and deposits",
       "reachability": {
-        "classification": "internal",
+        "classification": "external-reachable",
         "entry_points": [
-          "FunctionCall"
+          "CallbackHandler"
         ],
-        "attacker_controlled": false,
-        "bug_bounty_scope": "in-scope"
+        "attacker_controlled": true,
+        "bug_bounty_scope": "conditional"
       },
-      "bug_bounty_eligible": true,
-      "exploitability": "local-attack",
+      "bug_bounty_eligible": false,
+      "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/SlashableBound.lean#slashable_bound",
       "label": "beacon-chain:execution-payload",
@@ -2628,7 +2628,7 @@
       "lean_proof_code": "fun τ stake vset parent genesis st hconf => ⋯",
       "lean_conclusion": "∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR)",
       "lean_proof_source": "theorem slashable_bound\n    ... (model parameters elided in sample fixture) ... :\n    ∃ qL qR, max (weight stake vL - act - ext) (weight stake vR - act - ext) ≤ weight stake (qL ∩ qR) :=\n  fun τ stake vset parent genesis st hconf => ⋯",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_effective_balance_updates",
+      "spec_reference": "execution-apis:src/engine/prague.md#engine-newpayloadv4",
       "target_layer": "el",
       "source_theorems": [
         "GasperBeaconChain.Core.slashable_bound",
@@ -2740,15 +2740,15 @@
       "severity": "MEDIUM",
       "covers": "payload validation and sync scheduler",
       "reachability": {
-        "classification": "internal",
+        "classification": "external-reachable",
         "entry_points": [
-          "FunctionCall"
+          "CallbackHandler"
         ],
-        "attacker_controlled": false,
-        "bug_bounty_scope": "in-scope"
+        "attacker_controlled": true,
+        "bug_bounty_scope": "conditional"
       },
       "bug_bounty_eligible": false,
-      "exploitability": "local-attack",
+      "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/PlausibleLiveness.lean#plausible_liveness_construct_extension",
       "label": "sync",
@@ -2878,7 +2878,7 @@
       "lean_proof_code": "fun τ stake vset parent genesis st qctx htwothirds hunslashed hgood hwf_st hheight => ⋯",
       "lean_conclusion": "∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset parent genesis st' nf nh ∧ parent nf nc ∧ supermajority_link τ stake vset st' nf nc nh (nh + 1)",
       "lean_proof_source": "theorem plausible_liveness_construct_extension\n    ... (model parameters elided in sample fixture) ... :\n    ∃ st', unslashed_can_extend st st' ∧ no_new_slashed st st' ∧ ∃ nf nc nh, justified τ stake vset pare :=\n  fun τ stake vset parent genesis st qctx htwothirds hunslashed hgood hwf_st hheight => ⋯",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "execution-apis:src/engine/paris.md#sync",
       "target_layer": "el",
       "source_theorems": [
         "GasperBeaconChain.Core.plausible_liveness_construct_extension",
@@ -3024,9 +3024,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "in-scope"
+        "bug_bounty_scope": "conditional"
       },
-      "bug_bounty_eligible": true,
+      "bug_bounty_eligible": false,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
@@ -3181,7 +3181,7 @@
       "lean_conclusion": "q_intersection_slashed τ stake vset st",
       "lean_proof_source": "/-- Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection. -/\ntheorem k_safety'\n    ... (model parameters elided in sample fixture) ... :\n    q_intersection_slashed τ stake vset st :=\n  fun τ stake vset parent genesis st b1 b2 k1 k2 hfin1 hfin2 hnc1 hnc2 => ⋯",
       "lean_doc_string": "Accountable safety, k-generalized (sample fixture docstring): two\nconflicting k-finalized blocks imply a slashable 2/3 quorum intersection.",
-      "spec_reference": "consensus-specs:specs/phase0/beacon-chain.md#process_justification_and_finalization",
+      "spec_reference": "execution-apis:src/engine/paris.md#payload-validation",
       "target_layer": "el",
       "source_theorems": [
         "GasperBeaconChain.Core.k_safety'",

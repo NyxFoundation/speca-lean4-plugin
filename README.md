@@ -96,6 +96,10 @@ speca-lean4 emit-projected-01e \
     --health-json health.json \
     --target-layer both \
     --out outputs/01e_PARTIAL_gasper_projected.json
+
+speca-lean4 refine-projected-01e \
+    --input outputs/01e_PARTIAL_gasper_projected.json \
+    --out outputs/01e_PARTIAL_gasper_projected_refined.json
 ```
 
 Its reviewed [`data/projection_map.json`](data/projection_map.json) makes the
@@ -103,7 +107,9 @@ theorem -> owned input -> boundary obligation -> code surface chain explicit.
 It fails on unclassified theorems, records reviewed EL `not-applicable`
 decisions, and keeps EL properties at
 `descends-from-proved-via-unproved-bridge` until the composition theorem is
-proved. See [`docs/causal-projection.md`](docs/causal-projection.md).
+proved. The second command recursively applies reviewed atomic split rules
+while preserving that provenance and proof status. See
+[`docs/causal-projection.md`](docs/causal-projection.md).
 
 Output is exactly the `01e` property schema. Lean-specific data is **additive
 only**, never mutating a core field — per speca#88's contract: `lean_status`,

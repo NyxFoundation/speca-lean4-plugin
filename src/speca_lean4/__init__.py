@@ -28,6 +28,11 @@ from .projection import (
     load_projection_map,
     match_evidence,
 )
+from .refinement import (
+    load_refinement_rules,
+    recursive_refine,
+    refinement_diagnostics,
+)
 
 __all__ = [
     "build_properties",
@@ -51,6 +56,9 @@ __all__ = [
     "load_evidence",
     "load_projection_map",
     "match_evidence",
+    "load_refinement_rules",
+    "recursive_refine",
+    "refinement_diagnostics",
 ]
 
 __version__ = "0.1.0"
