@@ -38,6 +38,20 @@ def load_projection_map(path: str | Path) -> dict[str, Any]:
     return data
 
 
+def load_bounty_policy(path: str | Path) -> dict[str, Any]:
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if data.get("version") != 1:
+        raise ProjectionError("bug bounty policy version must be 1")
+    if data.get("source_url") != "https://ethereum.org/bug-bounty/":
+        raise ProjectionError("bug bounty policy must cite the official Ethereum page")
+    layers = data.get("in_scope_layers")
+    if not isinstance(layers, list) or not {"cl", "el"} <= set(layers):
+        raise ProjectionError("bug bounty policy must classify CL and EL")
+    if not isinstance(data.get("attack_path_rules"), dict):
+        raise ProjectionError("bug bounty policy must include attack_path_rules")
+    return data
+
+
 def load_evidence(path: str | Path | None) -> list[dict[str, str]]:
     if not path:
         return []
@@ -123,22 +137,67 @@ def _scope_mentions(scope: dict[str, Any], token: str) -> bool:
     return token.lower() in " ".join(strings(scope)).lower()
 
 
-def _apply_projection_scope(base: dict[str, Any], target_layer: str) -> None:
-    """Do not inherit CL scope/references when projecting onto the EL."""
-    scope = base.pop("_projection_scope", {})
+def _apply_projection_scope(
+    base: dict[str, Any],
+    target_layer: str,
+    audit_scope: dict[str, Any],
+    bounty_policy: dict[str, Any] | None,
+    obligation: dict[str, Any],
+) -> None:
+    """Separate the run's audit scope from the official bounty policy."""
+    policy_source = (bounty_policy or {}).get("source_url")
+    if policy_source:
+        base["bug_bounty_policy_source"] = policy_source
+        base["bug_bounty_policy_retrieved_at"] = bounty_policy["retrieved_at"]
+        base["bug_bounty_policy_last_updated"] = bounty_policy[
+            "source_last_updated"
+        ]
     if target_layer != "el":
         return
-    # The caller's scope may be a CL-only audit scope. EL findings cannot be
-    # labelled in-scope merely because their source theorem is in scope.
-    in_scope = _scope_mentions(scope, "execution")
+
+    # Engine API is trusted, but malicious protocol inputs can reach EL
+    # validation through an authenticated CL. Direct public Engine API exposure
+    # is explicitly out of scope under the official policy.
+    policy_in_scope = (
+        bounty_policy is not None
+        and target_layer in bounty_policy.get("in_scope_layers", [])
+    )
+    liveness_only = bool(obligation.get("liveness_only"))
+    if bounty_policy is None:
+        policy_in_scope = _scope_mentions(audit_scope, "execution")
+    in_scope = policy_in_scope and not liveness_only
     reach = dict(base["reachability"])
     reach["classification"] = "external-reachable"
     reach["entry_points"] = ["CallbackHandler"]
+    base["transitive_attack_path"] = [
+        "p2p:beacon_block -> authenticated Engine API",
+        "onchain:canonical payload -> authenticated Engine API",
+    ]
     reach["attacker_controlled"] = True
-    reach["bug_bounty_scope"] = "in-scope" if in_scope else "conditional"
+    reach["bug_bounty_scope"] = (
+        "in-scope" if in_scope
+        else "conditional" if policy_in_scope
+        else "out-of-scope"
+    )
     base["reachability"] = reach
     base["bug_bounty_eligible"] = in_scope
     base["exploitability"] = "external-attack"
+    base["bug_bounty_eligibility_basis"] = (
+        "Official policy includes EL specifications, EL clients, protocol "
+        "non-compliance, and consensus-integrity failures. Eligibility assumes "
+        "indirect delivery of attacker-controlled protocol input through an "
+        "authenticated CL; direct public Engine API exposure is excluded."
+    )
+    base["bug_bounty_exclusions"] = [
+        "direct-public-engine-api-exposure",
+        "no-current-mainnet-impact",
+    ]
+    if liveness_only:
+        base["bug_bounty_eligibility_basis"] = (
+            "DoS is in scope only when it meets the official low-effort impact "
+            "threshold; high-effort single-peer DoS is excluded."
+        )
+        base["bug_bounty_exclusions"].append("high-effort-single-peer-dos")
 
 
 def _validate_obligation(
@@ -183,6 +242,7 @@ def build_projected_properties(
     target_layer: str,
     evidence: list[dict[str, str]] | None = None,
     gasper_ref: str | None = None,
+    bounty_policy: dict[str, Any] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Build causal CL or EL 01e properties and an applicability report."""
     if target_layer not in {"cl", "el"}:
@@ -244,8 +304,9 @@ def build_projected_properties(
             "dataset_query": dict(obligation.get("dataset_match", {})),
             "dataset_evidence": match_evidence(obligation, evidence),
         })
-        base["_projection_scope"] = scope
-        _apply_projection_scope(base, target_layer)
+        _apply_projection_scope(
+            base, target_layer, scope, bounty_policy, obligation
+        )
         base["spec_reference"] = obligation["spec_references"][0]
         # The primary theorem's single label is not a valid layer-crossing
         # anchor.  The projection map owns this field explicitly.

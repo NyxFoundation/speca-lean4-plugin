@@ -11,6 +11,7 @@ from speca_lean4.health import index_health
 from speca_lean4.projection import (
     ProjectionError,
     build_projected_properties,
+    load_bounty_policy,
     load_evidence,
     load_projection_map,
     match_evidence,
@@ -29,6 +30,13 @@ def theorem_map() -> dict:
 @pytest.fixture
 def projection_map() -> dict:
     return load_projection_map(_ROOT / "data" / "projection_map.json")
+
+
+@pytest.fixture
+def bounty_policy() -> dict:
+    return load_bounty_policy(
+        _ROOT / "data" / "ethereum_bug_bounty_policy.json"
+    )
 
 
 @pytest.fixture
@@ -78,13 +86,15 @@ def test_projected_properties_are_schema_valid(
 
 
 def test_cl_and_el_proof_status_are_honest(
-    theorem_map, projection_map, health, scope
+    theorem_map, projection_map, bounty_policy, health, scope
 ):
     cl, _ = build_projected_properties(
-        theorem_map, health, scope, projection_map, "cl"
+        theorem_map, health, scope, projection_map, "cl",
+        bounty_policy=bounty_policy,
     )
     el, _ = build_projected_properties(
-        theorem_map, health, scope, projection_map, "el"
+        theorem_map, health, scope, projection_map, "el",
+        bounty_policy=bounty_policy,
     )
     assert {p["lean_status"] for p in cl} == {"descends-from-proved"}
     assert {p["lean_status"] for p in el} == {
@@ -94,8 +104,23 @@ def test_cl_and_el_proof_status_are_honest(
     assert {p["bridge_status"] for p in el} == {"specified-unproved"}
     assert {
         p["reachability"]["bug_bounty_scope"] for p in el
-    } == {"conditional"}
-    assert not any(p["bug_bounty_eligible"] for p in el)
+    } == {"in-scope", "conditional"}
+    live = next(p for p in el if p["property_id"] == "EL-GASPER-LIVE-001")
+    assert live["reachability"]["bug_bounty_scope"] == "conditional"
+    assert live["bug_bounty_eligible"] is False
+    assert all(
+        p["bug_bounty_eligible"]
+        for p in el
+        if p["property_id"] != "EL-GASPER-LIVE-001"
+    )
+    assert all(
+        p["bug_bounty_policy_source"] == "https://ethereum.org/bug-bounty/"
+        for p in cl + el
+    )
+    assert all(
+        "direct-public-engine-api-exposure" in p["bug_bounty_exclusions"]
+        for p in el
+    )
     assert all(p["spec_reference"].startswith("execution-") for p in el)
 
 

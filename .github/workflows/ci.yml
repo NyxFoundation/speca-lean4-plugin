@@ -116,13 +116,22 @@ jobs:
             --out-dir improve_run_mock --max-rounds 4
           python3 -c "
           import json
+          source = json.load(open('01e_fixture.json', encoding='utf-8'))['properties']
+          expected_ids = {
+              p['property_id'] for p in source
+              if p['property_id'].startswith('CHK-')
+          }
+          reference_n = json.load(
+              open('data/solodit_checklist.meta.json', encoding='utf-8')
+          )['n_rows']
           rep = json.load(open('judge_report_mock.json', encoding='utf-8'))
-          assert rep['ours']['n'] == 15 and rep['reference']['n'] == 52
+          assert rep['ours']['n'] == len(expected_ids)
+          assert rep['reference']['n'] == reference_n
           log = json.load(open('improve_run_mock/score_log.json', encoding='utf-8'))
           assert log['rounds'] and len(log['history_overall_mean']) == len(log['rounds'])
           assert isinstance(log['converged'], bool) and log['stop_reason']
           props = json.load(open('improve_run_mock/improved_01e.json', encoding='utf-8'))['properties']
-          assert len(props) == 15
+          assert {p['property_id'] for p in props} == expected_ids
           print('OK: judge report + improve score log written with the mock adapter;',
                 f\"converged={log['converged']} ({log['stop_reason']})\")
           "

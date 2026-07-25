@@ -8,6 +8,7 @@ from pathlib import Path
 from speca_lean4.health import index_health
 from speca_lean4.projection import (
     build_projected_properties,
+    load_bounty_policy,
     load_evidence,
     load_projection_map,
 )
@@ -29,11 +30,15 @@ def _projected():
     ))
     scope = json.loads((_FIX / "bug_bounty_scope.sample.json").read_text())
     pmap = load_projection_map(_ROOT / "data" / "projection_map.json")
+    bounty_policy = load_bounty_policy(
+        _ROOT / "data" / "ethereum_bug_bounty_policy.json"
+    )
     evidence = load_evidence(_ROOT / "data" / "ethereum_vulns_high.csv")
     props = []
     for layer in ("cl", "el"):
         part, _ = build_projected_properties(
-            theorem_map, health, scope, pmap, layer, evidence
+            theorem_map, health, scope, pmap, layer, evidence,
+            bounty_policy=bounty_policy,
         )
         props.extend(part)
     return props, evidence
@@ -72,8 +77,12 @@ def test_refinement_preserves_causal_and_proof_provenance():
         assert prop["causal_chain"][-1]["kind"] == "recursive-refinement"
         if prop["target_layer"] == "el":
             assert prop["lean_status"].endswith("via-unproved-bridge")
-            assert prop["reachability"]["bug_bounty_scope"] == "conditional"
-            assert prop["bug_bounty_eligible"] is False
+            if prop["refinement_history"][0] == "EL-GASPER-LIVE-001":
+                assert prop["reachability"]["bug_bounty_scope"] == "conditional"
+                assert prop["bug_bounty_eligible"] is False
+            else:
+                assert prop["reachability"]["bug_bounty_scope"] == "in-scope"
+                assert prop["bug_bounty_eligible"] is True
 
 
 def test_refinement_reduces_bundling_and_wildcards():

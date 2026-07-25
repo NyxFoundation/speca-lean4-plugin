@@ -34,6 +34,7 @@ Prevalence never decides whether a theorem applies.
 ```bash
 speca-lean4 emit-projected-01e \
   --scope BUG_BOUNTY_SCOPE.json \
+  --bounty-policy data/ethereum_bug_bounty_policy.json \
   --health-json theorem_health.json \
   --target-layer both \
   --vulns-csv data/ethereum_vulns_high.csv \
@@ -54,6 +55,19 @@ Use the full pinned `ethereum-vuln-dataset` CSV when available. The matcher
 retains `source_platform`, fix/introduced commits, source URL, and changed
 files; the compact vendored high-severity slice supplies only class-level
 evidence.
+
+`BUG_BOUNTY_SCOPE.json` describes the target selected for the current audit.
+It is not the Ethereum Foundation program definition. The latter is versioned
+separately in `data/ethereum_bug_bounty_policy.json`, with its official source
+URL, retrieval date, target layers, exclusions, and severity thresholds.
+
+The official policy includes EL specifications and EL clients, so non-liveness
+EL compliance obligations are marked `in-scope` even when the sample audit
+scope names only a CL client. This does not treat Engine API as public:
+eligibility assumes attacker-controlled protocol input reaches an authenticated
+EL through the CL. Findings that require exposing Engine API publicly remain
+excluded. Resource-exhaustion/liveness checks remain `conditional` because the
+program excludes high-effort single-peer DoS.
 
 ## Recursive self-improvement
 

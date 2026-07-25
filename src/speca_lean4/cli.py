@@ -209,6 +209,7 @@ def cmd_emit_projected_01e(args: argparse.Namespace) -> int:
     """Emit causally projected CL and/or EL implementation obligations."""
     from .projection import (
         build_projected_properties,
+        load_bounty_policy,
         load_evidence,
         load_projection_map,
     )
@@ -216,6 +217,7 @@ def cmd_emit_projected_01e(args: argparse.Namespace) -> int:
     theorem_map = _load_json(args.map)
     scope = _load_json(args.scope)
     projection_map = load_projection_map(args.projection_map)
+    bounty_policy = load_bounty_policy(args.bounty_policy)
     evidence = load_evidence(args.vulns_csv)
     if args.health_json:
         health = load_health(args.health_json)
@@ -235,7 +237,7 @@ def cmd_emit_projected_01e(args: argparse.Namespace) -> int:
     for layer in layers:
         projected, report = build_projected_properties(
             theorem_map, health, scope, projection_map, layer, evidence,
-            args.gasper_ref,
+            args.gasper_ref, bounty_policy,
         )
         properties.extend(projected)
         reports[layer] = report
@@ -257,6 +259,13 @@ def cmd_emit_projected_01e(args: argparse.Namespace) -> int:
         "target_layer": args.target_layer,
         "gasper_source": theorem_map.get("gasper_source"),
         "gasper_ref": args.gasper_ref or theorem_map.get("gasper_ref"),
+        "bug_bounty_policy": {
+            key: bounty_policy[key]
+            for key in (
+                "source_url", "retrieved_at", "source_last_updated",
+                "in_scope_layers",
+            )
+        },
         "projection_report": reports,
         "properties": properties,
     }
@@ -616,6 +625,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--projection-map",
         default=str(_REPO_ROOT / "data" / "projection_map.json"),
         help="reviewed theorem -> owned input -> obligation map",
+    )
+    pe.add_argument(
+        "--bounty-policy",
+        default=str(_REPO_ROOT / "data" / "ethereum_bug_bounty_policy.json"),
+        help="versioned Ethereum Bug Bounty scope and attack-path policy",
     )
     pe.add_argument(
         "--vulns-csv",

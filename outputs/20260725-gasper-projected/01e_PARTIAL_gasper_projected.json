@@ -5,6 +5,15 @@
   "target_layer": "both",
   "gasper_source": "NyxFoundation/gasper-lean4",
   "gasper_ref": "main",
+  "bug_bounty_policy": {
+    "source_url": "https://ethereum.org/bug-bounty/",
+    "retrieved_at": "2026-07-25",
+    "source_last_updated": "2026-05-20",
+    "in_scope_layers": [
+      "cl",
+      "el"
+    ]
+  },
   "projection_report": {
     "cl": {
       "target_layer": "cl",
@@ -490,7 +499,10 @@
           "root_cause": "consensus_divergence",
           "attack_path": "malformed_input"
         }
-      ]
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20"
     },
     {
       "property_id": "CL-GASPER-QUORUM-001",
@@ -681,7 +693,10 @@
           "root_cause": "consensus_divergence",
           "attack_path": "malicious_block"
         }
-      ]
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20"
     },
     {
       "property_id": "CL-GASPER-SLASH-001",
@@ -879,7 +894,10 @@
           "root_cause": "missing_input_validation",
           "attack_path": "crafted_state"
         }
-      ]
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20"
     },
     {
       "property_id": "CL-GASPER-JUST-001",
@@ -1097,7 +1115,10 @@
           "root_cause": "integer_overflow_underflow",
           "attack_path": "malformed_input"
         }
-      ]
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20"
     },
     {
       "property_id": "CL-GASPER-LIVE-001",
@@ -1374,7 +1395,10 @@
           "root_cause": "resource_exhaustion",
           "attack_path": "malicious_p2p_message"
         }
-      ]
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20"
     },
     {
       "property_id": "EL-GASPER-VALID-001",
@@ -1389,9 +1413,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "conditional"
+        "bug_bounty_scope": "in-scope"
       },
-      "bug_bounty_eligible": false,
+      "bug_bounty_eligible": true,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
@@ -1685,6 +1709,18 @@
           "root_cause": "improper_state_update",
           "attack_path": "crafted_state"
         }
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20",
+      "transitive_attack_path": [
+        "p2p:beacon_block -> authenticated Engine API",
+        "onchain:canonical payload -> authenticated Engine API"
+      ],
+      "bug_bounty_eligibility_basis": "Official policy includes EL specifications, EL clients, protocol non-compliance, and consensus-integrity failures. Eligibility assumes indirect delivery of attacker-controlled protocol input through an authenticated CL; direct public Engine API exposure is excluded.",
+      "bug_bounty_exclusions": [
+        "direct-public-engine-api-exposure",
+        "no-current-mainnet-impact"
       ]
     },
     {
@@ -1700,9 +1736,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "conditional"
+        "bug_bounty_scope": "in-scope"
       },
-      "bug_bounty_eligible": false,
+      "bug_bounty_eligible": true,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#finalization_fork_means_same_finalization_fork_one",
@@ -1914,6 +1950,18 @@
           "root_cause": "serialization_bug",
           "attack_path": "malformed_input"
         }
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20",
+      "transitive_attack_path": [
+        "p2p:beacon_block -> authenticated Engine API",
+        "onchain:canonical payload -> authenticated Engine API"
+      ],
+      "bug_bounty_eligibility_basis": "Official policy includes EL specifications, EL clients, protocol non-compliance, and consensus-integrity failures. Eligibility assumes indirect delivery of attacker-controlled protocol input through an authenticated CL; direct public Engine API exposure is excluded.",
+      "bug_bounty_exclusions": [
+        "direct-public-engine-api-exposure",
+        "no-current-mainnet-impact"
       ]
     },
     {
@@ -1929,9 +1977,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "conditional"
+        "bug_bounty_scope": "in-scope"
       },
-      "bug_bounty_eligible": false,
+      "bug_bounty_eligible": true,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
@@ -2215,6 +2263,18 @@
           "root_cause": "consensus_divergence",
           "attack_path": "malformed_input"
         }
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20",
+      "transitive_attack_path": [
+        "p2p:beacon_block -> authenticated Engine API",
+        "onchain:canonical payload -> authenticated Engine API"
+      ],
+      "bug_bounty_eligibility_basis": "Official policy includes EL specifications, EL clients, protocol non-compliance, and consensus-integrity failures. Eligibility assumes indirect delivery of attacker-controlled protocol input through an authenticated CL; direct public Engine API exposure is excluded.",
+      "bug_bounty_exclusions": [
+        "direct-public-engine-api-exposure",
+        "no-current-mainnet-impact"
       ]
     },
     {
@@ -2230,9 +2290,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "conditional"
+        "bug_bounty_scope": "in-scope"
       },
-      "bug_bounty_eligible": false,
+      "bug_bounty_eligible": true,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
@@ -2520,6 +2580,18 @@
           "root_cause": "consensus_divergence",
           "attack_path": "malicious_block"
         }
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20",
+      "transitive_attack_path": [
+        "p2p:beacon_block -> authenticated Engine API",
+        "onchain:canonical payload -> authenticated Engine API"
+      ],
+      "bug_bounty_eligibility_basis": "Official policy includes EL specifications, EL clients, protocol non-compliance, and consensus-integrity failures. Eligibility assumes indirect delivery of attacker-controlled protocol input through an authenticated CL; direct public Engine API exposure is excluded.",
+      "bug_bounty_exclusions": [
+        "direct-public-engine-api-exposure",
+        "no-current-mainnet-impact"
       ]
     },
     {
@@ -2535,9 +2607,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "conditional"
+        "bug_bounty_scope": "in-scope"
       },
-      "bug_bounty_eligible": false,
+      "bug_bounty_eligible": true,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/SlashableBound.lean#slashable_bound",
@@ -2730,6 +2802,18 @@
           "root_cause": "serialization_bug",
           "attack_path": "malformed_input"
         }
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20",
+      "transitive_attack_path": [
+        "p2p:beacon_block -> authenticated Engine API",
+        "onchain:canonical payload -> authenticated Engine API"
+      ],
+      "bug_bounty_eligibility_basis": "Official policy includes EL specifications, EL clients, protocol non-compliance, and consensus-integrity failures. Eligibility assumes indirect delivery of attacker-controlled protocol input through an authenticated CL; direct public Engine API exposure is excluded.",
+      "bug_bounty_exclusions": [
+        "direct-public-engine-api-exposure",
+        "no-current-mainnet-impact"
       ]
     },
     {
@@ -3009,6 +3093,19 @@
           "root_cause": "unhandled_error_or_nil",
           "attack_path": "malicious_p2p_message"
         }
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20",
+      "transitive_attack_path": [
+        "p2p:beacon_block -> authenticated Engine API",
+        "onchain:canonical payload -> authenticated Engine API"
+      ],
+      "bug_bounty_eligibility_basis": "DoS is in scope only when it meets the official low-effort impact threshold; high-effort single-peer DoS is excluded.",
+      "bug_bounty_exclusions": [
+        "direct-public-engine-api-exposure",
+        "no-current-mainnet-impact",
+        "high-effort-single-peer-dos"
       ]
     },
     {
@@ -3024,9 +3121,9 @@
           "CallbackHandler"
         ],
         "attacker_controlled": true,
-        "bug_bounty_scope": "conditional"
+        "bug_bounty_scope": "in-scope"
       },
-      "bug_bounty_eligible": false,
+      "bug_bounty_eligible": true,
       "exploitability": "external-attack",
       "lean_status": "descends-from-proved-via-unproved-bridge",
       "lean_artifact": "NyxFoundation/gasper-lean4@main:GasperBeaconChain/Core/Theories/AccountableSafety.lean#k_safety'",
@@ -3265,6 +3362,18 @@
           "root_cause": "improper_state_update",
           "attack_path": "crafted_state"
         }
+      ],
+      "bug_bounty_policy_source": "https://ethereum.org/bug-bounty/",
+      "bug_bounty_policy_retrieved_at": "2026-07-25",
+      "bug_bounty_policy_last_updated": "2026-05-20",
+      "transitive_attack_path": [
+        "p2p:beacon_block -> authenticated Engine API",
+        "onchain:canonical payload -> authenticated Engine API"
+      ],
+      "bug_bounty_eligibility_basis": "Official policy includes EL specifications, EL clients, protocol non-compliance, and consensus-integrity failures. Eligibility assumes indirect delivery of attacker-controlled protocol input through an authenticated CL; direct public Engine API exposure is excluded.",
+      "bug_bounty_exclusions": [
+        "direct-public-engine-api-exposure",
+        "no-current-mainnet-impact"
       ]
     }
   ]

@@ -24,6 +24,7 @@ from .kurtosis import (
 from .projection import (
     ProjectionError,
     build_projected_properties,
+    load_bounty_policy,
     load_evidence,
     load_projection_map,
     match_evidence,
@@ -53,6 +54,7 @@ __all__ = [
     "load_evidence_seeds",
     "ProjectionError",
     "build_projected_properties",
+    "load_bounty_policy",
     "load_evidence",
     "load_projection_map",
     "match_evidence",

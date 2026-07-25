@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "source_url": "https://ethereum.org/bug-bounty/",
+  "retrieved_at": "2026-07-25",
+  "source_last_updated": "2026-05-20",
+  "in_scope_layers": ["cl", "el"],
+  "in_scope_targets": {
+    "specifications": ["consensus-layer", "execution-layer"],
+    "execution_clients": ["Besu", "Erigon", "Geth", "Nethermind", "Reth"],
+    "consensus_clients": ["Lighthouse", "Lodestar", "Nimbus", "Teku", "Prysm", "Grandine"]
+  },
+  "in_scope_bug_types": [
+    "safety-or-finality-break",
+    "protocol-or-implementation-non-compliance",
+    "denial-of-service",
+    "unexpected-crash-or-rce",
+    "irreparable-consensus-split",
+    "calculation-or-parameter-inconsistency"
+  ],
+  "attack_path_rules": {
+    "engine_api_direct_public_exposure": "out-of-scope",
+    "engine_api_indirect_protocol_input": "in-scope",
+    "high_effort_single_peer_dos": "out-of-scope",
+    "no_current_mainnet_impact": "out-of-scope"
+  },
+  "severity_qualifications": {
+    "low": [
+      "slash more than 0.01 percent of validators",
+      "split more than 0.01 percent of the network",
+      "bring down more than 0.01 percent with one packet or onchain transaction"
+    ],
+    "medium": [
+      "slash more than 1 percent of validators",
+      "split more than 5 percent of the network",
+      "bring down more than 5 percent with one packet or onchain transaction"
+    ],
+    "high": [
+      "slash more than 33 percent of validators",
+      "split more than 33 percent of the network",
+      "bring down more than 33 percent with one onchain transaction"
+    ],
+    "critical": [
+      "slash more than 50 percent of validators",
+      "finalize an easily created infinite amount of ETH",
+      "steal or burn ETH from all EOAs",
+      "take down the entire network with one malicious onchain transaction"
+    ]
+  },
+  "eligibility_note": "Property eligibility identifies an in-scope vulnerability class, not an award decision. A report still needs a private, reproducible PoC, current mainnet impact, and must not depend on exposing the trusted Engine API publicly."
+}
