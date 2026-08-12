@@ -243,13 +243,23 @@ def _effective_severity(entry: dict[str, Any], push: dict[str, str]) -> str:
     return own
 
 
-def _type_consistency(hyp: dict[str, Any], th: TheoremHealth) -> str:
+def _project_prefix(theorem: str) -> str:
+    """Root namespace of a target theorem (`GasperBeaconChain.`, `EthTotal.`).
+
+    The exporter reports `referenced_constants` filtered to the formalization's
+    own namespace, so the theorem's own root is exactly the prefix a
+    project-local head constant must carry."""
+    root = str(theorem).split(".", 1)[0]
+    return f"{root}." if root else _GASPER_PREFIX
+
+
+def _type_consistency(hyp: dict[str, Any], th: TheoremHealth, theorem: str) -> str:
     """B5: the precondition's head constant must be among the theorem's
-    gasper-local referenced constants (A3). Non-gasper heads (Ne, Nat.lt, ...)
-    carry no gasper subject claim and are "unchecked"."""
+    project-local referenced constants (A3). Heads outside the formalization's
+    namespace (Ne, Nat.lt, ...) carry no subject claim and are "unchecked"."""
     head = str(hyp.get("head") or "")
     refs = set(th.referenced_constants)
-    if not head or not head.startswith(_GASPER_PREFIX) or not refs:
+    if not head or not head.startswith(_project_prefix(theorem)) or not refs:
         return "unchecked"
     return "ok" if head in refs else "mismatch"
 
@@ -428,7 +438,7 @@ def lower_entry(
             assertion=assertion,
             lean_precondition=precondition,
             lean_conclusion=conclusion,
-            lean_type_consistency=_type_consistency(hyp, th),
+            lean_type_consistency=_type_consistency(hyp, th, entry["theorem"]),
         ))
     return props
 
@@ -440,8 +450,9 @@ def build_properties(
     subgraphs: list[dict] | None = None,
     gasper_ref: str | None = None,
 ) -> list[dict[str, Any]]:
-    source = theorem_map.get("gasper_source", "NyxFoundation/gasper-lean4")
-    ref = gasper_ref or theorem_map.get("gasper_ref", "main")
+    source = theorem_map.get("source") or theorem_map.get(
+        "gasper_source", "NyxFoundation/gasper-lean4")
+    ref = gasper_ref or theorem_map.get("ref") or theorem_map.get("gasper_ref", "main")
     entries = theorem_map.get("properties", [])
     push = _dependent_push(health, derive_severities(entries, health))
     props: list[dict[str, Any]] = []
@@ -470,8 +481,9 @@ def build_properties_by_shard(
     keep per-file property count aligned with the benchmark granularity. `shard`
     is a grouping key in theorem_map only; it is never written into a property.
     """
-    source = theorem_map.get("gasper_source", "NyxFoundation/gasper-lean4")
-    ref = gasper_ref or theorem_map.get("gasper_ref", "main")
+    source = theorem_map.get("source") or theorem_map.get(
+        "gasper_source", "NyxFoundation/gasper-lean4")
+    ref = gasper_ref or theorem_map.get("ref") or theorem_map.get("gasper_ref", "main")
     entries = theorem_map.get("properties", [])
     push = _dependent_push(health, derive_severities(entries, health))
     groups: dict[str, list[dict[str, Any]]] = {}

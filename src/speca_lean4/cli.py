@@ -123,6 +123,19 @@ def _run_lean(theorem_map: dict[str, Any]) -> dict[str, Any]:
         ) from exc
 
 
+def _source_ref(theorem_map: dict, ref_override: str | None) -> tuple:
+    """(source repo, pinned ref) for the emitted document header.
+
+    The gasper map spells these `gasper_source`/`gasper_ref`; a second-target
+    map (theorem_map_ethtotal.json) spells them `source`/`ref`. Read either, so
+    a non-gasper track does not emit a header with null provenance while its
+    per-property `lean_artifact` carries the real repo and commit.
+    """
+    source = theorem_map.get("source") or theorem_map.get("gasper_source")
+    ref = ref_override or theorem_map.get("ref") or theorem_map.get("gasper_ref")
+    return source, ref
+
+
 def cmd_emit_01e(args: argparse.Namespace) -> int:
     if not args.out and not args.out_dir:
         print("error: pass --out (single file) and/or --out-dir (sharded)", file=sys.stderr)
@@ -143,8 +156,7 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
         )
         health = {}
 
-    gasper_source = theorem_map.get("gasper_source")
-    gasper_ref = args.gasper_ref or theorem_map.get("gasper_ref")
+    gasper_source, gasper_ref = _source_ref(theorem_map, args.gasper_ref)
 
     def _doc(props: list, shard: str | None = None) -> dict:
         d = {
@@ -152,6 +164,8 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
             "provider": "lean",
             "gasper_source": gasper_source,
             "gasper_ref": gasper_ref,
+            "source": gasper_source,
+            "ref": gasper_ref,
         }
         if shard is not None:
             d["shard"] = shard
@@ -257,8 +271,10 @@ def cmd_emit_projected_01e(args: argparse.Namespace) -> int:
         "provider": "lean",
         "projection": "gasper-causal",
         "target_layer": args.target_layer,
-        "gasper_source": theorem_map.get("gasper_source"),
-        "gasper_ref": args.gasper_ref or theorem_map.get("gasper_ref"),
+        "gasper_source": _source_ref(theorem_map, args.gasper_ref)[0],
+        "gasper_ref": _source_ref(theorem_map, args.gasper_ref)[1],
+        "source": _source_ref(theorem_map, args.gasper_ref)[0],
+        "ref": _source_ref(theorem_map, args.gasper_ref)[1],
         "bug_bounty_policy": {
             key: bounty_policy[key]
             for key in (
@@ -401,11 +417,14 @@ def cmd_emit_kurtosis(args: argparse.Namespace) -> int:
     )
 
     if args.out:
+        src, ref = _source_ref(theorem_map, args.gasper_ref)
         doc = {
             "phase": "01e",
             "provider": "lean",
-            "gasper_source": theorem_map.get("gasper_source"),
-            "gasper_ref": args.gasper_ref or theorem_map.get("gasper_ref"),
+            "gasper_source": src,
+            "gasper_ref": ref,
+            "source": src,
+            "ref": ref,
             "properties": props,
         }
         Path(args.out).write_text(

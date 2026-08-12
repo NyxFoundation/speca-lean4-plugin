@@ -4,15 +4,11 @@ import Lean.Meta
 import Lean.DeclarationRange
 import Lean.Structure
 import Lean.DocString
--- The substantive proved results (~70-80% of gasper-lean4) live in
--- `GasperBeaconChain.Core.*` (Theories/Lemmas): the top-level accountable
--- safety (`k_safety'`), the slashable bound, plausible liveness, and the
--- justification/quorum lemmas. `Executable.*` is the thin, still-growing
--- application layer that exposes decidable Bool checkers on top of Core. We
--- import BOTH so every Core and Executable target resolves; the gasper root
--- module `GasperBeaconChain` only reaches `Core.All` and never `Executable`.
-import GasperBeaconChain.Core.All
-import GasperBeaconChain.Executable.All
+-- NOTE: this module is *project-agnostic* — it imports no formalization.
+-- Which project's modules are loaded (and which namespace counts as
+-- "project-local") is decided by the workspace entry point: `lean/Main.lean`
+-- for gasper-lean4, `lean-ethtotal/Main.lean` for eth-total-supply-safety.
+-- Both pass a `ProjectConfig` (below) into `classifyAll`/`render`.
 
 /-!
 Proof-health export for the SPECA Lean4 plugin.
@@ -92,6 +88,50 @@ namespace SpecaExport
 
 open Lean
 
+/-- Which formalization is being exported.
+
+The exporter itself is project-agnostic; everything project-specific is in this
+record, supplied by the workspace entry point:
+
+* `nsPrefix` — the namespace that counts as *project-local*. Only constants
+  under it are reported in `referenced_constants` / `proof_constants` and only
+  they are ever expanded (`referenced_defs_expanded`); mathlib and Lean core
+  are never expanded.
+* `projectName` — the `project` field of the health report.
+* `modelAssumptionHeads` / `modelAssumptionPrefixes` — rule 3 of the A2
+  heuristic: `Prop` hypotheses whose head predicate is a fixed world/model
+  assumption are *depend-allowed*. This list is project knowledge, so an empty
+  list is the honest default: with no entries, every `Prop` hypothesis is
+  must-establish and nothing is silently excused from the audit. -/
+structure ProjectConfig where
+  nsPrefix                : Name
+  projectName             : String
+  modelAssumptionHeads    : List String := []
+  modelAssumptionPrefixes : List String := []
+  deriving Inhabited
+
+/-- gasper-lean4 (`GasperBeaconChain.*`). The model assumptions are the
+honest-majority / vote-honesty and block-existence / height-bound modeling
+hypotheses; see the module docstring, rule 3. Provisional list, tuned with the
+gasper maintainers, not hard-coded semantics. -/
+def gasperConfig : ProjectConfig where
+  nsPrefix := `GasperBeaconChain
+  projectName := "GasperBeaconChain"
+  modelAssumptionHeads := ["two_thirds_good", "good_votes", "target_height_bound"]
+  modelAssumptionPrefixes := ["blocks_exist"]
+
+/-- eth-total-supply-safety (`EthTotal.*`).
+
+No model-assumption list: the formalization has no honest-majority-style world
+assumptions. Its `Prop` hypotheses are ledger-shape and accounting facts
+(`Distinct l`, support-coverage, `L'.bal a ≤ L.bal a`, `L'.live = L.live`, …)
+that a client implementation must actually establish, so every one of them is
+must-establish. The non-`Prop` binders (`L L' : Ledger A`, `l : List A`, the
+universe/type parameters) stay depend-allowed under rule 2. -/
+def ethTotalConfig : ProjectConfig where
+  nsPrefix := `EthTotal
+  projectName := "EthTotal"
+
 /-- Per-hypothesis classification record. -/
 structure HypothesisInfo where
   name    : String
@@ -145,6 +185,7 @@ structure TheoremHealth where
   declEndLine         : Nat           -- 0 if unknown
   referencedDefsExpanded : Array ExpandedDef  -- A3+ (issue #16)
   docString           : String        -- A7+ (issue #17); "" if absent
+  exportError         : String        -- "" unless enrichment itself failed
   deriving Inhabited
 
 private def isNativeComputeAxiom (n : Name) : Bool :=
@@ -183,9 +224,10 @@ private def isAutomationConstant (n : Name) : Bool :=
   nameContains n "Aesop" ||
   nameContains n "Omega"
 
-/-- Is `n` a declaration of the gasper-lean4 project itself? -/
-private def isGasperLocal (n : Name) : Bool :=
-  Name.isPrefixOf `GasperBeaconChain n
+/-- Is `n` a declaration of the exported project itself (as opposed to mathlib
+or Lean core)? -/
+private def isProjectLocal (cfg : ProjectConfig) (n : Name) : Bool :=
+  Name.isPrefixOf cfg.nsPrefix n
 
 private def dedup (xs : Array Name) : Array Name :=
   xs.foldl (fun acc n => if acc.contains n then acc else acc.push n) #[]
@@ -291,17 +333,17 @@ private def expandOne (env : Environment) (n : Name) :
       let t ← Meta.ppExpr qv.type
       return ("quotient", truncatePp s!"{n} : {t}", qv.type.getUsedConstants)
 
-/-- Breadth-first expansion of the gasper-local definitions reachable from
+/-- Breadth-first expansion of the project-local definitions reachable from
 `roots` (the statement's referenced constants). Bounded by `expansionMaxDepth`
-levels and `expansionMaxTotal` total, deduped; only `GasperBeaconChain.*`
-non-auxiliary declarations are expanded. -/
-def expandReferencedDefs (env : Environment) (roots : Array Name) :
+levels and `expansionMaxTotal` total, deduped; only non-auxiliary declarations
+under `cfg.nsPrefix` are expanded. -/
+def expandReferencedDefs (cfg : ProjectConfig) (env : Environment) (roots : Array Name) :
     Meta.MetaM (Array ExpandedDef) := do
   let mut out : Array ExpandedDef := #[]
   let mut seen : Array Name := #[]
   let mut frontier : Array Name := #[]
   for r in roots do
-    if isGasperLocal r && !isAuxiliaryDecl r && !seen.contains r then
+    if isProjectLocal cfg r && !isAuxiliaryDecl r && !seen.contains r then
       seen := seen.push r
       frontier := frontier.push r
   for _ in [0:expansionMaxDepth] do
@@ -312,7 +354,7 @@ def expandReferencedDefs (env : Environment) (roots : Array Name) :
         if !pp.isEmpty then
           out := out.push { name := toString n, kind := kind, pp := pp }
           for u in dedup used do
-            if isGasperLocal u && !isAuxiliaryDecl u && !seen.contains u then
+            if isProjectLocal cfg u && !isAuxiliaryDecl u && !seen.contains u then
               seen := seen.push u
               next := next.push u
     frontier := next
@@ -334,26 +376,23 @@ private partial def headConst? (e : Expr) : Option Name :=
       else some n
     | _ => none
 
-/-- Fixed world/model assumptions (see the module docstring, rule 3).
-Provisional list; tuned with the gasper maintainers, not hard-coded semantics. -/
-private def modelAssumptionLastComponents : List String := [
-  "two_thirds_good",
-  "good_votes",
-  "target_height_bound"
-]
-
-private def isModelAssumptionHead (n : Name) : Bool :=
+/-- Is this head predicate one of the project's fixed world/model assumptions
+(see the module docstring, rule 3)? The list lives in `ProjectConfig`; a
+project that declares none has every `Prop` hypothesis must-establish. -/
+private def isModelAssumptionHead (cfg : ProjectConfig) (n : Name) : Bool :=
   let last := match n with
     | .str _ s => s
     | _        => toString n
-  modelAssumptionLastComponents.contains last || last.startsWith "blocks_exist"
+  cfg.modelAssumptionHeads.contains last ||
+    cfg.modelAssumptionPrefixes.any (fun p => last.startsWith p)
 
 /-- A2 classification. See the module docstring for the documented heuristic. -/
-private def classifyHyp (bi : BinderInfo) (isPropHyp : Bool) (head? : Option Name) : String :=
+private def classifyHyp (cfg : ProjectConfig) (bi : BinderInfo) (isPropHyp : Bool)
+    (head? : Option Name) : String :=
   if bi.isInstImplicit then "depend-allowed"
   else if !isPropHyp then "depend-allowed"
   else match head? with
-    | some h => if isModelAssumptionHead h then "depend-allowed" else "must-establish"
+    | some h => if isModelAssumptionHead cfg h then "depend-allowed" else "must-establish"
     | none   => "must-establish"
 
 private def declModuleName? (env : Environment) (n : Name) : Option Name :=
@@ -362,7 +401,7 @@ private def declModuleName? (env : Environment) (n : Name) : Option Name :=
   | none => none
 
 /-- Classify one target theorem name with enriched metadata (A1-A7). -/
-def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
+def classify (cfg : ProjectConfig) (env : Environment) (target : Name) : CoreM TheoremHealth := do
   if !env.contains target then
     return {
       name := toString target, resolved := false, leanStatus := "unknown",
@@ -371,7 +410,7 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
       referencedConstants := #[], gasperAxioms := #[],
       proofProvenance := "unknown", proofCode := "", proofConstants := #[],
       proofSource := "", declStartLine := 0, declEndLine := 0,
-      referencedDefsExpanded := #[], docString := ""
+      referencedDefsExpanded := #[], docString := "", exportError := ""
     }
   let ax ← collectAxioms target
   let hasSorry  := ax.contains ``sorryAx
@@ -389,14 +428,14 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
     | .defnInfo dv   => some dv.value
     | .opaqueInfo ov => some ov.value
     | _              => none
-  -- A4: gasper-local axioms (filter out Lean builtins)
+  -- A4: project-local axioms (filter out Lean builtins)
   let gasperAx := (ax.filter fun a => !isBuiltinAxiom a).map toString
-  -- A3: gasper-local constants referenced by the type
-  let refConstNames := dedup (type.getUsedConstants.filter isGasperLocal)
+  -- A3: project-local constants referenced by the type
+  let refConstNames := dedup (type.getUsedConstants.filter (isProjectLocal cfg))
   let refConsts := refConstNames.map toString
-  -- B3 feed: gasper-local constants referenced by the proof term
+  -- B3 feed: project-local constants referenced by the proof term
   let proofConsts := match value? with
-    | some v => (dedup (v.getUsedConstants.filter isGasperLocal)).map toString
+    | some v => (dedup (v.getUsedConstants.filter (isProjectLocal cfg))).map toString
     | none   => #[]
   -- A5: proof provenance (pure check on proof-term constants)
   let provenance := match value? with
@@ -425,7 +464,7 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
         let hypType := toString hypTypeFmt
         let head? := headConst? ldecl.type
         let isPropHyp ← Meta.isProp ldecl.type
-        let cls := classifyHyp ldecl.binderInfo isPropHyp head?
+        let cls := classifyHyp cfg ldecl.binderInfo isPropHyp head?
         let headStr := match head? with
           | some h => toString h
           | none   => ""
@@ -440,9 +479,9 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
         let fmt ← Meta.ppExpr v
         pure (toString fmt)
       | none => pure ""
-    -- A3+ (issue #16): recursively expand the gasper-local definitions the
+    -- A3+ (issue #16): recursively expand the project-local definitions the
     -- statement references (bounded; see expansionMaxDepth/expansionMaxTotal)
-    let expandedDefs ← expandReferencedDefs env refConstNames
+    let expandedDefs ← expandReferencedDefs cfg env refConstNames
     pure (stmt, concl, hyps, proofCode, expandedDefs)
   return {
     name := toString target, resolved := true, leanStatus := status,
@@ -452,7 +491,8 @@ def classify (env : Environment) (target : Name) : CoreM TheoremHealth := do
     proofProvenance := provenance, proofCode := proofCode,
     proofConstants := proofConsts, proofSource := "",
     declStartLine := startLine, declEndLine := endLine,
-    referencedDefsExpanded := expandedDefs, docString := docStr
+    referencedDefsExpanded := expandedDefs, docString := docStr,
+    exportError := ""
   }
 
 private def TheoremHealth.toJson (h : TheoremHealth) : Json :=
@@ -470,27 +510,65 @@ private def TheoremHealth.toJson (h : TheoremHealth) : Json :=
     ("referenced_constants", Json.arr (h.referencedConstants.map Json.str)),
     ("referenced_defs_expanded",
       Json.arr (h.referencedDefsExpanded.map ExpandedDef.toJson)),
+    -- `project_axioms` is the current name; `gasper_axioms` is kept as an
+    -- alias so an older Python driver reading the gasper key still works.
+    ("project_axioms",       Json.arr (h.gasperAxioms.map Json.str)),
     ("gasper_axioms",        Json.arr (h.gasperAxioms.map Json.str)),
     ("proof_provenance",     Json.str h.proofProvenance),
     ("proof_code",           Json.str h.proofCode),
     ("proof_constants",      Json.arr (h.proofConstants.map Json.str)),
     ("proof_source",         Json.str h.proofSource),
     ("doc_string",           Json.str h.docString),
+    ("export_error",         Json.str h.exportError),
     ("decl_start_line",      Json.num h.declStartLine),
     ("decl_end_line",        Json.num h.declEndLine)
   ]
 
+/-- Classify one target, degrading honestly if the *enrichment* blows up.
+
+Pretty-printing and the telescope run the elaborator, so a pathological
+statement can exhaust heartbeats or fail even though the theorem itself is
+fine. Losing the whole export to one such theorem would be worse than useless,
+and silently dropping it would misreport coverage. So the failure is caught and
+recorded: `lean_status` degrades to `unknown` (never `proved` — we did not
+complete the check) and `export_error` carries the reason. `sorry_free` is
+reported from `collectAxioms` when that part succeeded, and is `false` when it
+did not. -/
+def classifyOne (cfg : ProjectConfig) (env : Environment) (target : Name) :
+    CoreM TheoremHealth := do
+  try
+    classify cfg env target
+  catch e =>
+    let msg ← (do pure (← e.toMessageData.toString)) <|> pure "unrenderable exception"
+    -- the axiom check is cheap and independent of pretty-printing; try it alone
+    -- so a pp failure does not also cost us the sorry-freedom fact
+    let axOk ← (do
+      let ax ← collectAxioms target
+      pure (some (!ax.contains ``sorryAx))) <|> pure none
+    return {
+      name := toString target, resolved := env.contains target,
+      leanStatus := "unknown",
+      sorryFree := axOk.getD false, choiceFree := false, nativeFree := false,
+      «module» := "", statement := "", conclusion := "", hypotheses := #[],
+      referencedConstants := #[], gasperAxioms := #[],
+      proofProvenance := "unknown", proofCode := "", proofConstants := #[],
+      proofSource := "", declStartLine := 0, declEndLine := 0,
+      referencedDefsExpanded := #[], docString := "",
+      exportError := msg
+    }
+
 /-- Classify every target theorem name. -/
-def classifyAll (env : Environment) (targets : List Name) : CoreM (Array TheoremHealth) := do
+def classifyAll (cfg : ProjectConfig) (env : Environment) (targets : List Name) :
+    CoreM (Array TheoremHealth) := do
   let mut arr : Array TheoremHealth := #[]
   for t in targets do
-    arr := arr.push (← classify env t)
+    arr := arr.push (← classifyOne cfg env t)
   return arr
 
 /-- Render the full health report. -/
-def render (records : Array TheoremHealth) : Json :=
+def render (cfg : ProjectConfig) (records : Array TheoremHealth) : Json :=
   Json.mkObj [
-    ("project", Json.str "GasperBeaconChain"),
+    ("project", Json.str cfg.projectName),
     ("plugin",  Json.str "speca-lean4-plugin"),
     ("theorems", Json.arr (records.map TheoremHealth.toJson))
   ]
@@ -498,7 +576,7 @@ def render (records : Array TheoremHealth) : Json :=
 /-- Classify a list of target theorem names and render the full health report.
 (Kept for API compatibility; `Main` uses `classifyAll` + `render` so it can
 attach the verbatim proof source between the two.) -/
-def report (env : Environment) (targets : List Name) : CoreM Json := do
-  return render (← classifyAll env targets)
+def report (cfg : ProjectConfig) (env : Environment) (targets : List Name) : CoreM Json := do
+  return render cfg (← classifyAll cfg env targets)
 
 end SpecaExport

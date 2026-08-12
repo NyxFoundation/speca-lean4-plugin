@@ -81,7 +81,11 @@ class TheoremHealth(dict):
 
     @property
     def gasper_axioms(self) -> list[str]:
-        return self.get("gasper_axioms", [])
+        """Project-local (non-builtin) axioms the proof depends on (A4).
+
+        The exporter emits `project_axioms`; `gasper_axioms` is its
+        backwards-compatible alias, so either key is accepted here."""
+        return self.get("project_axioms", None) or self.get("gasper_axioms", [])
 
     @property
     def proof_provenance(self) -> str:
