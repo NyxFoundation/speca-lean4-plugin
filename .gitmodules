@@ -1,0 +1,3 @@
+[submodule "external/eth-total-supply-safety"]
+	path = external/eth-total-supply-safety
+	url = https://github.com/NyxFoundation/eth-total-supply-safety

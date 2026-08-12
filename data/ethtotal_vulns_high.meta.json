@@ -1,0 +1,52 @@
+{
+  "source": "NyxFoundation/ethereum-vuln-dataset",
+  "source_file": "data/ethereum_vulns.preview.csv",
+  "source_revision": "5249b6efc2376661afc50c00b4dbf6036fa6b0f5",
+  "vendored_by": "tools/vendor-ethtotal-vulns.py",
+  "severity_column": "severity_estimated",
+  "severity_model": "Ethereum Foundation bug-bounty severity — network-scale impact reachable REMOTELY by a single message/transaction; see data/ethereum_vulns_high.meta.json for the full definition. This is the bounty-aligned column, NOT the advisory/CVSS `severity` column.",
+  "filter": {
+    "severity_estimated_in": [
+      "Critical",
+      "High"
+    ],
+    "label_in": [
+      "state-trie",
+      "transactions",
+      "evm",
+      "opcodes",
+      "gas",
+      "precompiles",
+      "database",
+      "block-processing",
+      "beacon-chain:withdrawal",
+      "beacon-chain:deposit",
+      "beacon-chain:rewards-and-penalties",
+      "beacon-chain:effective-balance-updates",
+      "beacon-chain:exit-consolidation",
+      "deposit-contract"
+    ],
+    "note": "STRUCTURAL slice: label membership only, no per-finding prose judgment. Labels are the value-bearing state surfaces an EthTotal supply/ledger invariant can be violated through — where balances, gas/fee burn and account lifecycle are computed and persisted (EL), plus the CL surfaces that mint or retire supply."
+  },
+  "row_count": 44,
+  "rows_by_label": {
+    "state-trie": 14,
+    "transactions": 7,
+    "gas": 5,
+    "evm": 5,
+    "opcodes": 5,
+    "database": 4,
+    "block-processing": 3,
+    "precompiles": 1
+  },
+  "columns": [
+    "id",
+    "severity",
+    "label",
+    "root_cause",
+    "attack_path",
+    "title"
+  ],
+  "purpose": "Teaching material for the EthTotal stage-2 generate/improve loop (tools/run-improve-ethtotal.sh). improve/generate read only the class fields (severity/label/root_cause); title/attack_path are carried for traceability but never enter the prompt (speca#143 safeguard).",
+  "not_an_eval_denominator": "This slice is INPUT to self-improvement, never a benchmark the checklist is scored against — the #88 correction: the checklist is judged on audit quality against the solodit reference bar, not on reproducing dataset bugs."
+}

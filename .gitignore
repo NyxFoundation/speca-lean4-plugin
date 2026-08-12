@@ -10,7 +10,21 @@ build/
 # Lean / lake
 lean/.lake/
 lean/lake-packages/
+# gasper deps are resolved fresh (CI does `lake update`); the ethtotal
+# workspace's manifest IS versioned, since it records the transitive pin
+lean/lake-manifest.json
+lean/health.json
+lean/targets.txt
+lean-ethtotal/.lake/
+external/*/.lake/
+# full 3333-theorem export (11MB build artifact); the trimmed
+# lean-ethtotal/health.mapped.json is what gets versioned
+lean-ethtotal/health.json
 *.olean
 
 # work
 *.targets
+improve_run*/
+# root-level scratch emits only — outputs/<date>-<title>/01e_PARTIAL_*.json
+# is the versioned audit source and must stay tracked
+/01e_*.json

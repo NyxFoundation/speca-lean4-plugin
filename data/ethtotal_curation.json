@@ -1,0 +1,929 @@
+{
+  "version": 1,
+  "source": "NyxFoundation/eth-total-supply-safety",
+  "note": "Reviewed curation overlay for the EthTotal target set. tools/ethtotal-inventory.py enumerates all 3333 theorems, tools/ethtotal-triage.py buckets every one of them and ranks candidates per file, and this file is the human decision on top: which theorems become 01e base entries, at what severity, under which ethereum-vuln-dataset label, with what audit-facing title. tools/ethtotal-build-map.py joins the three into theorem_map_ethtotal.json. Nothing here asserts proof status — lean_status comes only from lake exe speca-export.",
+  "label_note": "`label` values are ethereum-vuln-dataset labels (the vocabulary in data/ethtotal_vulns_high.csv). EthTotal is an execution-layer accounting formalization, so its labels are the value-bearing EL surfaces (state-trie, transactions, evm, opcodes, gas, database, block-processing) plus the CL issuance surfaces for the withdrawal/mint results. Unlike the gasper labels, these have NO consensus-specs pyspec anchor, so `spec_reference` is honestly absent on these properties rather than pointed at a document that does not describe them.",
+  "covers_hint_note": "covers_hint names execution-specs (EELS) level state operations and opcode names — generic protocol surfaces an auditor greps for, never a client's internal symbol. They are matching hints for `covers` resolution, not verified anchors.",
+  "severity_note": "Severity is the Ethereum Foundation bug-bounty model (network-scale impact reachable remotely): CRITICAL = an implementation defect here breaks fund integrity or total-supply soundness at network scale; HIGH = it corrupts accounting/state for a value-bearing path; MEDIUM = it degrades the auditability or the record, without directly moving value. Severities are calibrated on the audit consequence, never tuned against a benchmark distribution.",
+  "themes": {
+    "supply-conservation": {
+      "label": "state-trie",
+      "code": "SUP",
+      "bug_bounty_area": "execution/state-accounting",
+      "shard": "supply-conservation",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "attacker_controlled": true,
+      "description": "The supply/balance reconciliation identities: total supply is the sum over the live account set, and any transition reconciles exactly with its per-account deltas."
+    },
+    "mint-burn-attribution": {
+      "label": "block-processing",
+      "code": "ATTR",
+      "bug_bounty_area": "execution/issuance-and-burn",
+      "shard": "mint-burn-attribution",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "attacker_controlled": true,
+      "description": "Every supply change must be attributable to an explicit, sited mint or burn event — the accountability half of the model (SiteConfined / witness results)."
+    },
+    "value-transfer": {
+      "label": "transactions",
+      "code": "XFER",
+      "bug_bounty_area": "execution/value-transfer",
+      "shard": "value-transfer",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "attacker_controlled": true,
+      "description": "Transfer, overdraft, self-transfer and stale-read behaviour: where a truncating subtraction or a re-read of a mutated balance creates value."
+    },
+    "fee-accounting": {
+      "label": "gas",
+      "code": "FEE",
+      "bug_bounty_area": "execution/fee-mechanics",
+      "shard": "fee-accounting",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "attacker_controlled": true,
+      "description": "Prepayment, escrow, refund/tip/burn settlement and the guards that make the split exact (the EIP-1559-shaped fee path)."
+    },
+    "account-lifecycle": {
+      "label": "opcodes",
+      "code": "LIFE",
+      "bug_bounty_area": "execution/account-lifecycle",
+      "shard": "account-lifecycle",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "attacker_controlled": true,
+      "description": "Account destruction, erasure, resurrection and write preconditions — SELFDESTRUCT and empty-account semantics."
+    },
+    "state-persistence": {
+      "label": "state-trie",
+      "code": "PERS",
+      "bug_bounty_area": "execution/state-persistence",
+      "shard": "state-persistence",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "attacker_controlled": true,
+      "description": "Storage support vs write set, default-value deletion, and the difference between writing a value and storing it."
+    },
+    "arithmetic-representation": {
+      "label": "evm",
+      "code": "ARITH",
+      "bug_bounty_area": "execution/arithmetic",
+      "shard": "arithmetic-representation",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "attacker_controlled": true,
+      "description": "Representation limits: balance caps, saturating (monus) subtraction, carries/parity, quantization thresholds and unbounded growth."
+    },
+    "audit-record": {
+      "label": "database",
+      "code": "REC",
+      "bug_bounty_area": "execution/state-logging",
+      "shard": "audit-record",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "attacker_controlled": false,
+      "description": "The trace/log side: what a record must carry for an audit to be sound — ordering, polarity, sites, checksums, aggregation and normalization."
+    },
+    "issuance-withdrawal": {
+      "label": "beacon-chain:withdrawal",
+      "code": "WDR",
+      "bug_bounty_area": "consensus/withdrawals",
+      "shard": "issuance-withdrawal",
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "attacker_controlled": false,
+      "description": "Supply entering the execution layer: withdrawal credits as mints, and their quantization."
+    },
+    "state-model": {
+      "label": "block-processing",
+      "code": "MODEL",
+      "bug_bounty_area": "execution/state-model",
+      "shard": "state-model",
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "attacker_controlled": false,
+      "description": "The structural layer: ledger/finitary-support algebra, the derivation lemmas and the categorical repackaging of already-proved results. Real proof substance, but its audit surface is the results built on top of it."
+    }
+  },
+  "file_themes": {
+    "EthTotal/AtomicDef/Finitary.lean": "state-model",
+    "EthTotal/AtomicDef/Ledger.lean": "supply-conservation",
+    "EthTotal/AtomicDef/Event.lean": "mint-burn-attribution",
+    "EthTotal/Lemmata/Derives/Algebra.lean": "state-model",
+    "EthTotal/Lemmata/Derives/Atomic.lean": "state-model",
+    "EthTotal/Lemmata/Derives/Compose.lean": "supply-conservation",
+    "EthTotal/Lemmata/Derives/Frame.lean": "account-lifecycle",
+    "EthTotal/Lemmata/Derives/Guard.lean": "state-persistence",
+    "EthTotal/Lemmata/Derives/Operator.lean": "supply-conservation",
+    "EthTotal/Lemmata/Derives/OperatorRefl.lean": "account-lifecycle",
+    "EthTotal/Lemmata/EthConcepts/DebitMonotone.lean": "value-transfer",
+    "EthTotal/Lemmata/EthConcepts/Fee.lean": "fee-accounting",
+    "EthTotal/Lemmata/EthConcepts/Invariant.lean": "supply-conservation",
+    "EthTotal/Lemmata/EthConcepts/Signature.lean": "mint-burn-attribution",
+    "EthTotal/Lemmata/EthConcepts/SupplyStrictness.lean": "supply-conservation",
+    "EthTotal/Lemmata/EthConcepts/TraceEmbeddings.lean": "audit-record",
+    "EthTotal/Theorem/Derives/Existence.lean": "state-model",
+    "EthTotal/Theorem/Derives/FrameRefl.lean": "state-model",
+    "EthTotal/Theorem/EthConcepts/DebitHasCoMonad.lean": "state-model",
+    "EthTotal/Theorem/EthConcepts/DebitHasMonad.lean": "value-transfer",
+    "EthTotal/Theorem/EthConcepts/IsEthereum.lean": "fee-accounting",
+    "EthTotal/Theorem/EthConcepts/Transaction.lean": "value-transfer",
+    "EthTotal/Theorem/Main/ExactSupply.lean": "supply-conservation",
+    "EthTotal/Theorem/Main/SignatureLawfulness.lean": "mint-burn-attribution",
+    "EthTotal/Theorem/Main/Category/AccountingDagger.lean": "state-model",
+    "EthTotal/Theorem/Main/Category/RecordedLat.lean": "mint-burn-attribution",
+    "EthTotal/Theorem/Main/Category/SiteConfined.lean": "mint-burn-attribution",
+    "EthTotal/Theorem/Main/Category/Functor/MeasurableFunctor.lean": "state-model",
+    "EthTotal/Extentions/BlockOrder.lean": "audit-record",
+    "EthTotal/Extentions/BridgeCorrection.lean": "supply-conservation",
+    "EthTotal/Extentions/BurnSignature.lean": "mint-burn-attribution",
+    "EthTotal/Extentions/CapNotAdditive.lean": "arithmetic-representation",
+    "EthTotal/Extentions/CarryExtension.lean": "arithmetic-representation",
+    "EthTotal/Extentions/CentralFee.lean": "fee-accounting",
+    "EthTotal/Extentions/ChainBound.lean": "arithmetic-representation",
+    "EthTotal/Extentions/ChainSplit.lean": "audit-record",
+    "EthTotal/Extentions/Checksum.lean": "audit-record",
+    "EthTotal/Extentions/ChurnFormula.lean": "supply-conservation",
+    "EthTotal/Extentions/Classifier.lean": "audit-record",
+    "EthTotal/Extentions/CountIsNotMeasure.lean": "audit-record",
+    "EthTotal/Extentions/CreditCollision.lean": "value-transfer",
+    "EthTotal/Extentions/CreditErase.lean": "account-lifecycle",
+    "EthTotal/Extentions/DetourCost.lean": "audit-record",
+    "EthTotal/Extentions/DoubleEntry.lean": "audit-record",
+    "EthTotal/Extentions/DualGrading.lean": "audit-record",
+    "EthTotal/Extentions/EraseCommute.lean": "account-lifecycle",
+    "EthTotal/Extentions/Explosive.lean": "audit-record",
+    "EthTotal/Extentions/FeeEscrow.lean": "fee-accounting",
+    "EthTotal/Extentions/FeeIdentity.lean": "fee-accounting",
+    "EthTotal/Extentions/FirstOffender.lean": "mint-burn-attribution",
+    "EthTotal/Extentions/Granularity.lean": "audit-record",
+    "EthTotal/Extentions/GrossExtension.lean": "audit-record",
+    "EthTotal/Extentions/GrossNet.lean": "audit-record",
+    "EthTotal/Extentions/MinimalDecision.lean": "account-lifecycle",
+    "EthTotal/Extentions/NegativeForms.lean": "arithmetic-representation",
+    "EthTotal/Extentions/NoCeiling.lean": "arithmetic-representation",
+    "EthTotal/Extentions/NoHarmlessAppend.lean": "audit-record",
+    "EthTotal/Extentions/NormalFormConflict.lean": "audit-record",
+    "EthTotal/Extentions/NormalizeReflection.lean": "audit-record",
+    "EthTotal/Extentions/OneDimensional.lean": "state-model",
+    "EthTotal/Extentions/OrderSensitivity.lean": "state-persistence",
+    "EthTotal/Extentions/OrderTransfer.lean": "audit-record",
+    "EthTotal/Extentions/Orthogonality.lean": "audit-record",
+    "EthTotal/Extentions/OverdraftMint.lean": "value-transfer",
+    "EthTotal/Extentions/PathCost.lean": "audit-record",
+    "EthTotal/Extentions/PathLowerBound.lean": "audit-record",
+    "EthTotal/Extentions/PathSandwich.lean": "audit-record",
+    "EthTotal/Extentions/PerAccountLog.lean": "audit-record",
+    "EthTotal/Extentions/PolarityParity.lean": "audit-record",
+    "EthTotal/Extentions/QuantizedReserve.lean": "arithmetic-representation",
+    "EthTotal/Extentions/ReachVsPath.lean": "state-model",
+    "EthTotal/Extentions/RelabelRigidity.lean": "audit-record",
+    "EthTotal/Extentions/RenameInvariance.lean": "audit-record",
+    "EthTotal/Extentions/RequestAggregation.lean": "audit-record",
+    "EthTotal/Extentions/Resurrection.lean": "account-lifecycle",
+    "EthTotal/Extentions/Rigidity.lean": "audit-record",
+    "EthTotal/Extentions/SaturatedBurn.lean": "arithmetic-representation",
+    "EthTotal/Extentions/SelfDestructBurn.lean": "account-lifecycle",
+    "EthTotal/Extentions/SelfNormalization.lean": "audit-record",
+    "EthTotal/Extentions/SelfTransfer.lean": "value-transfer",
+    "EthTotal/Extentions/SignatureGalois.lean": "mint-burn-attribution",
+    "EthTotal/Extentions/SiteChoice.lean": "audit-record",
+    "EthTotal/Extentions/SortedLog.lean": "audit-record",
+    "EthTotal/Extentions/StaleRead.lean": "value-transfer",
+    "EthTotal/Extentions/StatePresentation.lean": "state-persistence",
+    "EthTotal/Extentions/StorageSupport.lean": "state-persistence",
+    "EthTotal/Extentions/SupplyBlindness.lean": "supply-conservation",
+    "EthTotal/Extentions/SupportKernelDuality.lean": "state-persistence",
+    "EthTotal/Extentions/TestVectorMinimality.lean": "audit-record",
+    "EthTotal/Extentions/TraceSideChannel.lean": "audit-record",
+    "EthTotal/Extentions/TrieDefault.lean": "state-persistence",
+    "EthTotal/Extentions/WritePrecondition.lean": "state-persistence",
+    "EthTotal/Extentions/ZeroValueTouch.lean": "account-lifecycle"
+  },
+  "curated": [
+    {
+      "theorem": "EthTotal.exact_supply",
+      "severity": "CRITICAL",
+      "theme": "supply-conservation",
+      "text": "Total supply must reconcile exactly against the per-account balance deltas of a state transition",
+      "assertion": "L'.supply + sum(L.bal - L'.bal) over live = L.supply + sum(L'.bal - L.bal) over live",
+      "covers_hint": [
+        "state.get_account",
+        "state.set_account_balance",
+        "total supply",
+        "state root",
+        "account iteration"
+      ]
+    },
+    {
+      "theorem": "EthTotal.exact_supply_on",
+      "severity": "HIGH",
+      "theme": "supply-conservation",
+      "text": "Supply reconciliation must not depend on which covering account list the implementation enumerates",
+      "assertion": "any distinct list covering both supports yields the same reconciliation identity",
+      "covers_hint": [
+        "account iteration",
+        "state.get_account",
+        "trie traversal",
+        "snapshot"
+      ]
+    },
+    {
+      "theorem": "EthTotal.supply_diff_eq",
+      "severity": "HIGH",
+      "theme": "supply-conservation",
+      "text": "A transition that only debits accounts must reduce total supply by exactly the sum of those debits",
+      "assertion": "(forall a, L'.bal a <= L.bal a) -> L'.supply + sum(L.bal - L'.bal) = L.supply",
+      "covers_hint": [
+        "state.set_account_balance",
+        "fee burn",
+        "total supply"
+      ]
+    },
+    {
+      "theorem": "EthTotal.supply_le_of_bal_le_on",
+      "severity": "HIGH",
+      "theme": "supply-conservation",
+      "text": "Supply monotonicity must be checked only over an account set that covers the whole balance support",
+      "assertion": "support-covering hypothesis is required for (forall a in live, L'.bal a <= L.bal a) -> L'.supply <= L.supply",
+      "covers_hint": [
+        "account iteration",
+        "state.get_account",
+        "touched accounts"
+      ]
+    },
+    {
+      "theorem": "EthTotal.mint_witness_of_bal_lt_on",
+      "severity": "CRITICAL",
+      "theme": "mint-burn-attribution",
+      "text": "Every account balance increase must be attributable to a positive mint event recorded at a declared mint site",
+      "assertion": "bal increase and SiteConfined M B trace -> exists mint(d,v) in trace with v>0 and d in M",
+      "covers_hint": [
+        "state.set_account_balance",
+        "block reward",
+        "process_withdrawal",
+        "issuance"
+      ]
+    },
+    {
+      "theorem": "EthTotal.burn_witness_of_bal_lt_on",
+      "severity": "CRITICAL",
+      "theme": "mint-burn-attribution",
+      "text": "Every account balance decrease must be attributable to a positive burn event recorded at a declared burn site",
+      "assertion": "bal decrease and SiteConfined M B trace -> exists burn(s,v) in trace with v>0 and s in B",
+      "covers_hint": [
+        "state.set_account_balance",
+        "fee burn",
+        "state.destroy_account"
+      ]
+    },
+    {
+      "theorem": "EthTotal.supply_eq_of_confined_empty",
+      "severity": "HIGH",
+      "theme": "mint-burn-attribution",
+      "text": "A transition that declares no mint site and no burn site must leave total supply unchanged",
+      "assertion": "SiteConfined [] [] trace -> L'.supply = L.supply",
+      "covers_hint": [
+        "state.move_ether",
+        "internal transfer",
+        "total supply"
+      ]
+    },
+    {
+      "theorem": "EthTotal.trace_net_unique",
+      "severity": "HIGH",
+      "theme": "mint-burn-attribution",
+      "text": "Two event traces reporting the same state transition must agree on net minted minus burned",
+      "assertion": "both traces satisfy the accounting equation -> burned t + minted t' = burned t' + minted t",
+      "covers_hint": [
+        "receipts",
+        "state transition log",
+        "issuance accounting"
+      ]
+    },
+    {
+      "theorem": "EthTotal.burn_only_at",
+      "severity": "HIGH",
+      "theme": "mint-burn-attribution",
+      "text": "No event in a burn-confined trace may carry a burn site other than the declared one",
+      "assertion": "SiteConfined M [x] trace -> forall e in trace, e.burnSite = none or e.burnSite = some x",
+      "covers_hint": [
+        "fee burn",
+        "state.destroy_account",
+        "burn address"
+      ]
+    },
+    {
+      "theorem": "EthTotal.no_growth_without_a_positive_mint",
+      "severity": "HIGH",
+      "theme": "mint-burn-attribution",
+      "text": "Total supply must not grow unless the trace contains an event whose minted amount is strictly positive",
+      "assertion": "all mint events zero -> minted trace = 0 -> supply cannot increase",
+      "covers_hint": [
+        "issuance",
+        "block reward",
+        "process_withdrawal"
+      ]
+    },
+    {
+      "theorem": "EthTotal.process_transaction_effect",
+      "severity": "CRITICAL",
+      "theme": "fee-accounting",
+      "text": "Transaction processing must conserve supply across prepayment, execution and refund/tip/burn settlement",
+      "assertion": "prepay P = R+T+B then settle -> L2.supply + burned = L0.supply + minted, confined to the declared sites",
+      "covers_hint": [
+        "process_transaction",
+        "state.move_ether",
+        "gas refund",
+        "priority fee",
+        "base fee burn"
+      ]
+    },
+    {
+      "theorem": "EthTotal.admission_iff_guards",
+      "severity": "HIGH",
+      "theme": "fee-accounting",
+      "text": "The single admission check on prepayment plus value must be equivalent to the two staged balance guards",
+      "assertion": "P + value <= bal(sender) <-> P <= bal(sender) and value <= bal(sender) after prepay",
+      "covers_hint": [
+        "process_transaction",
+        "validate_transaction",
+        "intrinsic cost",
+        "sender balance check"
+      ]
+    },
+    {
+      "theorem": "EthTotal.refund_tip_burn_partition_the_prepayment",
+      "severity": "CRITICAL",
+      "theme": "fee-accounting",
+      "text": "Refund, priority tip and base-fee burn must exactly partition the prepaid amount with no residue",
+      "assertion": "R + (T + B) = P, and settlement distributes exactly R, T, B from the escrowed P",
+      "covers_hint": [
+        "gas refund",
+        "priority fee",
+        "base fee burn",
+        "process_transaction"
+      ]
+    },
+    {
+      "theorem": "EthTotal.escrow_never_underflows",
+      "severity": "HIGH",
+      "theme": "fee-accounting",
+      "text": "Fee settlement must never draw more from the escrowed prepayment than was actually escrowed",
+      "assertion": "escrow balance stays >= 0 without truncation across refund, tip and burn",
+      "covers_hint": [
+        "gas refund",
+        "priority fee",
+        "base fee burn",
+        "escrow"
+      ]
+    },
+    {
+      "theorem": "EthTotal.escrow_leak",
+      "severity": "HIGH",
+      "theme": "fee-accounting",
+      "text": "Any prepayment residue left in the fee escrow after settlement must be detected, not silently retained",
+      "assertion": "R + T + B < P -> escrow retains P - (R+T+B): a leak, not a balanced settlement",
+      "covers_hint": [
+        "gas refund",
+        "priority fee",
+        "base fee burn",
+        "escrow"
+      ]
+    },
+    {
+      "theorem": "EthTotal.escrow_overdraw",
+      "severity": "HIGH",
+      "theme": "fee-accounting",
+      "text": "Fee settlement must reject a distribution that exceeds the prepayment instead of overdrawing the escrow",
+      "assertion": "R + T + B > P is unrepresentable: the settlement must fail, not saturate",
+      "covers_hint": [
+        "gas refund",
+        "priority fee",
+        "base fee burn",
+        "escrow"
+      ]
+    },
+    {
+      "theorem": "EthTotal.both_fee_guards_are_independently_necessary",
+      "severity": "HIGH",
+      "theme": "fee-accounting",
+      "text": "Neither the gas-limit guard nor the base-fee guard may be dropped: each independently prevents a fee-path defect",
+      "assertion": "dropping either guard admits a settlement that violates the fee partition",
+      "covers_hint": [
+        "validate_transaction",
+        "gas limit",
+        "base fee",
+        "max fee per gas"
+      ]
+    },
+    {
+      "theorem": "EthTotal.naive_self_transfer_mints",
+      "severity": "CRITICAL",
+      "theme": "value-transfer",
+      "text": "A self-transfer must not be implemented as debit-then-credit against a stale balance read",
+      "assertion": "credit computed from the pre-debit balance on a self-directed transfer increases supply",
+      "covers_hint": [
+        "state.move_ether",
+        "CALL",
+        "self transfer",
+        "state.get_account"
+      ]
+    },
+    {
+      "theorem": "EthTotal.specification_forbids_what_the_naive_code_permits",
+      "severity": "HIGH",
+      "theme": "value-transfer",
+      "text": "A transfer implementation must be checked against the specification's neutrality requirement, not only against its own steps",
+      "assertion": "the naive stepwise transfer admits states the specification forbids",
+      "covers_hint": [
+        "state.move_ether",
+        "CALL",
+        "transfer semantics"
+      ]
+    },
+    {
+      "theorem": "EthTotal.xfer_overdraft_inflates",
+      "severity": "CRITICAL",
+      "theme": "value-transfer",
+      "text": "A transfer whose debit would underflow must be rejected, never allowed to saturate at zero",
+      "assertion": "value > bal(src) with saturating subtraction credits the full value: supply increases by value - bal(src)",
+      "covers_hint": [
+        "state.move_ether",
+        "CALL",
+        "balance check",
+        "saturating subtraction"
+      ]
+    },
+    {
+      "theorem": "EthTotal.mint_witness_of_overdraft",
+      "severity": "CRITICAL",
+      "theme": "value-transfer",
+      "text": "An overdrafting transfer must produce no mint witness, so any recorded mint on a transfer path is a defect",
+      "assertion": "overdraft transfer inflates supply with no legitimate mint event at any declared site",
+      "covers_hint": [
+        "state.move_ether",
+        "CALL",
+        "balance check",
+        "issuance accounting"
+      ]
+    },
+    {
+      "theorem": "EthTotal.stale_read_self_duplicates",
+      "severity": "CRITICAL",
+      "theme": "value-transfer",
+      "text": "A balance read taken before a mutation must not be reused to compute the post-mutation write",
+      "assertion": "reusing a pre-mutation balance for the second write duplicates the account's value",
+      "covers_hint": [
+        "state.get_account",
+        "state.set_account_balance",
+        "cached account",
+        "state journal"
+      ]
+    },
+    {
+      "theorem": "EthTotal.stale_credit_supply_gap",
+      "severity": "HIGH",
+      "theme": "value-transfer",
+      "text": "Two credits derived from the same stale balance snapshot must not both be applied",
+      "assertion": "stale double credit leaves supply short of the sum of the credits: the gap is the lost amount",
+      "covers_hint": [
+        "state.set_account_balance",
+        "cached account",
+        "state journal",
+        "batch update"
+      ]
+    },
+    {
+      "theorem": "EthTotal.overflow_requires_mint",
+      "severity": "HIGH",
+      "theme": "arithmetic-representation",
+      "text": "An account balance may not exceed the representable bound unless the chain actually minted that much",
+      "assertion": "bal(a) at step i <= supply(0) + total minted up to n; exceeding the cap requires a real mint",
+      "covers_hint": [
+        "U256",
+        "balance overflow",
+        "state.set_account_balance",
+        "issuance"
+      ]
+    },
+    {
+      "theorem": "EthTotal.flash_loan_impossible",
+      "severity": "HIGH",
+      "theme": "arithmetic-representation",
+      "text": "No account may transiently hold more than the chain's cumulative issuance at any intermediate step",
+      "assertion": "intermediate balances are bounded by initial supply plus cumulative mints, not just final state",
+      "covers_hint": [
+        "state journal",
+        "intermediate state",
+        "U256",
+        "balance bound"
+      ]
+    },
+    {
+      "theorem": "EthTotal.reported_burn_is_saturated",
+      "severity": "HIGH",
+      "theme": "arithmetic-representation",
+      "text": "A burn record must report the requested amount, never the amount a saturating subtraction managed to remove",
+      "assertion": "unguarded burn reports min(request, balance); the shortfall is invisible in the record",
+      "covers_hint": [
+        "fee burn",
+        "state.set_account_balance",
+        "saturating subtraction",
+        "receipts"
+      ]
+    },
+    {
+      "theorem": "EthTotal.one_guard_closes_both_leaks",
+      "severity": "HIGH",
+      "theme": "arithmetic-representation",
+      "text": "A single sufficient-balance guard before the debit must be what makes the burn record and the state agree",
+      "assertion": "request <= balance is exactly the condition under which reported burn equals applied burn",
+      "covers_hint": [
+        "fee burn",
+        "balance check",
+        "state.set_account_balance"
+      ]
+    },
+    {
+      "theorem": "EthTotal.no_history_survives_below_the_threshold",
+      "severity": "MEDIUM",
+      "theme": "arithmetic-representation",
+      "text": "Amounts below the quantization threshold must not be treated as recoverable state",
+      "assertion": "sub-threshold band collapses to a point: no history is recoverable below the quantum",
+      "covers_hint": [
+        "Gwei",
+        "quantization",
+        "rounding",
+        "process_withdrawal"
+      ]
+    },
+    {
+      "theorem": "EthTotal.no_credit_after_destroy",
+      "severity": "CRITICAL",
+      "theme": "account-lifecycle",
+      "text": "A destroyed account must not be credited again without an explicit re-creation step",
+      "assertion": "credit applied after erasure has no effect on the erased account and desynchronizes supply",
+      "covers_hint": [
+        "SELFDESTRUCT",
+        "state.destroy_account",
+        "state.set_account_balance",
+        "account resurrection"
+      ]
+    },
+    {
+      "theorem": "EthTotal.no_write_after_erase",
+      "severity": "HIGH",
+      "theme": "account-lifecycle",
+      "text": "Any write to an account already erased in the same transition must be rejected",
+      "assertion": "write to an erased account is not a state update: the account is absent from the live set",
+      "covers_hint": [
+        "SELFDESTRUCT",
+        "state.destroy_account",
+        "state.set_account_balance",
+        "state journal"
+      ]
+    },
+    {
+      "theorem": "EthTotal.destroy_guard_invalidated_by_credit",
+      "severity": "HIGH",
+      "theme": "account-lifecycle",
+      "text": "The zero-balance precondition for destroying an account must be re-checked after any credit in the same transition",
+      "assertion": "a credit between the guard check and the erase invalidates the guard",
+      "covers_hint": [
+        "SELFDESTRUCT",
+        "state.destroy_account",
+        "balance check",
+        "state journal"
+      ]
+    },
+    {
+      "theorem": "EthTotal.a_self_destruct_burns_exactly_the_balance",
+      "severity": "HIGH",
+      "theme": "account-lifecycle",
+      "text": "Destroying an account must burn exactly its remaining balance and record that amount as the burn",
+      "assertion": "destroy = zero the balance then erase: burn amount equals the pre-destroy balance",
+      "covers_hint": [
+        "SELFDESTRUCT",
+        "state.destroy_account",
+        "fee burn",
+        "receipts"
+      ]
+    },
+    {
+      "theorem": "EthTotal.the_burn_comes_from_zeroing_not_from_the_transfer",
+      "severity": "HIGH",
+      "theme": "account-lifecycle",
+      "text": "The supply reduction on self-destruct must be attributed to zeroing the account, not to the beneficiary transfer",
+      "assertion": "the transfer alone never burns; only the zeroing step removes supply",
+      "covers_hint": [
+        "SELFDESTRUCT",
+        "state.move_ether",
+        "beneficiary",
+        "receipts"
+      ]
+    },
+    {
+      "theorem": "EthTotal.guarding_a_transfer_by_nonzero_value_is_not_enough",
+      "severity": "HIGH",
+      "theme": "account-lifecycle",
+      "text": "Skipping state writes on zero-value transfers must not skip the liveness/touch effects the specification requires",
+      "assertion": "a nonzero-value guard alone does not preserve the liveness component of the state",
+      "covers_hint": [
+        "state.touch_account",
+        "zero value transfer",
+        "CALL",
+        "empty account"
+      ]
+    },
+    {
+      "theorem": "EthTotal.no_unchecked_write",
+      "severity": "HIGH",
+      "theme": "state-persistence",
+      "text": "Every balance write must be preceded by a membership check on the account set it writes into",
+      "assertion": "a write to a non-member account is a no-op or must carry value zero",
+      "covers_hint": [
+        "state.set_account_balance",
+        "state.get_account",
+        "account existence"
+      ]
+    },
+    {
+      "theorem": "EthTotal.a_zero_write_does_not_enlarge_the_support",
+      "severity": "HIGH",
+      "theme": "state-persistence",
+      "text": "Writing a zero value must not create a storage entry or enlarge the account support",
+      "assertion": "support after a zero write equals support before it, whatever the write set records",
+      "covers_hint": [
+        "state.set_storage",
+        "trie_set",
+        "storage support",
+        "SSTORE"
+      ]
+    },
+    {
+      "theorem": "EthTotal.a_key_is_stored_exactly_when_its_value_is_nonzero",
+      "severity": "HIGH",
+      "theme": "state-persistence",
+      "text": "Storage presence must be decided by the value being nonzero, never by the key appearing in a write set",
+      "assertion": "key in storage <-> value at key /= 0; write-set membership is not storage membership",
+      "covers_hint": [
+        "state.set_storage",
+        "state.get_storage",
+        "trie_set",
+        "SSTORE",
+        "SLOAD"
+      ]
+    },
+    {
+      "theorem": "EthTotal.writing_the_default_is_deletion",
+      "severity": "HIGH",
+      "theme": "state-persistence",
+      "text": "Writing the default value into the trie must delete the entry rather than store an explicit default",
+      "assertion": "trie write of the default value is deletion; a plain map keeping the default is a different algebra",
+      "covers_hint": [
+        "trie_set",
+        "state.set_storage",
+        "SSTORE",
+        "storage root"
+      ]
+    },
+    {
+      "theorem": "EthTotal.live_order_is_observable",
+      "severity": "MEDIUM",
+      "theme": "state-persistence",
+      "text": "The order of the account/storage enumeration must be treated as observable state, not an implementation detail",
+      "assertion": "two states equal pointwise on balances can still differ in the live-set order",
+      "covers_hint": [
+        "account iteration",
+        "trie traversal",
+        "state root",
+        "ordering"
+      ]
+    },
+    {
+      "theorem": "EthTotal.the_naive_two_ledger_total_overcounts",
+      "severity": "HIGH",
+      "theme": "supply-conservation",
+      "text": "Summing two books that share a mirrored account must subtract the mirror balance, or the total overcounts",
+      "assertion": "naive sum of two ledgers exceeds the true total by exactly the mirrored balance",
+      "covers_hint": [
+        "total supply",
+        "bridge accounting",
+        "state.get_account"
+      ]
+    },
+    {
+      "theorem": "EthTotal.supply_blind_to_owner",
+      "severity": "MEDIUM",
+      "theme": "supply-conservation",
+      "text": "A supply figure must not be used to conclude anything about who holds the value",
+      "assertion": "moving the entire balance between accounts is supply-neutral and invisible to a supply check",
+      "covers_hint": [
+        "total supply",
+        "state.move_ether",
+        "invariant check"
+      ]
+    },
+    {
+      "theorem": "EthTotal.parity_mismatch_is_corruption",
+      "severity": "MEDIUM",
+      "theme": "audit-record",
+      "text": "A trace whose parity checksum disagrees with the recorded totals must be rejected as corrupt",
+      "assertion": "no trace exists with a parity inconsistent with its mint/burn totals",
+      "covers_hint": [
+        "receipts",
+        "state transition log",
+        "checksum",
+        "verification"
+      ]
+    },
+    {
+      "theorem": "EthTotal.zero_amount_events_are_invisible_to_accounting",
+      "severity": "MEDIUM",
+      "theme": "audit-record",
+      "text": "Event counts must not be used as an accounting invariant: zero-amount events change no total",
+      "assertion": "a zero-amount mint or burn is a legal record that leaves minted/burned unchanged",
+      "covers_hint": [
+        "receipts",
+        "event log",
+        "invariant check"
+      ]
+    },
+    {
+      "theorem": "EthTotal.no_total_credit_means_no_account_credit",
+      "severity": "MEDIUM",
+      "theme": "audit-record",
+      "text": "A zero aggregate credit must be checked to imply zero credit at every individual account",
+      "assertion": "total credit zero -> per-account credit zero; per-account totals are additive over blocks",
+      "covers_hint": [
+        "per-account log",
+        "receipts",
+        "aggregation",
+        "state transition log"
+      ]
+    },
+    {
+      "theorem": "EthTotal.site_audit_breaks_under_rename",
+      "severity": "MEDIUM",
+      "theme": "audit-record",
+      "text": "A site-based audit must be recomputed after any account relabelling, since sites are not rename-invariant",
+      "assertion": "amounts and counts are rename-blind, but recorded sites move under renaming",
+      "covers_hint": [
+        "address mapping",
+        "receipts",
+        "state transition log"
+      ]
+    },
+    {
+      "theorem": "EthTotal.no_harmless_append",
+      "severity": "MEDIUM",
+      "theme": "audit-record",
+      "text": "Appending to a trace must never be assumed neutral: both mint and burn probes are needed to detect it",
+      "assertion": "every nonempty append is detectable, but only by probing both polarities",
+      "covers_hint": [
+        "receipts",
+        "state transition log",
+        "verification"
+      ]
+    },
+    {
+      "theorem": "EthTotal.balance_alone_cannot_decide_liveness",
+      "severity": "MEDIUM",
+      "theme": "account-lifecycle",
+      "text": "Account existence must not be inferred from a zero balance: liveness is independent state",
+      "assertion": "an empty account is not determined by its balance; positivity is the only decidable boundary",
+      "covers_hint": [
+        "account_exists_and_is_empty",
+        "state.touch_account",
+        "empty account",
+        "EIP-161"
+      ]
+    },
+    {
+      "theorem": "EthTotal.process_withdrawal_effect",
+      "severity": "HIGH",
+      "theme": "issuance-withdrawal",
+      "text": "A withdrawal credit must be recorded as a mint of exactly the credited amount, confined to the recipient",
+      "assertion": "L.setBal w (bal w + W) -> supply + burned = supply + minted with SiteConfined [w] []",
+      "covers_hint": [
+        "process_withdrawal",
+        "state.set_account_balance",
+        "issuance",
+        "withdrawal"
+      ]
+    },
+    {
+      "theorem": "EthTotal.process_withdrawal_fresh_effect",
+      "severity": "HIGH",
+      "theme": "issuance-withdrawal",
+      "text": "A withdrawal to an account not yet in the state must create it before crediting, still as a confined mint",
+      "assertion": "addLive then credit keeps the mint confined to the recipient and the accounting exact",
+      "covers_hint": [
+        "process_withdrawal",
+        "state.create_account",
+        "withdrawal",
+        "issuance"
+      ]
+    },
+    {
+      "theorem": "EthTotal.withdrawals_supply_quantized",
+      "severity": "MEDIUM",
+      "theme": "issuance-withdrawal",
+      "text": "Quantized withdrawal credits must keep total supply an exact multiple of the quantum at every step",
+      "assertion": "supply n = supply 0 + k * sum of the per-step quanta",
+      "covers_hint": [
+        "process_withdrawal",
+        "Gwei",
+        "quantization",
+        "issuance"
+      ]
+    },
+    {
+      "theorem": "EthTotal.process_transaction_destroy_phase",
+      "severity": "CRITICAL",
+      "theme": "account-lifecycle",
+      "text": "The destruction phase of a transaction must burn exactly the destroyed balance and confine the burn to that account",
+      "assertion": "setBal a 0 then eraseLive a -> supply + burn(bal a) balances, SiteConfined [] [a]",
+      "covers_hint": [
+        "SELFDESTRUCT",
+        "state.destroy_account",
+        "process_transaction",
+        "receipts"
+      ]
+    },
+    {
+      "theorem": "EthTotal.destroy_chain_supply",
+      "severity": "HIGH",
+      "theme": "account-lifecycle",
+      "text": "A sequence of account destructions must reduce supply by exactly the sum of the destroyed balances",
+      "assertion": "supply n + sum of destroyed balances over range n = supply 0",
+      "covers_hint": [
+        "SELFDESTRUCT",
+        "state.destroy_account",
+        "block processing",
+        "total supply"
+      ]
+    },
+    {
+      "theorem": "EthTotal.chain_bal_lt_of_cap",
+      "severity": "HIGH",
+      "theme": "arithmetic-representation",
+      "text": "Balance-representation bounds must be justified from cumulative issuance, not assumed per-account",
+      "assertion": "supply 0 + total minted < W -> every intermediate balance stays below W",
+      "covers_hint": [
+        "U256",
+        "balance overflow",
+        "issuance",
+        "state.set_account_balance"
+      ]
+    },
+    {
+      "theorem": "EthTotal.supply_exact_of_confined_no_mint",
+      "severity": "HIGH",
+      "theme": "mint-burn-attribution",
+      "text": "On a path that declares no mint site, the burn total must account for the entire supply reduction",
+      "assertion": "SiteConfined [] B trace -> L'.supply + burned trace = L.supply exactly",
+      "covers_hint": [
+        "fee burn",
+        "state.destroy_account",
+        "total supply"
+      ]
+    },
+    {
+      "theorem": "EthTotal.a_saturating_debit_keeps_the_shortfall",
+      "severity": "HIGH",
+      "theme": "supply-conservation",
+      "text": "A debit that saturates must surface the shortfall rather than reporting a completed transfer",
+      "assertion": "saturating debit leaves the shortfall in place: reported movement exceeds actual movement",
+      "covers_hint": [
+        "state.move_ether",
+        "saturating subtraction",
+        "balance check",
+        "receipts"
+      ]
+    }
+  ]
+}

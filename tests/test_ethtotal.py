@@ -1,0 +1,187 @@
+"""Honesty invariants for the EthTotal track (docs/ethtotal-track.md).
+
+The gasper track pins its invariants in tests/test_honesty.py and in the CI
+`honesty check` steps. This is the same idea for the second target: the claims
+that make the EthTotal `01e` trustworthy are the ones a future edit is most
+likely to break quietly, so they are asserted here rather than described in
+prose.
+
+What is pinned:
+
+1. the lemma sweep is total — every theorem in the inventory is bucketed by the
+   triage, with a reason, and every theorem-bearing source file is represented;
+2. the reviewed curation only names theorems that exist;
+3. the map is internally consistent, and its severity claims are only made
+   where a human made them;
+4. every generated CHK item descends from a mapped theorem and cites dataset
+   evidence;
+5. the map never claims a proof status the exporter did not report.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+_ROOT = Path(__file__).resolve().parents[1]
+_INVENTORY = _ROOT / "data" / "ethtotal_inventory.json"
+_TRIAGE = _ROOT / "data" / "ethtotal_triage.json"
+_CURATION = _ROOT / "data" / "ethtotal_curation.json"
+_MAP = _ROOT / "theorem_map_ethtotal.json"
+_HEALTH = _ROOT / "lean-ethtotal" / "health.mapped.json"
+
+_SEVERITIES = {"CRITICAL", "HIGH", "MEDIUM", "LOW", "INFORMATIONAL"}
+
+
+def _load(p: Path) -> dict:
+    return json.loads(p.read_text(encoding="utf-8"))
+
+
+@pytest.fixture(scope="module")
+def inventory() -> dict:
+    return _load(_INVENTORY)
+
+
+@pytest.fixture(scope="module")
+def triage() -> dict:
+    return _load(_TRIAGE)
+
+
+@pytest.fixture(scope="module")
+def curation() -> dict:
+    return _load(_CURATION)
+
+
+@pytest.fixture(scope="module")
+def theorem_map() -> dict:
+    return _load(_MAP)
+
+
+@pytest.fixture(scope="module")
+def health() -> dict:
+    return {t["name"]: t for t in _load(_HEALTH)["theorems"]}
+
+
+# --- 1. the lemma sweep is total -------------------------------------------
+
+def test_triage_buckets_every_theorem(inventory, triage):
+    """No theorem is silently dropped between inventory and triage."""
+    inv_names = {d["name"] for d in inventory["declarations"] if d["kind"] == "theorem"}
+    triaged = {e["name"] for f in triage["files"] for e in f["theorems"]}
+    assert triaged == inv_names, (
+        f"{len(inv_names - triaged)} theorem(s) missing from the triage, "
+        f"{len(triaged - inv_names)} triaged theorem(s) not in the inventory"
+    )
+
+
+def test_every_triaged_theorem_has_a_bucket_and_a_reason(triage):
+    for f in triage["files"]:
+        for e in f["theorems"]:
+            assert e["bucket"] in {"selected", "represented", "screened-out"}, e
+            assert e["reason"].strip(), f"{e['name']}: bucketed without a reason"
+
+
+def test_every_theorem_bearing_file_is_represented(triage):
+    """The lemma layers get the same treatment as the headline theorems."""
+    for f in triage["files"]:
+        assert f["theorem_count"] > 0
+        assert f["selected"], f"{f['file']}: {f['theorem_count']} theorems, none selected"
+
+
+def test_lemma_layers_are_actually_covered(triage):
+    layers = {f["layer"] for f in triage["files"] if f["selected"]}
+    for required in ("Lemmata.Derives", "Lemmata.EthConcepts", "AtomicDef", "Extentions"):
+        assert required in layers, f"no selection from the {required} layer"
+
+
+# --- 2. the reviewed curation ----------------------------------------------
+
+def test_curated_theorems_exist(inventory, curation):
+    by_short: dict[str, list[str]] = {}
+    names = set()
+    for d in inventory["declarations"]:
+        names.add(d["name"])
+        by_short.setdefault(d["short_name"], []).append(d["name"])
+    for c in curation["curated"]:
+        n = c["theorem"]
+        resolved = [n] if n in names else by_short.get(n.rsplit(".", 1)[-1], [])
+        assert len(resolved) == 1, f"curated theorem {n!r} resolves to {resolved}"
+
+
+def test_every_source_file_has_a_theme(triage, curation):
+    for f in triage["files"]:
+        assert f["file"] in curation["file_themes"], f"{f['file']}: no theme assigned"
+    for f, theme in curation["file_themes"].items():
+        assert theme in curation["themes"], f"{f}: unknown theme {theme!r}"
+
+
+def test_curated_entries_are_complete(curation):
+    for c in curation["curated"]:
+        assert c["severity"] in _SEVERITIES, c
+        assert c["text"].strip() and len(c["text"]) <= 260, c["theorem"]
+        assert c["assertion"].strip() and len(c["assertion"]) <= 200, c["theorem"]
+
+
+# --- 3. the map ------------------------------------------------------------
+
+def test_map_ids_are_unique(theorem_map):
+    ids = [e["property_id"] for e in theorem_map["properties"]]
+    assert len(ids) == len(set(ids))
+
+
+def test_base_entries_do_not_double_count_a_theorem(theorem_map):
+    """A theorem may back several verbatim checklist entries, but only one base
+    (decomposed) entry — otherwise its must-establish obligations are emitted
+    twice."""
+    base = [e["theorem"] for e in theorem_map["properties"] if e.get("lowering") != "verbatim"]
+    assert len(base) == len(set(base))
+
+
+def test_severity_is_only_claimed_where_reviewed(theorem_map):
+    """Derived entries carry real proof obligations but no reviewed severity, so
+    they must not claim CRITICAL/HIGH."""
+    for e in theorem_map["properties"]:
+        assert e["severity"] in _SEVERITIES, e["property_id"]
+        if e.get("x_origin", "").startswith("derived"):
+            assert e["severity"] == "MEDIUM", (
+                f"{e['property_id']}: derived entry claims {e['severity']} without review"
+            )
+
+
+def test_every_entry_has_label_and_area(theorem_map):
+    for e in theorem_map["properties"]:
+        assert e.get("label", "").strip(), e["property_id"]
+        assert e.get("bug_bounty_area", "").strip(), e["property_id"]
+        assert e.get("type") == "invariant", e["property_id"]
+
+
+# --- 4. the generated checklist overlay ------------------------------------
+
+def test_checklist_entries_descend_from_a_mapped_theorem(theorem_map):
+    base = {e["theorem"] for e in theorem_map["properties"] if e.get("lowering") != "verbatim"}
+    for e in theorem_map["properties"]:
+        if e.get("lowering") != "verbatim":
+            continue
+        assert e["theorem"] in base, f"{e['property_id']}: cites unmapped theorem {e['theorem']}"
+        assert e.get("x_dataset_evidence", "").strip(), (
+            f"{e['property_id']}: checklist entry without dataset evidence"
+        )
+        assert str(e["property_id"]).startswith("CHK-"), e["property_id"]
+
+
+# --- 5. no proof status the exporter did not report ------------------------
+
+def test_map_targets_are_proved_in_the_export(theorem_map, health):
+    for e in theorem_map["properties"]:
+        h = health.get(e["theorem"])
+        assert h is not None, f"{e['property_id']}: {e['theorem']} absent from the health export"
+        assert h["lean_status"] == "proved", f"{e['theorem']}: {h['lean_status']}"
+        assert h["resolved"] is True and not h.get("export_error")
+
+
+def test_export_reports_no_project_axioms(health):
+    """EthTotal's own audit module reports the development axiom-free; the
+    export must agree, or one of the two is wrong."""
+    for name, h in health.items():
+        assert not h.get("project_axioms"), f"{name}: non-builtin axioms {h['project_axioms']}"

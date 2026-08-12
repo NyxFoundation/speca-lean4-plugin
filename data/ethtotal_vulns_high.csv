@@ -1,0 +1,45 @@
+id,severity,label,root_cause,attack_path,title
+evd-p0000,Critical,gas,integer_overflow_underflow,malicious_tx,Gas allocation error in CALL operations in Besu EVM [GHSA-4456-w38r-m5
+evd-p0001,High,evm,missing_input_validation,malformed_input,"SHL, SHR, and SAR operations trigger native exception at key values"
+evd-p0210,High,opcodes,consensus_divergence,malicious_tx,RETURNDATA corruption via datacopy
+evd-p0211,High,transactions,consensus_divergence,crafted_state,Consensus flaw during block processing
+evd-p0214,High,opcodes,integer_overflow_underflow,malformed_input,Denial of service via `MulMod`
+evd-p0215,High,precompiles,improper_state_update,malicious_tx,Shallow copy in the 0x4 precompile could lead to EVM memory corruption
+evd-p0217,High,opcodes,missing_bounds_check,malicious_tx,Security disclosures
+evd-p0235,High,transactions,unhandled_error_or_nil,crafted_state,miner: fix nil statedb panic in applyTransaction pre-amsterdam
+evd-p0239,High,transactions,missing_input_validation,malformed_input,core/types: fix panic on invalid signature length
+evd-p0250,High,evm,incorrect_gas_accounting,malformed_input,core/vm: remove panic when address is not present
+evd-p0253,High,database,improper_state_update,crafted_state,triedb/pathdb: fix panic in recoverable
+evd-p0257,High,state-trie,improper_state_update,crafted_state,trie: use explicit errors in stacktrie (instead of panic)
+evd-p0276,High,gas,unhandled_error_or_nil,malformed_input,core/vm: evm fix panic
+evd-p0280,High,state-trie,improper_state_update,crafted_state,snapshot: add Unlock before return/panic
+evd-p0304,High,transactions,serialization_bug,malicious_tx,fix panic on bad tx sender
+evd-p0332,High,block-processing,missing_bounds_check,malicious_block,"core: reorg logs crashed, add a check for corner cases"
+evd-p0350,High,state-trie,unhandled_error_or_nil,crafted_state,[core] Race condition on diffLayer
+evd-p0395,High,database,resource_exhaustion,malicious_block,Prune forks from the database
+evd-p1082,High,gas,missing_input_validation,crafted_state,EIP-7928: Add BAL max items cap and slot uniqueness validation (#19627
+evd-p1315,High,evm,missing_bounds_check,malformed_input,Go Ethereum Denial of Service
+evd-p1365,High,database,resource_exhaustion,malicious_tx,This patch should still be considered bleeding-edge. We advise exchang
+evd-p1392,High,block-processing,consensus_divergence,malicious_block,This is a security-critical release that fixes a regression in v1.9.4 
+evd-p1429,High,state-trie,improper_state_update,crafted_state,core/state: handle *bintrie.BinaryTrie in mustCopyTrie
+evd-p1430,High,state-trie,missing_input_validation,malformed_input,trie/bintrie: fix GetAccount/GetStorage non-membership — verify stem b
+evd-p1435,High,state-trie,missing_bounds_check,crafted_state,core/stateless: cap witness depth metrics buckets
+evd-p1439,High,state-trie,consensus_divergence,crafted_state,triedb/pathdb: fix state revert on v2 history
+evd-p1442,High,state-trie,resource_exhaustion,crafted_state,core/state: fix trie prefetcher for verkle
+evd-p1444,High,state-trie,resource_exhaustion,crafted_state,core/state: filter out nil trie for copy
+evd-p1458,High,state-trie,missing_input_validation,crafted_state,trie: fix range prover
+evd-p1476,High,transactions,integer_overflow_underflow,malicious_p2p_message,rlp: input limit and other corrections
+evd-p1482,High,state-trie,integer_overflow_underflow,crafted_state,trie/database: fix overflow in parent tracking
+evd-p1483,High,gas,integer_overflow_underflow,malformed_input,core/vm: Correct the Memory Gas Overflow condition
+evd-p1486,High,state-trie,missing_input_validation,crafted_state,core/stateless: fix parsing an empty witness
+evd-p1493,High,opcodes,unhandled_error_or_nil,malformed_input,core/vm/runtime: Add Random field to config
+evd-p1497,High,state-trie,consensus_divergence,crafted_state,"trie, tests/fuzzers: implement a stacktrie fuzzer + stacktrie fixes"
+evd-p1500,High,state-trie,consensus_divergence,malformed_input,trie: fix delete bug for values contained in fullNode
+evd-p1501,High,block-processing,other,malicious_block,core: force import known but rolled back blocks
+evd-p1507,High,transactions,resource_exhaustion,malicious_p2p_message,eth/fetcher: throttle peers which deliver many invalid transactions
+evd-p1533,High,database,missing_bounds_check,crafted_state,triedb/pathdb: fix incorrect address length in history searching
+evd-p1757,High,evm,other,malicious_tx,fix: fix hardcoded PadDirection in SliceWithZeroPadding UInt256 overlo
+evd-p2221,High,opcodes,consensus_divergence,malicious_tx,CVE-2021-41272
+evd-p2222,High,gas,integer_overflow_underflow,malicious_tx,CVE-2022-36025
+evd-p2223,High,evm,missing_bounds_check,malicious_tx,CVE-2018-20421
+evd-p2224,High,transactions,integer_overflow_underflow,malicious_tx,CVE-2025-29072

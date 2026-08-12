@@ -1,0 +1,18 @@
+{
+  "target": "example-execution-client",
+  "in_scope": [
+    "execution layer: state transition, account balances and total supply accounting",
+    "transaction processing: value transfer, gas prepayment, refund and fee burn",
+    "account lifecycle: creation, SELFDESTRUCT, empty-account and storage semantics",
+    "withdrawal processing (execution-layer credit of consensus-layer withdrawals)",
+    "state persistence: storage trie writes, default-value deletion, journalling and rollback"
+  ],
+  "out_of_scope": [
+    "RPC/API surfaces without state-transition impact",
+    "peer-to-peer transport and sync performance",
+    "liveness / performance degradation without accounting impact"
+  ],
+  "entry_points": ["rpc:eth_sendRawTransaction", "engine:newPayload", "p2p:transactions"],
+  "severity_rubric": {"min_eligible": "Low"},
+  "x_note": "Sample execution-client scope for the EthTotal (eth-total-supply-safety) track — the counterpart of bug_bounty_scope.sample.json, which is consensus-client shaped for the gasper track. The real BUG_BOUNTY_SCOPE.json comes from the speca run; this fixture exists so emit-01e and the tests can run without one."
+}
