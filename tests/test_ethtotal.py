@@ -238,3 +238,18 @@ def test_gasper_properties_never_pick_up_an_el_anchor():
     shared_id = next(r["property_id"] for r in el["defs"]
                      if r["property_id"].startswith("CHK-GEN-"))
     assert spec_reference_for_property(shared_id, "GasperBeaconChain.Core.k_safety'") is None
+
+
+def test_emitted_01e_records_the_anchor_provenance():
+    """The audit source must be self-describing: a `#symbol` reference is not
+    checkable without the spec revision it was verified against."""
+    doc = _load(_ROOT / "outputs" / "20260812-ethtotal" / "01e_PARTIAL_ethtotal.json")
+    tables = doc.get("spec_anchor_tables")
+    assert tables, "emitted 01e does not record which anchor table it used"
+    el = [t for t in tables if t["reference_prefix"] == "execution-specs"]
+    assert len(el) == 1
+    assert len(el[0]["spec_revision"]) == 40 and el[0]["spec_fork"]
+    for p in doc["properties"]:
+        assert p["spec_reference"].startswith("execution-specs:")
+        assert p["spec_reference_basis"] in {"named-in-text", "label-default"}
+        assert p["covers"] == p["spec_reference"].rsplit("#", 1)[-1]

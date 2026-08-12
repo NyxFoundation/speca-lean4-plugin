@@ -123,6 +123,24 @@ def _run_lean(theorem_map: dict[str, Any]) -> dict[str, Any]:
         ) from exc
 
 
+def _anchor_provenance_for(props: list) -> list:
+    """Provenance of the anchor tables the emitted properties actually used.
+
+    Only tables whose prefix appears in a `spec_reference` are listed: the
+    header describes this document, not the repo's data directory. Without it a
+    consumer reading the 01e alone cannot tell which revision of which spec a
+    `#symbol` was verified against.
+    """
+    from .anchors import anchor_table_provenance
+
+    used = {
+        str(p.get("spec_reference", "")).split(":", 1)[0]
+        for p in props
+        if p.get("spec_reference")
+    }
+    return [t for t in anchor_table_provenance() if t.get("reference_prefix") in used]
+
+
 def _source_ref(theorem_map: dict, ref_override: str | None) -> tuple:
     """(source repo, pinned ref) for the emitted document header.
 
@@ -167,6 +185,9 @@ def cmd_emit_01e(args: argparse.Namespace) -> int:
             "source": gasper_source,
             "ref": gasper_ref,
         }
+        anchors = _anchor_provenance_for(props)
+        if anchors:
+            d["spec_anchor_tables"] = anchors
         if shard is not None:
             d["shard"] = shard
         d["properties"] = props

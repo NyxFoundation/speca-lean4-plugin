@@ -118,6 +118,62 @@ def spec_reference_for_property(property_id: str | None,
     return None
 
 
+def spec_reference_basis(property_id: str | None, theorem: str | None = None,
+                         path: str | Path | None = None) -> str | None:
+    """"named-in-text" | "label-default" for a property's execution-layer anchor.
+
+    None when the EL table has no row for it (so a consensus property, which
+    always anchors at label level, does not claim a basis it never chose)."""
+    if not property_id:
+        return None
+    el = load_execution_anchor_map(path)
+    if not el:
+        return None
+    for row in el.get("defs", []):
+        if row.get("property_id") != property_id:
+            continue
+        if theorem is not None and row.get("theorem") != theorem:
+            continue
+        return "named-in-text" if row.get("matched_in_text") else "label-default"
+    return None
+
+
+def anchor_table_provenance(path: str | Path | None = None) -> list[dict[str, Any]]:
+    """Provenance of the anchor tables available, one entry per table.
+
+    Emitted into the `01e` header so a consumer reading the document alone can
+    tell WHICH revision of WHICH spec a `spec_reference` was verified against —
+    a `#symbol` is not checkable without it.
+    """
+    def _drop_empty(row: dict[str, Any]) -> dict[str, Any]:
+        # A table that is not revision-pinned says nothing rather than `null`.
+        # (The consensus table is dated, not pinned — that gap is real and is
+        # visible as an ABSENT spec_revision, not a null one.)
+        return {k: v for k, v in row.items() if v is not None}
+
+    out: list[dict[str, Any]] = []
+    m = load_anchor_map(path)
+    if m:
+        out.append(_drop_empty({
+            "reference_prefix": m.get("reference_prefix", "consensus-specs"),
+            "spec_source": m.get("spec_source"),
+            "spec_revision": m.get("spec_revision"),
+            "generated": m.get("generated"),
+            "table": "data/anchor_map.json",
+        }))
+    el = load_execution_anchor_map()
+    if el:
+        out.append(_drop_empty({
+            "reference_prefix": el.get("reference_prefix", "execution-specs"),
+            "spec_source": el.get("spec_source"),
+            "spec_revision": el.get("spec_revision"),
+            "spec_fork": el.get("spec_fork"),
+            "table": "data/anchor_map_execution.json",
+            "verification": "every symbol located in the pinned checkout (file/line recorded per row)",
+        }))
+    return out
+
+
 def spec_reference(label: str | None, path: str | Path | None = None) -> str | None:
     """Canonical ``<prefix>:<doc>#<symbol>`` anchor for a label.
 

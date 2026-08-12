@@ -52,6 +52,9 @@ BRIDGED_LEAN_STATUSES = {
 }
 LEAN_STATUSES = DIRECT_LEAN_STATUSES | DESCENDED_LEAN_STATUSES | BRIDGED_LEAN_STATUSES
 PROOF_PROVENANCES = {"automated", "hand-written", "unknown"}
+
+# How a property's spec anchor was chosen (see Property.spec_reference_basis).
+SPEC_REFERENCE_BASES = {"named-in-text", "label-default"}
 TYPE_CONSISTENCY = {"ok", "mismatch", "unchecked"}
 
 
@@ -105,6 +108,13 @@ class Property:
     lean_doc_string: str | None = None
     # C5: spec anchor derived from the dataset label vocabulary
     spec_reference: str | None = None
+    # How that anchor was chosen: "named-in-text" when the property's own text
+    # names the symbol, "label-default" when it inherits its label's primary
+    # surface. A reader can tell an item's own claim from an inherited one
+    # without leaving the 01e. Absent when no PER-PROPERTY anchor row exists —
+    # the consensus table anchors by label only, and claiming "label-default"
+    # there would imply a per-property decision nobody made.
+    spec_reference_basis: str | None = None
     # E1 (issue #7): Executable decidable Bool checker / constructive witness
     # for this property's theorem (from data/checker_map.json). Non-null only
     # where a REAL Executable counterpart exists.
@@ -118,7 +128,7 @@ class Property:
         "lean_axioms", "lean_proof_provenance",
         "lean_proof_code", "lean_precondition", "lean_conclusion",
         "lean_type_consistency", "lean_proof_source", "lean_doc_string",
-        "spec_reference", "checker", "witness",
+        "spec_reference", "spec_reference_basis", "checker", "witness",
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -218,11 +228,16 @@ def validate_property(d: dict[str, Any]) -> list[str]:
         problems.append("lean_must_establish must be a list")
 
     for key in ("lean_precondition", "lean_conclusion", "lean_proof_source",
-                "lean_doc_string", "spec_reference", "kurtosis_test",
-                "checker", "witness"):
+                "lean_doc_string", "spec_reference", "spec_reference_basis",
+                "kurtosis_test", "checker", "witness"):
         v = d.get(key)
         if v is not None and not isinstance(v, str):
             problems.append(f"{key} must be a string")
+    basis = d.get("spec_reference_basis")
+    if basis is not None and basis not in SPEC_REFERENCE_BASES:
+        problems.append(f"spec_reference_basis {basis!r} not in {sorted(SPEC_REFERENCE_BASES)}")
+    if basis is not None and not d.get("spec_reference"):
+        problems.append("spec_reference_basis without a spec_reference")
 
     lrde = d.get("lean_referenced_defs_expanded")
     if lrde is not None:

@@ -55,6 +55,7 @@ from typing import Any
 
 from .anchors import spec_reference as _anchor_spec_reference
 from .anchors import spec_reference_for_property as _anchor_spec_reference_for_property
+from .anchors import spec_reference_basis as _anchor_spec_reference_basis
 from .anchors import spec_symbol as _anchor_spec_symbol
 from .health import TheoremHealth, status_for, health_for
 
@@ -400,6 +401,8 @@ def build_property(
         lean_proof_source=lean_proof_source,
         lean_doc_string=lean_doc_string,
         spec_reference=_spec_reference(label, entry["property_id"], entry.get("theorem")),
+        spec_reference_basis=_anchor_spec_reference_basis(
+            entry["property_id"], entry.get("theorem")),
     )
 
 

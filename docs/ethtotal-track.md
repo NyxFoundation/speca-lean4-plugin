@@ -309,6 +309,39 @@ positive this rule removed.
 name the same surface instead of disagreeing. All 43 checklist properties carry
 both.
 
+### What the `01e` itself records
+
+The anchoring has to survive being read on its own — a `#symbol` reference is
+not checkable without knowing which revision of which spec it was verified
+against. So the emitted document carries the provenance, not just the
+references:
+
+```json
+"spec_anchor_tables": [{
+  "reference_prefix": "execution-specs",
+  "spec_source": "ethereum/execution-specs",
+  "spec_revision": "6e4808927cb7140f05c43890b48630afcc368d91",
+  "spec_fork": "prague",
+  "table": "data/anchor_map_execution.json",
+  "verification": "every symbol located in the pinned checkout (file/line recorded per row)"
+}]
+```
+
+Only the tables this document actually used are listed — the header describes
+the document, not the repo's data directory. The gasper 01e lists its own row,
+and the absence of `spec_revision` there is the honest signal that the consensus
+table is dated rather than revision-pinned.
+
+Per property, alongside `covers` and `spec_reference`:
+
+| field | value |
+|---|---|
+| `spec_reference_basis` | `named-in-text` (8) — the property's own text names the symbol; `label-default` (35) — it inherits its label's primary surface |
+
+The field is absent where no per-property anchor row exists (the consensus table
+anchors by label only, and claiming `label-default` there would imply a
+per-property decision nobody made).
+
 ## Honest gaps
 
 - **Anchors are label-level for 35 of 43 checklist items.** They point at the
