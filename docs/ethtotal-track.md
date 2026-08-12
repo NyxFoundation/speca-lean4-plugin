@@ -264,17 +264,61 @@ From the live local export (submodule `a21b9f1`, Lean 4.33.0-rc1):
 | base `01e` properties emitted | 345 (305 must-establish-decomposed) |
 | generated `CHK-*` checklist items | 43 |
 
+## Spec anchoring (execution-specs)
+
+The consensus track anchors each label to a consensus-specs pyspec symbol via
+`data/anchor_map.json`. EthTotal is execution-layer, so its counterpart is
+[`data/anchor_map_execution.json`](../data/anchor_map_execution.json), built by
+`tools/build-el-anchor-map.py` against a pinned
+[`ethereum/execution-specs`](https://github.com/ethereum/execution-specs)
+checkout (EELS, revision and fork recorded in the table).
+
+Judgment and fact are kept apart. Which surface a label corresponds to is
+reviewed judgment and each row states its `why`. Whether the symbol *exists* is
+not asserted: the builder locates every definition in the checkout and records
+`file`/`line`/`kind`, and a symbol it cannot find is a hard error rather than a
+silently dropped row. So an execution-specs bump that renames or moves a symbol
+fails the rebuild instead of leaving a dead anchor.
+
+| label | primary surface |
+|---|---|
+| state-trie | `state_tracker.py#set_account_balance` |
+| transactions | `fork.py#process_transaction` |
+| gas | `fork.py#process_transaction` (settlement happens inside it) |
+| evm | `vm/interpreter.py#process_message` |
+| opcodes | `vm/instructions/system.py#selfdestruct` |
+| database | `state_tracker.py#incorporate_tx_into_block` (journal/commit) |
+| block-processing | `fork.py#apply_body` |
+| precompiles | `vm/precompiled_contracts/mapping.py#PRE_COMPILED_CONTRACTS` |
+| beacon-chain:withdrawal | `fork.py#process_withdrawals` |
+
+The last row is a deliberate mismatch, recorded in the table rather than
+smoothed over: the dataset label is the consensus-side name, but the properties
+carrying it are about the *execution-layer* credit of a withdrawal, so that is
+what they anchor to.
+
+Per-property rows go finer: a property anchors to the surface its own text
+names, recorded as `matched_in_text`, and to the label's primary surface
+otherwise. Of the 43 checklist items, **8 name their surface themselves**; the
+other 35 take the label default. Symbols that are also ordinary English words
+(`balance`, `root`, `state`, …) only count in opcode form (`BALANCE`) — matching
+"…proves balance >= burn amount…" to the BALANCE opcode was a real false
+positive this rule removed.
+
+`covers` now leads with the anchored symbol, so `covers` and `spec_reference`
+name the same surface instead of disagreeing. All 43 checklist properties carry
+both.
+
 ## Honest gaps
 
-- **No `spec_reference`.** `data/anchor_map.json` maps consensus-specs section
-  names to pyspec symbols; EthTotal's labels are execution-layer surfaces with
-  no entry there. The field is absent rather than pointed at a document that
-  does not describe the property. Populating it means an execution-specs
-  (EELS) anchor table — real work, not a rename.
-- **`covers_hint` is unverified.** The hints name execution-specs level state
-  operations (`state.move_ether`, `state.destroy_account`, `trie_set`, …) and
-  opcodes. They are matching hints, not confirmed anchors, and they are never
-  client-specific.
+- **Anchors are label-level for 35 of 43 checklist items.** They point at the
+  right module and a real symbol, but at the label's primary surface rather than
+  the exact function the item is about. `matched_in_text` says which is which,
+  per row.
+- **Anchors are fork-scoped.** The table is built against one named fork
+  (`spec_fork`); a different fork means regenerating, not editing.
+- **`covers_hint` in the curation is still unverified.** It feeds `covers` only
+  when no anchor applies, and is never client-specific.
 - **No recall workstream.** The gasper track has a label-grounded recall
   denominator (`data/label_match_rules.json`, `data/recall_gaps.json`); the
   EthTotal track has none yet, so `verify-recall` is not wired for it. That is

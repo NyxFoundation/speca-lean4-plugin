@@ -54,6 +54,7 @@ from dataclasses import replace
 from typing import Any
 
 from .anchors import spec_reference as _anchor_spec_reference
+from .anchors import spec_reference_for_property as _anchor_spec_reference_for_property
 from .anchors import spec_symbol as _anchor_spec_symbol
 from .health import TheoremHealth, status_for, health_for
 
@@ -84,11 +85,17 @@ _LABEL_SPEC = {
 }
 
 
-def _spec_reference(label: str | None) -> str | None:
-    """C4/C5: consensus-specs anchor derived from the dataset label.
+def _spec_reference(label: str | None, property_id: str | None = None,
+                    theorem: str | None = None) -> str | None:
+    """C4/C5: spec anchor for a property.
 
-    Anchor table first (data/anchor_map.json, C3); inline C5 fallback only when
-    the data file is unavailable."""
+    Per-property row first (the execution-layer table anchors each property to
+    the surface its own text names, when it names one), then the label-level
+    anchor tables (consensus-specs / execution-specs), then the inline C5
+    fallback only when the data files are unavailable."""
+    ref = _anchor_spec_reference_for_property(property_id, theorem)
+    if ref:
+        return ref
     ref = _anchor_spec_reference(label)
     if ref:
         return ref
@@ -357,10 +364,13 @@ def build_property(
     # D5: label from theorem_map entry
     label = entry.get("label")
 
-    # C5: covers is label-grounded first — the label's pyspec symbol leads the
-    # hint list, so with no subgraph match `covers` is a spec symbol, not prose.
+    # C5: covers is anchor-grounded first — with no subgraph match `covers` is a
+    # spec symbol, not prose. The per-property anchor leads when there is one
+    # (so `covers` and `spec_reference` name the same surface rather than
+    # disagreeing), then the label's primary symbol.
     covers_hints = list(entry.get("covers_hint", []))
-    symbol = _label_symbol(label)
+    anchored = _spec_reference(label, entry["property_id"], entry.get("theorem"))
+    symbol = anchored.rsplit("#", 1)[-1] if anchored and "#" in anchored else _label_symbol(label)
     if symbol:
         covers_hints = [symbol] + [h for h in covers_hints if h != symbol]
 
@@ -389,7 +399,7 @@ def build_property(
         lean_conclusion=lean_conclusion,
         lean_proof_source=lean_proof_source,
         lean_doc_string=lean_doc_string,
-        spec_reference=_spec_reference(label),
+        spec_reference=_spec_reference(label, entry["property_id"], entry.get("theorem")),
     )
 
 

@@ -28,6 +28,11 @@ from typing import Any
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 _ANCHOR_MAP = _REPO_ROOT / "data" / "anchor_map.json"
+# Execution-layer counterpart (EthTotal track): same shape, anchored to
+# ethereum/execution-specs instead of consensus-specs. The two label sets are
+# disjoint — a consensus label never resolves here and vice versa — so the
+# lookup order below cannot change any gasper anchor.
+_ANCHOR_MAP_EL = _REPO_ROOT / "data" / "anchor_map_execution.json"
 
 
 def anchor_map_path() -> Path:
@@ -48,23 +53,82 @@ def load_anchor_map(path: str | Path | None = None) -> dict[str, Any] | None:
     return _load(str(path or _ANCHOR_MAP))
 
 
-def spec_anchor(label: str | None, path: str | Path | None = None) -> tuple[str, str] | None:
-    """(spec_doc, spec_symbol) for a dataset label, from the anchor table."""
+def load_execution_anchor_map(path: str | Path | None = None) -> dict[str, Any] | None:
+    """Load the execution-layer anchor table; None when unavailable."""
+    return _load(str(path or _ANCHOR_MAP_EL))
+
+
+def _anchor_row(label: str | None, path: str | Path | None = None
+                ) -> tuple[str, str, str] | None:
+    """(spec_doc, spec_symbol, reference_prefix) for a dataset label.
+
+    Consensus table first (unchanged for every gasper label), then the
+    execution-layer table. Each table names its own reference prefix, so an
+    execution anchor is never mislabelled `consensus-specs:`.
+    """
+    if not label:
+        return None
     m = load_anchor_map(path)
-    if not m or not label:
+    row = ((m or {}).get("labels") or {}).get(label)
+    if row:
+        return str(row["spec_doc"]), str(row["spec_symbol"]), str(
+            (m or {}).get("reference_prefix", "consensus-specs"))
+    if path is not None:
+        # an explicit table was named; do not silently consult another one
         return None
-    row = (m.get("labels") or {}).get(label)
-    if not row:
+    el = load_execution_anchor_map()
+    row = ((el or {}).get("labels") or {}).get(label)
+    if row:
+        return str(row["spec_doc"]), str(row["spec_symbol"]), str(
+            (el or {}).get("reference_prefix", "execution-specs"))
+    return None
+
+
+def spec_anchor(label: str | None, path: str | Path | None = None) -> tuple[str, str] | None:
+    """(spec_doc, spec_symbol) for a dataset label, from the anchor tables."""
+    row = _anchor_row(label, path)
+    return (row[0], row[1]) if row else None
+
+
+def spec_reference_for_property(property_id: str | None,
+                                theorem: str | None = None,
+                                path: str | Path | None = None) -> str | None:
+    """Per-property execution-specs anchor, when the EL table has a row for it.
+
+    More precise than the label default: the row records whether the symbol was
+    matched in the property's own text (`matched_in_text`) or inherited from the
+    label, and `spec_reference` is built from that choice.
+
+    Matching requires the SOURCE THEOREM as well as the id. Property ids are only
+    unique within a track — both the gasper and the EthTotal checklists number
+    their generated items `CHK-GEN-NN` — so an id-only lookup would hand a
+    consensus property an execution-layer anchor.
+    """
+    if not property_id:
         return None
-    return str(row["spec_doc"]), str(row["spec_symbol"])
+    el = load_execution_anchor_map(path)
+    if not el:
+        return None
+    for row in el.get("defs", []):
+        if row.get("property_id") != property_id:
+            continue
+        if theorem is not None and row.get("theorem") != theorem:
+            continue
+        return str(row["spec_reference"])
+    return None
 
 
 def spec_reference(label: str | None, path: str | Path | None = None) -> str | None:
-    """Canonical ``consensus-specs:<doc>#<symbol>`` anchor for a label."""
-    a = spec_anchor(label, path)
-    if a is None:
+    """Canonical ``<prefix>:<doc>#<symbol>`` anchor for a label.
+
+    ``consensus-specs:`` for the consensus labels, ``execution-specs:`` for the
+    execution-layer ones — the prefix comes from whichever table holds the row,
+    never from a guess.
+    """
+    row = _anchor_row(label, path)
+    if row is None:
         return None
-    return f"consensus-specs:{a[0]}#{a[1]}"
+    return f"{row[2]}:{row[0]}#{row[1]}"
 
 
 def spec_symbol(label: str | None, path: str | Path | None = None) -> str | None:

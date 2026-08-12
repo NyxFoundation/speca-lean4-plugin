@@ -1,0 +1,2032 @@
+{
+  "version": 1,
+  "generated_by": "tools/build-el-anchor-map.py",
+  "spec_source": "ethereum/execution-specs",
+  "spec_revision": "6e4808927cb7140f05c43890b48630afcc368d91",
+  "spec_fork": "prague",
+  "reference_prefix": "execution-specs",
+  "note": "Execution-layer counterpart of data/anchor_map.json. That table anchors the consensus labels to consensus-specs pyspec symbols; this one anchors the value-bearing execution labels used by the EthTotal track to EELS symbols. Which surface a label corresponds to is reviewed judgment (see each row's `why`); whether the symbol EXISTS is not asserted — every row was resolved by locating the definition in the pinned checkout, and the file/line recorded. Regenerate after an execution-specs bump: a symbol that moved or was renamed fails the build rather than silently anchoring to nothing. Anchors are fork-scoped (see spec_fork); a different fork means regenerating, not editing.",
+  "labels": {
+    "state-trie": {
+      "spec_doc": "src/ethereum/forks/prague/state_tracker.py",
+      "spec_symbol": "set_account_balance",
+      "spec_symbol_line": 566,
+      "spec_symbol_kind": "function",
+      "why": "account balance persistence and the state root computed from it — the surface a supply/balance reconciliation invariant lives on",
+      "surfaces": [
+        {
+          "symbol": "set_account",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 356,
+          "kind": "function"
+        },
+        {
+          "symbol": "get_account",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 108,
+          "kind": "function"
+        },
+        {
+          "symbol": "extract_block_diff",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 720,
+          "kind": "function"
+        },
+        {
+          "symbol": "compute_state_root",
+          "file": "src/ethereum/state.py",
+          "line": 130,
+          "kind": "method"
+        },
+        {
+          "symbol": "trie_set",
+          "file": "src/ethereum/merkle_patricia_trie.py",
+          "line": 325,
+          "kind": "function"
+        }
+      ]
+    },
+    "transactions": {
+      "spec_doc": "src/ethereum/forks/prague/fork.py",
+      "spec_symbol": "process_transaction",
+      "spec_symbol_line": 814,
+      "spec_symbol_kind": "function",
+      "why": "value transfer and sender debit: where an overdraft, a stale read or a self-transfer would create value",
+      "surfaces": [
+        {
+          "symbol": "move_ether",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 509,
+          "kind": "function"
+        },
+        {
+          "symbol": "check_transaction",
+          "file": "src/ethereum/forks/prague/fork.py",
+          "line": 395,
+          "kind": "function"
+        },
+        {
+          "symbol": "calculate_intrinsic_cost",
+          "file": "src/ethereum/forks/prague/transactions.py",
+          "line": 591,
+          "kind": "function"
+        },
+        {
+          "symbol": "increment_nonce",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 589,
+          "kind": "function"
+        }
+      ]
+    },
+    "gas": {
+      "spec_doc": "src/ethereum/forks/prague/fork.py",
+      "spec_symbol": "process_transaction",
+      "spec_symbol_line": 814,
+      "spec_symbol_kind": "function",
+      "why": "the prepay -> refund/priority-fee/base-fee-burn settlement; the fee split itself is performed inside process_transaction",
+      "surfaces": [
+        {
+          "symbol": "charge_gas",
+          "file": "src/ethereum/forks/prague/vm/gas.py",
+          "line": 222,
+          "kind": "function"
+        },
+        {
+          "symbol": "calculate_intrinsic_cost",
+          "file": "src/ethereum/forks/prague/transactions.py",
+          "line": 591,
+          "kind": "function"
+        },
+        {
+          "symbol": "check_transaction",
+          "file": "src/ethereum/forks/prague/fork.py",
+          "line": 395,
+          "kind": "function"
+        },
+        {
+          "symbol": "calculate_base_fee_per_gas",
+          "file": "src/ethereum/forks/prague/fork.py",
+          "line": 275,
+          "kind": "function"
+        }
+      ]
+    },
+    "evm": {
+      "spec_doc": "src/ethereum/forks/prague/vm/interpreter.py",
+      "spec_symbol": "process_message",
+      "spec_symbol_line": 221,
+      "spec_symbol_kind": "function",
+      "why": "CALL/CREATE value semantics, executed through the message-processing path",
+      "surfaces": [
+        {
+          "symbol": "process_message_call",
+          "file": "src/ethereum/forks/prague/vm/interpreter.py",
+          "line": 92,
+          "kind": "function"
+        },
+        {
+          "symbol": "process_create_message",
+          "file": "src/ethereum/forks/prague/vm/interpreter.py",
+          "line": 161,
+          "kind": "function"
+        },
+        {
+          "symbol": "move_ether",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 509,
+          "kind": "function"
+        }
+      ]
+    },
+    "opcodes": {
+      "spec_doc": "src/ethereum/forks/prague/vm/instructions/system.py",
+      "spec_symbol": "selfdestruct",
+      "spec_symbol_line": 527,
+      "spec_symbol_kind": "function",
+      "why": "account lifecycle at the opcode level: SELFDESTRUCT, storage writes and the empty-account predicate",
+      "surfaces": [
+        {
+          "symbol": "sstore",
+          "file": "src/ethereum/forks/prague/vm/instructions/storage.py",
+          "line": 63,
+          "kind": "function"
+        },
+        {
+          "symbol": "sload",
+          "file": "src/ethereum/forks/prague/vm/instructions/storage.py",
+          "line": 32,
+          "kind": "function"
+        },
+        {
+          "symbol": "balance",
+          "file": "src/ethereum/forks/prague/vm/instructions/environment.py",
+          "line": 57,
+          "kind": "function"
+        },
+        {
+          "symbol": "destroy_account",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 406,
+          "kind": "function"
+        },
+        {
+          "symbol": "account_exists_and_is_empty",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 305,
+          "kind": "function"
+        }
+      ]
+    },
+    "database": {
+      "spec_doc": "src/ethereum/forks/prague/state_tracker.py",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_symbol_line": 691,
+      "spec_symbol_kind": "function",
+      "why": "the journal/commit/rollback path — where a record is made durable, and where an ordering or revert defect corrupts the audit trail",
+      "surfaces": [
+        {
+          "symbol": "copy_tx_state",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 637,
+          "kind": "function"
+        },
+        {
+          "symbol": "restore_tx_state",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 668,
+          "kind": "function"
+        },
+        {
+          "symbol": "extract_block_diff",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 720,
+          "kind": "function"
+        }
+      ]
+    },
+    "block-processing": {
+      "spec_doc": "src/ethereum/forks/prague/fork.py",
+      "spec_symbol": "apply_body",
+      "spec_symbol_line": 712,
+      "spec_symbol_kind": "function",
+      "why": "block-level application of rewards, fees and withdrawals — the mint/burn attribution surface",
+      "surfaces": [
+        {
+          "symbol": "state_transition",
+          "file": "src/ethereum/forks/prague/fork.py",
+          "line": 192,
+          "kind": "function"
+        },
+        {
+          "symbol": "process_withdrawals",
+          "file": "src/ethereum/forks/prague/fork.py",
+          "line": 964,
+          "kind": "function"
+        },
+        {
+          "symbol": "make_receipt",
+          "file": "src/ethereum/forks/prague/fork.py",
+          "line": 546,
+          "kind": "function"
+        },
+        {
+          "symbol": "create_ether",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 543,
+          "kind": "function"
+        }
+      ]
+    },
+    "precompiles": {
+      "spec_doc": "src/ethereum/forks/prague/vm/precompiled_contracts/mapping.py",
+      "spec_symbol": "PRE_COMPILED_CONTRACTS",
+      "spec_symbol_line": 57,
+      "spec_symbol_kind": "function",
+      "why": "the precompile dispatch table; value-forwarding precompile paths enter here",
+      "surfaces": [
+        {
+          "symbol": "process_message_call",
+          "file": "src/ethereum/forks/prague/vm/interpreter.py",
+          "line": 92,
+          "kind": "function"
+        }
+      ]
+    },
+    "beacon-chain:withdrawal": {
+      "spec_doc": "src/ethereum/forks/prague/fork.py",
+      "spec_symbol": "process_withdrawals",
+      "spec_symbol_line": 964,
+      "spec_symbol_kind": "function",
+      "why": "NOTE: the dataset label is the consensus-side name, but the properties it carries here are about the EXECUTION-layer credit of a withdrawal, so the anchored surface is the EL one. Recorded explicitly rather than silently.",
+      "surfaces": [
+        {
+          "symbol": "create_ether",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 543,
+          "kind": "function"
+        },
+        {
+          "symbol": "set_account_balance",
+          "file": "src/ethereum/forks/prague/state_tracker.py",
+          "line": 566,
+          "kind": "function"
+        }
+      ]
+    }
+  },
+  "defs": [
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-001",
+      "theorem": "EthTotal.exact_supply",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-002",
+      "theorem": "EthTotal.exact_supply_on",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-003",
+      "theorem": "EthTotal.supply_diff_eq",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-004",
+      "theorem": "EthTotal.supply_le_of_bal_le_on",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-001",
+      "theorem": "EthTotal.mint_witness_of_bal_lt_on",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-002",
+      "theorem": "EthTotal.burn_witness_of_bal_lt_on",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-003",
+      "theorem": "EthTotal.supply_eq_of_confined_empty",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-004",
+      "theorem": "EthTotal.trace_net_unique",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-005",
+      "theorem": "EthTotal.burn_only_at",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-006",
+      "theorem": "EthTotal.no_growth_without_a_positive_mint",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-001",
+      "theorem": "EthTotal.process_transaction_effect",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-002",
+      "theorem": "EthTotal.admission_iff_guards",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-003",
+      "theorem": "EthTotal.refund_tip_burn_partition_the_prepayment",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-004",
+      "theorem": "EthTotal.escrow_never_underflows",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-005",
+      "theorem": "EthTotal.escrow_leak",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-006",
+      "theorem": "EthTotal.escrow_overdraw",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-007",
+      "theorem": "EthTotal.both_fee_guards_are_independently_necessary",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-001",
+      "theorem": "EthTotal.naive_self_transfer_mints",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-002",
+      "theorem": "EthTotal.specification_forbids_what_the_naive_code_permits",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-003",
+      "theorem": "EthTotal.xfer_overdraft_inflates",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-004",
+      "theorem": "EthTotal.mint_witness_of_overdraft",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-005",
+      "theorem": "EthTotal.Ledger.stale_read_self_duplicates",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-006",
+      "theorem": "EthTotal.Ledger.stale_credit_supply_gap",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-001",
+      "theorem": "EthTotal.overflow_requires_mint",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-002",
+      "theorem": "EthTotal.flash_loan_impossible",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-003",
+      "theorem": "EthTotal.reported_burn_is_saturated",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-004",
+      "theorem": "EthTotal.one_guard_closes_both_leaks",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-005",
+      "theorem": "EthTotal.no_history_survives_below_the_threshold",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-001",
+      "theorem": "EthTotal.Ledger.no_credit_after_destroy",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-002",
+      "theorem": "EthTotal.Ledger.no_write_after_erase",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-003",
+      "theorem": "EthTotal.Ledger.destroy_guard_invalidated_by_credit",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-004",
+      "theorem": "EthTotal.a_self_destruct_burns_exactly_the_balance",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-005",
+      "theorem": "EthTotal.the_burn_comes_from_zeroing_not_from_the_transfer",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-006",
+      "theorem": "EthTotal.guarding_a_transfer_by_nonzero_value_is_not_enough",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-001",
+      "theorem": "EthTotal.Ledger.no_unchecked_write",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-002",
+      "theorem": "EthTotal.a_zero_write_does_not_enlarge_the_support",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-003",
+      "theorem": "EthTotal.a_key_is_stored_exactly_when_its_value_is_nonzero",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-004",
+      "theorem": "EthTotal.writing_the_default_is_deletion",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-005",
+      "theorem": "EthTotal.live_order_is_observable",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-005",
+      "theorem": "EthTotal.the_naive_two_ledger_total_overcounts",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-006",
+      "theorem": "EthTotal.supply_blind_to_owner",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-001",
+      "theorem": "EthTotal.parity_mismatch_is_corruption",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-002",
+      "theorem": "EthTotal.zero_amount_events_are_invisible_to_accounting",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-003",
+      "theorem": "EthTotal.no_total_credit_means_no_account_credit",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-004",
+      "theorem": "EthTotal.site_audit_breaks_under_rename",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-005",
+      "theorem": "EthTotal.no_harmless_append",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-007",
+      "theorem": "EthTotal.balance_alone_cannot_decide_liveness",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-WDR-001",
+      "theorem": "EthTotal.process_withdrawal_effect",
+      "label": "beacon-chain:withdrawal",
+      "spec_symbol": "process_withdrawals",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_withdrawals",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-WDR-002",
+      "theorem": "EthTotal.process_withdrawal_fresh_effect",
+      "label": "beacon-chain:withdrawal",
+      "spec_symbol": "process_withdrawals",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_withdrawals",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-WDR-003",
+      "theorem": "EthTotal.withdrawals_supply_quantized",
+      "label": "beacon-chain:withdrawal",
+      "spec_symbol": "process_withdrawals",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_withdrawals",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-008",
+      "theorem": "EthTotal.process_transaction_destroy_phase",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-009",
+      "theorem": "EthTotal.destroy_chain_supply",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-006",
+      "theorem": "EthTotal.chain_bal_lt_of_cap",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-007",
+      "theorem": "EthTotal.supply_exact_of_confined_no_mint",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-007",
+      "theorem": "EthTotal.a_saturating_debit_keeps_the_shortfall",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-008",
+      "theorem": "EthTotal.Ev.mintAmount_eq_zero_of_mintSite_none",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-001",
+      "theorem": "EthTotal.Distinct.eraseOneOfPoint",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-008",
+      "theorem": "EthTotal.Ledger.bal_eq_zero_of_not_live",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-006",
+      "theorem": "EthTotal.no_common_intermediate_bound",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-009",
+      "theorem": "EthTotal.no_empty_burnSig_of_destroy",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-007",
+      "theorem": "EthTotal.cap_not_additive",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-008",
+      "theorem": "EthTotal.no_halving_and_no_choice",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-008",
+      "theorem": "EthTotal.Bal.non_constant_not_central",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-007",
+      "theorem": "EthTotal.burn_audit_independent_of_cut",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-008",
+      "theorem": "EthTotal.no_trace_with_wrong_parity",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-009",
+      "theorem": "EthTotal.churn_does_not_depend_on_the_covering",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-009",
+      "theorem": "EthTotal.balPos_not_supplyDetermined",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-010",
+      "theorem": "EthTotal.any_reshuffling_records_as_the_empty_log",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-010",
+      "theorem": "EthTotal.Ledger.credit_destroy_order_matters",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-011",
+      "theorem": "EthTotal.a_stage_outside_the_interval_inflates_the_report",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-012",
+      "theorem": "EthTotal.total_is_not_multiplicative",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-013",
+      "theorem": "EthTotal.Bal.meet_is_not_a_grading",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-011",
+      "theorem": "EthTotal.Ledger.supply_eraseLive_comm",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-014",
+      "theorem": "EthTotal.supply_drop_forbids_zero_burn",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-015",
+      "theorem": "EthTotal.net_hides_steps",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-016",
+      "theorem": "EthTotal.Bal.meet_superadditive",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-017",
+      "theorem": "EthTotal.Bal.no_burn_bound",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-012",
+      "theorem": "EthTotal.empty_account_is_not_determined_by_balance",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-009",
+      "theorem": "EthTotal.Bal.net_not_determine_hom",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ARITH-010",
+      "theorem": "EthTotal.Bal.sqrt_exists_iff_even",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-018",
+      "theorem": "EthTotal.no_central_endo_record",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-019",
+      "theorem": "EthTotal.head_of_mintOnly_not_burn",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-020",
+      "theorem": "EthTotal.normalize_blind_to_empty_accounts",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-002",
+      "theorem": "EthTotal.no_cross_fiber_ranking",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-021",
+      "theorem": "EthTotal.key_order_not_transfer",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-022",
+      "theorem": "EthTotal.Bal.orthogonal_forbids_mint",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-007",
+      "theorem": "EthTotal.no_empty_mintSig_of_overdraft",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-023",
+      "theorem": "EthTotal.NeutralPath.moved_zero_does_not_bound_length",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-024",
+      "theorem": "EthTotal.account_counts_do_not_bound_xfers",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-025",
+      "theorem": "EthTotal.shortPath_length_le",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-026",
+      "theorem": "EthTotal.no_halving_of_odd",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-003",
+      "theorem": "EthTotal.supply_determines_reach_but_not_cost",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-027",
+      "theorem": "EthTotal.ConfinedRecorded.no_preimage_under_widening",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-028",
+      "theorem": "EthTotal.the_omitted_entry_is_not_recoverable",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-029",
+      "theorem": "EthTotal.Accounting.round_trip_not_id",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-030",
+      "theorem": "EthTotal.no_self_normalization_at_zero_measure",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-010",
+      "theorem": "EthTotal.confinement_not_unique_as_order",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-031",
+      "theorem": "EthTotal.normalization_leaks_a_choice",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-032",
+      "theorem": "EthTotal.sorting_erases_the_interleaving",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-006",
+      "theorem": "EthTotal.pointwise_agreement_is_not_equality",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-010",
+      "theorem": "EthTotal.not_xferReach_of_owner_ne",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-007",
+      "theorem": "EthTotal.no_total_kernel_enumeration",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-033",
+      "theorem": "EthTotal.a_credit_total_is_pinned_by_single_events",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-034",
+      "theorem": "EthTotal.Recorded.no_endo_record_of_unbalanced",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-008",
+      "theorem": "EthTotal.the_double_entry_counter_is_pinned_by_its_gross_total",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-009",
+      "theorem": "EthTotal.Ledger.supply_of_fresh_write",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-004",
+      "theorem": "EthTotal.Bal.no_sqrt_of_parity_ne",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-005",
+      "theorem": "EthTotal.eraseOne_of_notMem",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-011",
+      "theorem": "EthTotal.Ledger.supply_acc_chain",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-013",
+      "theorem": "EthTotal.Ledger.eraseLive_mem_iff",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-PERS-010",
+      "theorem": "EthTotal.Ledger.no_ledger_valuing_offLive",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-012",
+      "theorem": "EthTotal.Ledger.setBal_setBal_comm",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-LIFE-014",
+      "theorem": "EthTotal.Ledger.destroy_bal_reflect",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-008",
+      "theorem": "EthTotal.Ledger.xfer_bal_le_of_ne_srcOfPoint",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-009",
+      "theorem": "EthTotal.Ledger.xfer_bal_le_of_ne_src",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-010",
+      "theorem": "EthTotal.Ledger.xfer_bal_le_of_ne_dstOfPoint",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-011",
+      "theorem": "EthTotal.Ledger.xfer_bal_le_of_ne_dst",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-012",
+      "theorem": "EthTotal.Ledger.destroy_bal_le_of_ne",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-013",
+      "theorem": "EthTotal.Ledger.bal_le_setBalOfPoint_add",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-009",
+      "theorem": "EthTotal.escrow_guard",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-010",
+      "theorem": "EthTotal.fee_split",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-011",
+      "theorem": "EthTotal.escrow_step",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-012",
+      "theorem": "EthTotal.escrow_after",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-013",
+      "theorem": "EthTotal.Ledger.acc_destroy",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-014",
+      "theorem": "EthTotal.Ledger.acc_destroy_net",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-015",
+      "theorem": "EthTotal.Ledger.acc_setBal_add",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-016",
+      "theorem": "EthTotal.Ledger.acc_setBal_sub",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-017",
+      "theorem": "EthTotal.Ledger.acc_burn",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-018",
+      "theorem": "EthTotal.Ledger.acc_setBal_zero",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-011",
+      "theorem": "EthTotal.siteConfined_nil_nil_iff",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-012",
+      "theorem": "EthTotal.site_mem_mintSites",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-013",
+      "theorem": "EthTotal.site_mem_burnSites",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-014",
+      "theorem": "EthTotal.mintSiteWeight_of_site",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-015",
+      "theorem": "EthTotal.burnSiteWeight_of_site",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-016",
+      "theorem": "EthTotal.normalizeSig_preserves_sites_not_minted",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-019",
+      "theorem": "EthTotal.Ledger.xfer_supply_neutral_iff",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-020",
+      "theorem": "EthTotal.Ledger.supply_destroy",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-021",
+      "theorem": "EthTotal.ExactLedger.live_ne_nil_iff",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-022",
+      "theorem": "EthTotal.Ledger.supply_setBal",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-023",
+      "theorem": "EthTotal.Ledger.supply_removeLive",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-024",
+      "theorem": "EthTotal.Ledger.supply_eraseLive",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-035",
+      "theorem": "EthTotal.mem_mintPairs_iff",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-036",
+      "theorem": "EthTotal.mem_burnPairs_iff",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-037",
+      "theorem": "EthTotal.Ev.eq_of_measurements",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-038",
+      "theorem": "EthTotal.Ev.swap_ne",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-039",
+      "theorem": "EthTotal.mintSites_conj_ne_conjOnly",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-REC-040",
+      "theorem": "EthTotal.Trace.sortByPolarity_ne_dual",
+      "label": "database",
+      "spec_symbol": "incorporate_tx_into_block",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#incorporate_tx_into_block",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-006",
+      "theorem": "EthTotal.NeutralReach.consolidate_acc",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-007",
+      "theorem": "EthTotal.Ledger.setBal_bal_id_iff",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-008",
+      "theorem": "EthTotal.debitCreditIsClosureOperator_apply",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-014",
+      "theorem": "EthTotal.debit_credit_exact_iff",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-015",
+      "theorem": "EthTotal.exact_iff_clopen_boundary",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-016",
+      "theorem": "EthTotal.debit_credit_eq_max",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-017",
+      "theorem": "EthTotal.le_debit_credit",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-018",
+      "theorem": "EthTotal.debitCreditIsClosure",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-019",
+      "theorem": "EthTotal.debitCreditIsClosureOperator",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-013",
+      "theorem": "EthTotal.model_supply",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-014",
+      "theorem": "EthTotal.model_distinct",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-015",
+      "theorem": "EthTotal.model_mem_sender",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-016",
+      "theorem": "EthTotal.model_mem_escrow",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-017",
+      "theorem": "EthTotal.model_mem_coinbase",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-FEE-018",
+      "theorem": "EthTotal.model_mem_recipient",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-020",
+      "theorem": "EthTotal.process_transaction_of_reach",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-021",
+      "theorem": "EthTotal.process_transaction_of_neutral",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-022",
+      "theorem": "EthTotal.process_transaction_destroy_effect",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-XFER-023",
+      "theorem": "EthTotal.eels_escrow_supply_eq",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-009",
+      "theorem": "EthTotal.xferReach_iff_net_zero",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-MODEL-010",
+      "theorem": "EthTotal.Recorded.realize_trace_ne_nil",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-017",
+      "theorem": "EthTotal.Recorded.net_unique",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-018",
+      "theorem": "EthTotal.ConfinedRecorded.chain_burn_witness_of_bal_lt_on",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-025",
+      "theorem": "EthTotal.le_supply_of_le_bal_on",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-026",
+      "theorem": "EthTotal.supply_eq_of_bal_eq_on",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-SUP-027",
+      "theorem": "EthTotal.lt_supply_of_lt_bal_on",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-019",
+      "theorem": "EthTotal.not_lt_supply_of_confined_no_mint",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-020",
+      "theorem": "EthTotal.not_supply_lt_of_confined_no_burn",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "PROP-lean-ethtotal-ATTR-021",
+      "theorem": "EthTotal.supply_le_of_not_lt",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-01",
+      "theorem": "EthTotal.Ledger.destroy_guard_invalidated_by_credit",
+      "label": "opcodes",
+      "spec_symbol": "destroy_account",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#destroy_account",
+      "matched_in_text": true
+    },
+    {
+      "property_id": "CHK-GEN-02",
+      "theorem": "EthTotal.Ledger.no_credit_after_destroy",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-03",
+      "theorem": "EthTotal.Ledger.no_write_after_erase",
+      "label": "opcodes",
+      "spec_symbol": "destroy_account",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#destroy_account",
+      "matched_in_text": true
+    },
+    {
+      "property_id": "CHK-GEN-04",
+      "theorem": "EthTotal.Ledger.stale_credit_supply_gap",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-05",
+      "theorem": "EthTotal.Ledger.stale_read_self_duplicates",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-06",
+      "theorem": "EthTotal.a_key_is_stored_exactly_when_its_value_is_nonzero",
+      "label": "state-trie",
+      "spec_symbol": "trie_set",
+      "spec_reference": "execution-specs:src/ethereum/merkle_patricia_trie.py#trie_set",
+      "matched_in_text": true
+    },
+    {
+      "property_id": "CHK-GEN-07",
+      "theorem": "EthTotal.a_saturating_debit_keeps_the_shortfall",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-08",
+      "theorem": "EthTotal.a_self_destruct_burns_exactly_the_balance",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-09",
+      "theorem": "EthTotal.a_zero_write_does_not_enlarge_the_support",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-10",
+      "theorem": "EthTotal.admission_iff_guards",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": true
+    },
+    {
+      "property_id": "CHK-GEN-11",
+      "theorem": "EthTotal.burn_only_at",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-12",
+      "theorem": "EthTotal.burn_witness_of_bal_lt_on",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-13",
+      "theorem": "EthTotal.chain_bal_lt_of_cap",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-14",
+      "theorem": "EthTotal.escrow_leak",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-15",
+      "theorem": "EthTotal.escrow_never_underflows",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-16",
+      "theorem": "EthTotal.escrow_overdraw",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-17",
+      "theorem": "EthTotal.exact_supply",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-18",
+      "theorem": "EthTotal.flash_loan_impossible",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-19",
+      "theorem": "EthTotal.guarding_a_transfer_by_nonzero_value_is_not_enough",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-20",
+      "theorem": "EthTotal.mint_witness_of_bal_lt_on",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-21",
+      "theorem": "EthTotal.mint_witness_of_overdraft",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-22",
+      "theorem": "EthTotal.naive_self_transfer_mints",
+      "label": "transactions",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-23",
+      "theorem": "EthTotal.no_growth_without_a_positive_mint",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-24",
+      "theorem": "EthTotal.one_guard_closes_both_leaks",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-25",
+      "theorem": "EthTotal.overflow_requires_mint",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-26",
+      "theorem": "EthTotal.process_transaction_effect",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-27",
+      "theorem": "EthTotal.process_withdrawal_effect",
+      "label": "beacon-chain:withdrawal",
+      "spec_symbol": "process_withdrawals",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_withdrawals",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-28",
+      "theorem": "EthTotal.process_withdrawal_fresh_effect",
+      "label": "beacon-chain:withdrawal",
+      "spec_symbol": "process_withdrawals",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_withdrawals",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-29",
+      "theorem": "EthTotal.supply_diff_eq",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-30",
+      "theorem": "EthTotal.supply_eq_of_confined_empty",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-31",
+      "theorem": "EthTotal.the_burn_comes_from_zeroing_not_from_the_transfer",
+      "label": "opcodes",
+      "spec_symbol": "selfdestruct",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py#selfdestruct",
+      "matched_in_text": true
+    },
+    {
+      "property_id": "CHK-GEN-32",
+      "theorem": "EthTotal.the_naive_two_ledger_total_overcounts",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-33",
+      "theorem": "EthTotal.writing_the_default_is_deletion",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-34",
+      "theorem": "EthTotal.xfer_overdraft_inflates",
+      "label": "transactions",
+      "spec_symbol": "move_ether",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#move_ether",
+      "matched_in_text": true
+    },
+    {
+      "property_id": "CHK-GEN-35",
+      "theorem": "EthTotal.Ledger.no_unchecked_write",
+      "label": "state-trie",
+      "spec_symbol": "get_account",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#get_account",
+      "matched_in_text": true
+    },
+    {
+      "property_id": "CHK-GEN-36",
+      "theorem": "EthTotal.both_fee_guards_are_independently_necessary",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-37",
+      "theorem": "EthTotal.exact_supply_on",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-38",
+      "theorem": "EthTotal.refund_tip_burn_partition_the_prepayment",
+      "label": "gas",
+      "spec_symbol": "process_transaction",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#process_transaction",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-39",
+      "theorem": "EthTotal.reported_burn_is_saturated",
+      "label": "evm",
+      "spec_symbol": "process_message",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-40",
+      "theorem": "EthTotal.specification_forbids_what_the_naive_code_permits",
+      "label": "transactions",
+      "spec_symbol": "move_ether",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#move_ether",
+      "matched_in_text": true
+    },
+    {
+      "property_id": "CHK-GEN-41",
+      "theorem": "EthTotal.supply_exact_of_confined_no_mint",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-42",
+      "theorem": "EthTotal.supply_le_of_bal_le_on",
+      "label": "state-trie",
+      "spec_symbol": "set_account_balance",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/state_tracker.py#set_account_balance",
+      "matched_in_text": false
+    },
+    {
+      "property_id": "CHK-GEN-43",
+      "theorem": "EthTotal.trace_net_unique",
+      "label": "block-processing",
+      "spec_symbol": "apply_body",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/fork.py#apply_body",
+      "matched_in_text": false
+    }
+  ]
+}

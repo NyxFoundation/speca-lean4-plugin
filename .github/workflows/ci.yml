@@ -156,7 +156,15 @@ jobs:
           assert props, 'no properties emitted'
           bad = [p['property_id'] for p in props if p['lean_status'] not in ('proved', 'descends-from-proved')]
           assert not bad, f'non-proved lean_status: {bad[:5]}'
-          print(f'OK: {len(props)} EthTotal properties, all proved or descends-from-proved')
+          # execution-specs anchoring: every property carries a spec_reference,
+          # and covers names the same surface it points at
+          noref = [p['property_id'] for p in props if not p.get('spec_reference')]
+          assert not noref, f'missing spec_reference: {noref[:5]}'
+          split = [p['property_id'] for p in props
+                   if p['covers'] != p['spec_reference'].rsplit('#', 1)[-1]]
+          assert not split, f'covers disagrees with spec_reference: {split[:5]}'
+          print(f'OK: {len(props)} EthTotal properties, all proved or descends-from-proved,')
+          print(f'    all anchored to execution-specs with covers == anchor symbol')
           "
 
   lean:

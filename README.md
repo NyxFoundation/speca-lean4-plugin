@@ -54,6 +54,13 @@ concretized into a `CHK-*` implementation checklist that the stage-2 judge →
 improve loop sharpens against an execution-layer slice of
 `ethereum-vuln-dataset`.
 
+Spec anchoring is per-layer: the consensus labels resolve through
+`data/anchor_map.json` to consensus-specs pyspec symbols, the execution-layer
+ones through `data/anchor_map_execution.json` to
+[`ethereum/execution-specs`](https://github.com/ethereum/execution-specs)
+symbols, each row verified (file + line) against a pinned checkout by
+`tools/build-el-anchor-map.py`.
+
 The two tracks share one exporter: `SpecaExport` is parameterized by a
 `ProjectConfig` (namespace, project name, model assumptions), with
 `gasperConfig` holding exactly the previous hardcoded values — the gasper export

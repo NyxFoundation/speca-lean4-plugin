@@ -4,7 +4,7 @@
   "folder": "outputs/20260812-ethtotal",
   "file": "01e_PARTIAL_ethtotal.json",
   "plugin_repo": "NyxFoundation/speca-lean4-plugin",
-  "plugin_commit": "4c03b34f5e83d564215dbe943a402cc37271f6c1",
+  "plugin_commit": "714c8f8b3a4ee67efcde16f0b24bd2b4c0c939b7",
   "theorem_map": "theorem_map_ethtotal.json",
   "property_count": 43,
   "checklist_count": 43,

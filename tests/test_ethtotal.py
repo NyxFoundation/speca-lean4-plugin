@@ -185,3 +185,56 @@ def test_export_reports_no_project_axioms(health):
     export must agree, or one of the two is wrong."""
     for name, h in health.items():
         assert not h.get("project_axioms"), f"{name}: non-builtin axioms {h['project_axioms']}"
+
+
+# --- 6. the execution-layer anchor table -----------------------------------
+
+_EL_ANCHORS = _ROOT / "data" / "anchor_map_execution.json"
+
+
+@pytest.fixture(scope="module")
+def el_anchors() -> dict:
+    return _load(_EL_ANCHORS)
+
+
+def test_every_el_anchor_is_verified_against_a_pinned_revision(el_anchors):
+    """Rows carry the file and line the symbol was found at, so a spec bump that
+    moves or renames a symbol is detectable rather than silently stale."""
+    assert el_anchors["spec_source"] == "ethereum/execution-specs"
+    assert len(el_anchors["spec_revision"]) == 40
+    assert el_anchors["spec_fork"]
+    for label, row in el_anchors["labels"].items():
+        assert row["spec_doc"].endswith(".py"), label
+        assert row["spec_symbol_line"] > 0, label
+        assert row["spec_symbol_kind"] in {"function", "method"}, label
+        assert row["why"].strip(), label
+        for s in row["surfaces"]:
+            assert s["line"] > 0 and s["file"].endswith(".py"), (label, s)
+
+
+def test_every_mapped_label_has_an_el_anchor(theorem_map, el_anchors):
+    for e in theorem_map["properties"]:
+        assert e["label"] in el_anchors["labels"], (
+            f"{e['property_id']}: label {e['label']!r} has no execution-specs anchor"
+        )
+
+
+def test_el_anchor_rows_cover_every_property_and_name_their_theorem(theorem_map, el_anchors):
+    """Rows are keyed by (property_id, theorem): ids alone are only unique within
+    a track — both checklists number generated items CHK-GEN-NN — so an id-only
+    row would hand a consensus property an execution-layer anchor."""
+    rows = {(r["property_id"], r["theorem"]) for r in el_anchors["defs"]}
+    for e in theorem_map["properties"]:
+        assert (e["property_id"], e["theorem"]) in rows, e["property_id"]
+    for r in el_anchors["defs"]:
+        assert r["theorem"].startswith("EthTotal."), r["property_id"]
+        assert r["spec_reference"].startswith("execution-specs:"), r["property_id"]
+        assert isinstance(r["matched_in_text"], bool)
+
+
+def test_gasper_properties_never_pick_up_an_el_anchor():
+    from speca_lean4.anchors import spec_reference_for_property
+    el = _load(_EL_ANCHORS)
+    shared_id = next(r["property_id"] for r in el["defs"]
+                     if r["property_id"].startswith("CHK-GEN-"))
+    assert spec_reference_for_property(shared_id, "GasperBeaconChain.Core.k_safety'") is None
