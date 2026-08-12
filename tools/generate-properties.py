@@ -273,7 +273,7 @@ def main() -> int:
         # rather than dropping the theorem (important for the critical/high ones).
         prompt = build_generate_prompt(c)
         prop, why = None, "gen fail"
-        for attempt in range(3):
+        for attempt in range(4):
             try:
                 obj = _extract_json(gen(prompt))
             except Exception as e:
@@ -282,11 +282,18 @@ def main() -> int:
             if prop:
                 break
             if ">" in why and "chars" not in why and "name" not in why:
-                # length overflow -> ask for a terser rewrite and retry
+                # Length overflow -> ask for a terser rewrite and retry. Ask for
+                # a budget BELOW the cap and tighten it each attempt: asking for
+                # exactly the cap reliably lands a few characters over it, which
+                # used to lose the item entirely (8 of 45 on the first EthTotal
+                # generation run, several of them the most audit-relevant).
+                budget = max(140, TEXT_MAX - 40 * (attempt + 1))
+                a_budget = max(90, ASSERTION_MAX - 20 * (attempt + 1))
                 prompt = (build_generate_prompt(c) +
                           f"\n\nSTRICT RETRY: your previous answer was REJECTED for being too long "
-                          f"({why}). Return TEXT <= {TEXT_MAX} chars and ASSERTION <= {ASSERTION_MAX} "
-                          f"chars — be terse, drop examples, keep the one core check.")
+                          f"({why}). Return TEXT <= {budget} chars and ASSERTION <= {a_budget} "
+                          f"chars — hard limits, count them. Be terse: drop examples and "
+                          f"parentheticals, keep the one core check as a single imperative clause.")
                 continue
             break
         if not prop:

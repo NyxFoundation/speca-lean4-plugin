@@ -1,5 +1,11 @@
 # Pipeline — end-to-end execution flow and artifact locations
 
+> Scope: this page describes the **gasper track** (`theorem_map.json`,
+> `lean/`, gasper-lean4). The second target — eth-total-supply-safety, via the
+> `external/eth-total-supply-safety` submodule and the `lean-ethtotal/`
+> workspace — has the same shape but its own inputs, tools and artifact
+> locations, documented in [`ethtotal-track.md`](ethtotal-track.md).
+
 Consolidated reference for what runs, in what order, and where every artifact
 lands. Paths are derived from the code (`src/speca_lean4/cli.py`,
 `src/speca_lean4/kurtosis.py`, `lean/Main.lean`) and the CI workflow

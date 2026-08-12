@@ -135,6 +135,29 @@ jobs:
           print('OK: judge report + improve score log written with the mock adapter;',
                 f\"converged={log['converged']} ({log['stop_reason']})\")
           "
+      - name: ethtotal track — emit 01e from the versioned trimmed health (no Lean needed)
+        # The EthTotal exporter runs on a different toolchain (4.33.0-rc1) and a
+        # mathlib restore of its own, so it is not built here. What IS checked
+        # here is everything downstream of it: the map builds from the reviewed
+        # data files, and the 01e emits with every property `proved` against the
+        # trimmed export that is versioned in the repo.
+        run: |
+          python3 tools/ethtotal-build-map.py
+          git diff --exit-code theorem_map_ethtotal.json \
+            || (echo "theorem_map_ethtotal.json is stale — rerun tools/ethtotal-build-map.py" && exit 1)
+          speca-lean4 emit-01e \
+            --map theorem_map_ethtotal.json \
+            --scope tests/fixtures/bug_bounty_scope.ethtotal.sample.json \
+            --health-json lean-ethtotal/health.mapped.json \
+            --out 01e_ethtotal.json
+          python3 -c "
+          import json
+          props = json.load(open('01e_ethtotal.json', encoding='utf-8'))['properties']
+          assert props, 'no properties emitted'
+          bad = [p['property_id'] for p in props if p['lean_status'] not in ('proved', 'descends-from-proved')]
+          assert not bad, f'non-proved lean_status: {bad[:5]}'
+          print(f'OK: {len(props)} EthTotal properties, all proved or descends-from-proved')
+          "
 
   lean:
     name: lean exporter build

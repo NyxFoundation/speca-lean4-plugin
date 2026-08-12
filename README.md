@@ -36,6 +36,29 @@ into SPECA `01e` security properties.
 > hand-written text is not Lean-verified, only the theorem it descends from
 > is. Design: [`docs/high-angle-checklist.md`](docs/high-angle-checklist.md).
 
+## Two formalization targets
+
+| track | source | layer | map | workspace |
+|---|---|---|---|---|
+| **gasper** | [`gasper-lean4`](https://github.com/NyxFoundation/gasper-lean4) (git dep) | consensus — Casper FFG accountable safety | `theorem_map.json` | `lean/` (Lean 4.31.0) |
+| **ethtotal** | [`eth-total-supply-safety`](https://github.com/NyxFoundation/eth-total-supply-safety) (submodule at `external/`) | execution — total-supply & ledger accounting | `theorem_map_ethtotal.json` | `lean-ethtotal/` (Lean 4.33.0-rc1) |
+
+Everything below describes the gasper track unless stated otherwise; the second
+track has its own end-to-end write-up in
+[`docs/ethtotal-track.md`](docs/ethtotal-track.md). Short version: all **3333**
+theorems of the EthTotal development are exported and certified
+(`lean_status: proved`, zero non-builtin axioms), every one of them is bucketed
+by a reviewable triage so the `Lemmata/` layer is swept rather than sampled, 176
+become base entries (55 reviewed + 121 derived), and the CRITICAL/HIGH ones are
+concretized into a `CHK-*` implementation checklist that the stage-2 judge →
+improve loop sharpens against an execution-layer slice of
+`ethereum-vuln-dataset`.
+
+The two tracks share one exporter: `SpecaExport` is parameterized by a
+`ProjectConfig` (namespace, project name, model assumptions), with
+`gasperConfig` holding exactly the previous hardcoded values — the gasper export
+is byte-compatible, `gasper_axioms` included.
+
 ## Why a plugin (not vendored into speca)
 
 Per speca#87/#88 the Lean/`lake` toolchain stays out of core `speca`. `speca`

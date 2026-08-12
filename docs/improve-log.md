@@ -11,6 +11,32 @@ Run the loop with `tools/run-improve.sh`; persist with `tools/apply-improved.py`
 
 <!-- newest first -->
 
+## 2026-08-12 — EthTotal track, first run (43 CHK generated, 22 sharpened)
+
+First stage-2 run on the **second formalization target**
+(eth-total-supply-safety; see [`ethtotal-track.md`](ethtotal-track.md)). Run it
+with `tools/run-improve-ethtotal.sh`; persist into
+`data/ethtotal_generated_properties.json` (NOT the map — the map is a build
+product) and rebuild with `tools/ethtotal-build-map.py`.
+
+- **judge**: cross-family via Hermes (`tools/llm-hermes.sh`) — doubles as the self-preference check
+- **improve**: `claude -p` (speca#143 defensive class-only prompt)
+- **teaching corpus**: `data/ethtotal_vulns_high.csv` — the ethereum-vuln-dataset critical/high population restricted by label to the value-bearing execution surfaces (44 rows), vendored by `tools/vendor-ethtotal-vulns.py`
+- **generation** (`--cover-all`, floor 3.5): 45 CRITICAL/HIGH theorems → 34 kept, 3 below floor, 8 lost to the 260-char cap; a second pass with a tightened retry budget recovered 9 of the 11 leftovers → **43 CHK-\* items**
+- **baseline vs the bar**: ours **4.284** (n=43) vs solodit reference **2.742** (n=52), `meets_reference_bar: true` with no axis gap — the bar was cleared *before* any sharpening, so the loop was raising an already-passing checklist
+- **score progression** (overall mean): 4.209 → 4.470 → 4.572 → 4.591 (4 rounds; 16 + 5 + 1 = 22 items sharpened of 33 candidates)
+- **convergence**: `converged: false`, `max_rounds_reached_without_convergence` — the last round's gain (+0.019) is flat, but the plateau rule needs 3 consecutive flat rounds and `--max-rounds 3` cut the run first. Reported as it happened rather than rounded up to "converged".
+- **applied**: 21 CHK entries (`tools/apply-improved.py --map data/ethtotal_generated_properties.json`)
+- **audit source emitted**: `outputs/20260812-ethtotal/01e_PARTIAL_ethtotal.json` (43 properties, CRITICAL 11 / HIGH 32, all `descends-from-proved`)
+
+Example: CHK-GEN-17 (from `exact_supply`) "…routes through the single
+account-update primitive that writes the trie and adjusts the running supply
+total…" → "…is applied via the state writer that records the account in the
+commit/journal set, so no path mutates a cached account struct in place;
+**otherwise the committed trie root omits the change and diverges from peers'
+state root**" — the sharpening added the failure consequence that makes the
+check auditable, not just statable.
+
 ## 2026-07-23 — run 1 (10 CHK sharpened)
 
 - **judge**: kimi-k2.6 via Hermes (`custom:ollama-cloud`) — cross-family, doubles as the self-preference check

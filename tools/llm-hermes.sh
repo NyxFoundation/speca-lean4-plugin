@@ -19,6 +19,17 @@
 #     --llm-cmd "bash tools/llm-hermes.sh -m kimi-k2.6 --provider custom:ollama-cloud"
 #
 # No API key is read or forwarded by this script; auth lives in the Hermes CLI.
+#
+# Resolving the binary: on a NixOS workstation `hermes` is often only a zsh
+# alias to a /nix/store path, so it is invisible to this (bash) script. Set
+# HERMES_BIN to point at it, e.g.
+#   export HERMES_BIN="$(zsh -ic 'alias hermes' | cut -d= -f2-)"
+# Otherwise PATH is used.
 set -euo pipefail
+HERMES_BIN="${HERMES_BIN:-hermes}"
+if ! command -v "$HERMES_BIN" >/dev/null 2>&1; then
+    echo "llm-hermes.sh: '$HERMES_BIN' not found on PATH — set HERMES_BIN to the hermes binary" >&2
+    exit 127
+fi
 prompt="$(cat)"
-exec hermes -z "$prompt" -t "" "$@"
+exec "$HERMES_BIN" -z "$prompt" -t "" "$@"
