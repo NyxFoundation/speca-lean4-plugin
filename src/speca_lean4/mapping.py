@@ -403,6 +403,15 @@ def build_property(
         spec_reference=_spec_reference(label, entry["property_id"], entry.get("theorem")),
         spec_reference_basis=_anchor_spec_reference_basis(
             entry["property_id"], entry.get("theorem")),
+        x_evidence_id=entry.get("x_evidence_id"),
+        x_evidence_sha256=entry.get("x_evidence_sha256"),
+        x_evidence_kind=entry.get("x_evidence_kind"),
+        x_fidelity_verdict=entry.get("x_fidelity_verdict"),
+        x_fidelity_reason=entry.get("x_fidelity_reason"),
+        x_fidelity_model=entry.get("x_fidelity_model"),
+        x_lean_obligation=entry.get("x_lean_obligation"),
+        x_lean_obligation_head=entry.get("x_lean_obligation_head"),
+        x_lean_obligation_name=entry.get("x_lean_obligation_name"),
     )
 
 

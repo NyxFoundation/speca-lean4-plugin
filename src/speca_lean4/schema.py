@@ -115,6 +115,18 @@ class Property:
     # the consensus table anchors by label only, and claiming "label-default"
     # there would imply a per-property decision nobody made.
     spec_reference_basis: str | None = None
+    # Proof-aware stage-2 provenance. These identify the exact Lean evidence
+    # payload and the one obligation selected by the generator; they are
+    # additive documentation fields and do not certify the checklist prose.
+    x_evidence_id: str | None = None
+    x_evidence_sha256: str | None = None
+    x_evidence_kind: str | None = None
+    x_fidelity_verdict: str | None = None
+    x_fidelity_reason: str | None = None
+    x_fidelity_model: str | None = None
+    x_lean_obligation: str | None = None
+    x_lean_obligation_head: str | None = None
+    x_lean_obligation_name: str | None = None
     # E1 (issue #7): Executable decidable Bool checker / constructive witness
     # for this property's theorem (from data/checker_map.json). Non-null only
     # where a REAL Executable counterpart exists.
@@ -129,6 +141,9 @@ class Property:
         "lean_proof_code", "lean_precondition", "lean_conclusion",
         "lean_type_consistency", "lean_proof_source", "lean_doc_string",
         "spec_reference", "spec_reference_basis", "checker", "witness",
+        "x_evidence_id", "x_evidence_sha256", "x_evidence_kind",
+        "x_fidelity_verdict", "x_fidelity_reason", "x_fidelity_model",
+        "x_lean_obligation", "x_lean_obligation_head", "x_lean_obligation_name",
     )
 
     def to_dict(self) -> dict[str, Any]:

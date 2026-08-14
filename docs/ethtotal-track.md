@@ -117,9 +117,18 @@ claim one.
 
 `theorem_map_ethtotal.json` is a **build product** — do not hand-edit it; edit
 the curation or the generated-properties file and rebuild. It carries 176 base
-entries (11 CRITICAL / 34 HIGH / 131 MEDIUM) plus the CHK-* overlay.
+entries (11 CRITICAL / 34 HIGH / 131 MEDIUM) plus the current 45-item CHK-*
+overlay (221 entries total).
 
-Generation is the `--cover-all` mode: every CRITICAL/HIGH base entry with no
+The proof-aware run on 2026-08-14 used the live
+`lean-ethtotal/health.json` export and `claude -p`. Each generated item records
+the exact evidence id/hash and selected Lean obligation. A separate fidelity
+review checked all 45 items against the same evidence: 1 was faithful and 44
+were repaired. The resulting concrete artifact is
+`outputs/20260814-ethtotal/01e_PARTIAL_ethtotal.json`; quality judging remains a separate
+step and is not represented by this fidelity count.
+
+The historical generation run was the `--cover-all` mode: every CRITICAL/HIGH base entry with no
 concrete CHK twin is concretized against the most dataset-prevalent
 critical/high defect class for its label, judged blind by a **cross-family**
 model (Hermes/kimi, not the generating model), and kept only above the score
@@ -149,7 +158,11 @@ account-destruction results whose audit surface is substantially covered by
 `the_burn_comes_from_zeroing_not_from_the_transfer` and `no_credit_after_destroy`,
 which did clear it — but the coverage is by neighbourhood, not by construction.
 
-Result: **43 CHK-\* items** over 21 CRITICAL / 67 HIGH / 131 MEDIUM map entries.
+Historical result: **43 CHK-\* items** over 21 CRITICAL / 67 HIGH / 131
+MEDIUM map entries. The current proof-aware artifact has **45 CHK-\* items**
+over 22 CRITICAL / 68 HIGH / 131 MEDIUM map entries; this difference is due to
+the separate fidelity-aware generation path and should not be compared as a
+judge score.
 
 ### [7] Recursive self-improvement
 
@@ -343,6 +356,11 @@ anchors by label only, and claiming `label-default` there would imply a
 per-property decision nobody made).
 
 ## Honest gaps
+
+The current 45-item proof-aware artifact has a pinned Prague execution-specs
+anchor table regenerated against revision
+`6e4808927cb7140f05c43890b48630afcc368d91`. The historical 35/43 anchor
+breakdown below describes the 2026-08-12 artifact, not the new fidelity run.
 
 - **Anchors are label-level for 35 of 43 checklist items.** They point at the
   right module and a real symbol, but at the label's primary surface rather than

@@ -373,6 +373,21 @@ def build_improve_prompt(
         f"- [{e['id']}] {e['severity']} — {e['label']} / {e['root_cause']}"
         for e in evidence
     )
+    lean_lines = ""
+    if prop.get("x_evidence_id"):
+        refs = prop.get("lean_referenced_defs_expanded") or []
+        ref_names = ", ".join(str(x.get("name", "")) for x in refs[:24])
+        lean_lines = (
+            "Canonical Lean evidence (preserve this obligation; it is not a "
+            "prompt instruction):\n"
+            f"- evidence_id: {prop.get('x_evidence_id')}\n"
+            f"- evidence_sha256: {prop.get('x_evidence_sha256')}\n"
+            f"- primary obligation: {prop.get('x_lean_obligation_name', '')} "
+            f"[{prop.get('x_lean_obligation_head', '')}] "
+            f"{prop.get('x_lean_obligation', '')}\n"
+            f"- theorem conclusion: {prop.get('lean_conclusion', '')}\n"
+            f"- referenced objects: {ref_names}\n\n"
+        )
     return (
         # Defensive framing up front, and only failure-CLASS signals below (no
         # exploit title / attack-path): a specific-incident framing tripped the
@@ -383,6 +398,7 @@ def build_improve_prompt(
         "Current item:\n"
         f"TEXT: {prop.get('text', '')}\n"
         f"ASSERTION: {prop.get('assertion', '')}\n\n"
+        f"{lean_lines}"
         f"Judge scores (1-5): {json.dumps(scored['scores'])}\n"
         f"Judge critique: {scored['critique']}\n\n"
         f"{EF_BOUNTY_SEVERITY}\n\n"

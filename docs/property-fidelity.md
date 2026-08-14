@@ -6,10 +6,11 @@ and what the generated `CHK-*` checklist actually says. Written after the
 584 total pairs, 241 structurally-cannot-implement, 40 unlocatable, and 261
 entered audit) and re-checked against the `20260723-gasper` run.
 
-**The finding in one sentence:** on the legacy EthTotal path, the property
-generator never sees a proof — it receives the theorem's *last name component*
-and nothing else from Lean — and the judge that scores the result has no
-separate fidelity gate that would notice.
+**The historical finding in one sentence:** on the legacy EthTotal path, the
+property generator never saw a proof — it received the theorem's *last name
+component* and nothing else from Lean — and the judge that scored the result
+had no separate fidelity gate that would notice. The proof-aware path described
+below is now implemented and exercised on the 45 EthTotal candidates.
 
 The local measurements are reproducible; §6 lists the commands. Cross-client
 measurements additionally require the pinned audit-repo artifacts named in §5.
@@ -25,30 +26,51 @@ measurements additionally require the pinned audit-repo artifacts named in §5.
 health.json          statement · conclusion · hypotheses(must-establish)
                      referenced_defs_expanded · proof_source · doc_string
         │
-        │  ✗ NOTHING FROM HERE REACHES THE GENERATOR
+        │  ✓ canonical evidence record reaches generation and improvement
         ▼
 theorem_map*.json    labels (from the theorem's FILE) · severity · covers_hint
         │  tools/generate-properties.py  → build_generate_prompt()
         ▼
-CHK-*                LLM input = theorem name.split(".")[-1] + label
-                                 + covers_hint + defect class + severity
+CHK-*                LLM input = evidence id/hash + statement/conclusion
+                                 + selected must-establish obligation
+                                 + bounded referenced defs/proof source
         │  speca-lean4 improve ×4        → build_improve_prompt()
         ▼                                  (text · assertion · critique · classes)
 CHK-* sharpened
         │  speca-lean4 emit-01e          → mapping.build_property()
         ▼
-01e_PARTIAL_*.json   ★ lean_statement / lean_must_establish / lean_proof_source
-                       are attached HERE — after every decision has been made
+01e_PARTIAL_*.json   ★ Lean fields + evidence/fidelity provenance are retained
+                       in the emitted item
 ```
 
-The Lean enrichment is *decoration on the output*, not *input to the
-derivation*. `mapping.py:309-335` attaches it; nothing upstream reads it.
+### Current implementation (2026-08-14)
+
+`tools/generate-properties.py --health-json lean-ethtotal/health.json` now
+builds a canonical evidence payload from the live export, including the fully
+qualified theorem, conclusion, numbered `must-establish` obligations,
+referenced definitions, proof source, and a SHA-256 hash. The model must select
+one numbered obligation and the generated CHK item records that selection as
+`x_evidence_*` / `x_lean_obligation*`. The historical label/defect join remains
+candidate-selection context only; it is not treated as proof evidence.
+
+`tools/refine-property-fidelity.py` is a separate `claude -p` gate. It sees the
+same evidence payload, rejects unsupported client-specific additions, and
+rewrites only the text/assertion when needed. The 2026-08-14 EthTotal artifact
+contains 45/45 reviewed properties: 1 faithful and 44 repaired. The final 01e
+also retains the reviewer verdict, reason, and model command. Quality judging
+was intentionally run separately and is not conflated with this fidelity
+result.
+
+On the pre-fix path, Lean enrichment was *decoration on the output*, not
+*input to the derivation*. `mapping.py:309-335` attached it after the model
+decision; the current path feeds the canonical record upstream as described
+above.
 
 ---
 
 ## 2. Evidence
 
-### 2.1 The generator never sees the proof
+### 2.1 Historical baseline: the generator never saw the proof
 
 `tools/generate-properties.py:170-202`:
 
@@ -275,6 +297,11 @@ marks them `lowering: verbatim`.
 
 ### R1 — feed a canonical evidence record into generation and improvement
 
+**Status: implemented.** Generation and improvement prompts now receive the
+same live-health evidence payload, and its id/hash are retained in the emitted
+property. The separate fidelity gate is implemented in
+`tools/refine-property-fidelity.py`.
+
 Load the health record and, where applicable, the reviewed projection before
 calling the model. Pass a small, structured evidence object to both the
 generator and the improve loop:
@@ -341,7 +368,8 @@ obligation-derived item and is the primary evidence for a theorem with no
 implementation obligation. This is already the intended fallback in
 `lower_entry()` for no-precondition theorems.
 
-Applicability today: EthTotal 43/43 properties have a non-empty
+Applicability in the proof-aware EthTotal run: all 45/45 generated properties
+have a non-empty
 `lean_must_establish`; gasper 17/27. The gasper remainder goes to
 `emit-projected-01e` (§3.2b), not to the concretizer.
 
@@ -364,6 +392,10 @@ pretty-printing alone cannot establish fidelity. Prefer normalized predicate
 metadata and source-backed evidence over a string-shape CI gate.
 
 ### R4 — separate benchmark quality from proof fidelity
+
+**Status: implemented for EthTotal.** The five quality axes remain separate;
+the new fidelity pass reports `faithful` / `repaired` provenance and does not
+change the quality score or reference-bar distribution.
 
 Keep the existing five axes for the blind comparison with the reference
 corpus. Reference checklist items do not have Lean evidence, so a sixth
@@ -427,6 +459,15 @@ be routed to causal projection rather than left to the concretizer.
 ---
 
 ## 5. Acceptance criteria
+
+### Current proof-aware run (2026-08-14)
+
+Using `lean-ethtotal/health.json` and `claude -p`, generation produced 45
+CHK-* candidates, rebuilt the 221-entry theorem map, and emitted 45 concrete
+01e properties. All 45 carry `descends-from-proved`, an exact evidence hash,
+and a fidelity verdict; the separate fidelity review classified 1 as faithful
+and repaired 44. The quality judge remains a separate benchmark step and was
+not used as a fidelity substitute in this run.
 
 Re-run the EthTotal generation after the canonical evidence/projection path is
 implemented and compare against this run:
