@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "gasper_source": "NyxFoundation/gasper-lean4",
   "gasper_ref": "main",
-  "note": "Core-centric theorem -> 01e-property mapping (Stage C). Per the gasper-lean4 maintainer (fab/banri): ~70-80% of the proved substance lives in GasperBeaconChain.Core.* (Theories + Lemmas), NOT the thin, still-growing Executable application layer. So the primary targets are the Core Theories/Lemmas (top-level accountable safety k_safety', the slashable bound, plausible liveness, and the justification/quorum lemmas). The Executable.* entries are retained but reframed as the DECIDABLE/COMPUTABLE Bool-checker versions of the corresponding Core theorem -- that is their real role. NOTE on names: every Core declaration lives in the flat `GasperBeaconChain.Core` namespace regardless of its source subdirectory (Theories/ and Lemmas/ are file paths, not namespace segments), so the fully-qualified `theorem` is `GasperBeaconChain.Core.<name>`; the source path is recorded in x_layer. Fields prefixed x_ are documentation (incl. x_stride, the STRIDE class fab requested) and are NOT emitted; the emitted `type` follows the benchmark vocabulary (invariant). `shard` groups properties into coherent protocol-area subsets for `emit-01e --out-dir`, which writes one 01e_PARTIAL_<shard>.json per shard so per-file property count matches the benchmark granularity (bench 11.62 +/- 3.72 props/file). Since the B1 must-establish decomposition (issue #4) each theorem lowers to N properties (one per must-establish precondition of its Lean statement; 1:1 when it has none), so the shard partition was re-tuned into six protocol-area groups sized for the decomposed counts (fixture-calibrated: safety-accountable 9, safety-cases 10, safety-bound-witness 8, finality-justification 10, finality-quorum 8, finality-liveness 9 -- all within the 1-sigma band; real CI counts may shift and the shards are re-tunable here without touching Lean or Python). `shard` is a grouping key only and is NOT emitted into properties. This file is the TUNING OVERLAY: severity calibration, covers hints, scope/reachability, labels, shards. Statement, hypotheses, must-establish decomposition, conclusion, and proof provenance now come from the Lean exporter, not from this file. STAGE-2 CHECKLIST OVERLAY (speca#88 stage 2, docs/high-angle-checklist.md): the CHK-* entries are LLM-synthesized implementation invariants that descend from the same proved theorems but target the arithmetic/type-width/bounds/termination/resource failure surface documented by real client bugs in ethereum-vuln-dataset (cited per entry in x_dataset_evidence). They carry lowering='verbatim': emitted 1:1 with the hand-written text/assertion, never decomposed per must-establish hypothesis (the decomposition describes the theorem's statement, not these audit items). A theorem may therefore back several properties; theorem-name uniqueness holds among the non-checklist entries only. All CHK-* entries live in the checklist-high-angle shard (15 props, within the benchmark 1-sigma band).",
+  "note": "Core-centric theorem -> 01e-property mapping (Stage C). Per the gasper-lean4 maintainer (fab/banri): ~70-80% of the proved substance lives in GasperBeaconChain.Core.* (Theories + Lemmas), NOT the thin, still-growing Executable application layer. So the primary targets are the Core Theories/Lemmas (top-level accountable safety k_safety', the slashable bound, plausible liveness, and the justification/quorum lemmas). The Executable.* entries are retained but reframed as the DECIDABLE/COMPUTABLE Bool-checker versions of the corresponding Core theorem -- that is their real role. NOTE on names: every Core declaration lives in the flat `GasperBeaconChain.Core` namespace regardless of its source subdirectory (Theories/ and Lemmas/ are file paths, not namespace segments), so the fully-qualified `theorem` is `GasperBeaconChain.Core.<name>`; the source path is recorded in x_layer. Fields prefixed x_ are documentation (incl. x_stride, the STRIDE class fab requested) and are NOT emitted; the emitted `type` follows the benchmark vocabulary (invariant). `shard` groups properties into coherent protocol-area subsets for `emit-01e --out-dir`, which writes one 01e_PARTIAL_<shard>.json per shard so per-file property count matches the benchmark granularity (bench 11.62 +/- 3.72 props/file). Since the B1 must-establish decomposition (issue #4) each theorem lowers to N properties (one per must-establish precondition of its Lean statement; 1:1 when it has none), so the shard partition was re-tuned into six protocol-area groups sized for the decomposed counts (fixture-calibrated: safety-accountable 9, safety-cases 10, safety-bound-witness 8, finality-justification 10, finality-quorum 8, finality-liveness 9 -- all within the 1-sigma band; real CI counts may shift and the shards are re-tunable here without touching Lean or Python). `shard` is a grouping key only and is NOT emitted into properties. This file is the TUNING OVERLAY: severity calibration, covers hints, scope/reachability, labels, shards. Statement, hypotheses, must-establish decomposition, conclusion, and proof provenance now come from the Lean exporter, not from this file. STAGE-2 CHECKLIST OVERLAY (speca#88 stage 2, docs/high-angle-checklist.md): the CHK-* entries are LLM-synthesized implementation invariants that descend from the same proved theorems but target the arithmetic/type-width/bounds/termination/resource failure surface documented by real client bugs in ethereum-vuln-dataset (cited per entry in x_dataset_evidence). They carry lowering='verbatim': emitted 1:1 with the hand-written text/assertion, never decomposed per must-establish hypothesis (the decomposition describes the theorem's statement, not these audit items). A theorem may therefore back several properties; theorem-name uniqueness holds among the non-checklist entries only. All CHK-* entries live in the checklist-high-angle shard (15 props, within the benchmark 1-sigma band). ETHVULN 追記(speca#146 c-1): PROP-lean-ethvuln-* の66件は、ethereum-vuln-dataset(ethvuln_ref のスナップショット)の severity Critical/High 全エントリを 1 エントリ = 1 定理で形式化した SpecaExport.EthVuln 配下の Lean 命題群への登録である。theorem は完全修飾名 EthVulnFormalProps.entry_<sanitized id>_<class> で、lean/SpecaExport/EthVuln/Props/*.lean に宣言されている。命題は型検査を通るが証明は現段階では sorry(exporter の health JSON が lean_status=unknown として正直に記録する)。text は日本語(データセット由来の値・識別子は英語)。x_entry_id がデータセットのエントリ id、x_dataset_evidence が CSV の title。生成元は eth-vuln-formal-props リポジトリの scripts/generate_theorem_map.py。",
   "properties": [
     {
       "property_id": "PROP-lean-safety-core-001",
@@ -1250,7 +1250,9 @@
       "shard": "checklist-high-angle",
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "liveness_only": false,
       "x_dataset_evidence": "ethereum-vuln-dataset: beacon-chain:justification-and-finality / missing_input_validation class-level evidence; no individual incident is claimed as proof"
@@ -1271,7 +1273,9 @@
       "shard": "checklist-high-angle",
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "liveness_only": false,
       "x_dataset_evidence": "ethereum-vuln-dataset: beacon-chain:justification-and-finality / missing_input_validation class-level evidence; no individual incident is claimed as proof"
@@ -1292,7 +1296,9 @@
       "shard": "checklist-high-angle",
       "bug_bounty_area": "consensus/slashing",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "liveness_only": false,
       "x_dataset_evidence": "ethereum-vuln-dataset: beacon-chain:justification-and-finality / missing_input_validation class-level evidence; no individual incident is claimed as proof"
@@ -1313,7 +1319,9 @@
       "shard": "checklist-high-angle",
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "liveness_only": false,
       "x_dataset_evidence": "ethereum-vuln-dataset: beacon-chain:justification-and-finality / missing_input_validation class-level evidence; no individual incident is claimed as proof"
@@ -1334,7 +1342,9 @@
       "shard": "checklist-high-angle",
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "liveness_only": false,
       "x_dataset_evidence": "ethereum-vuln-dataset: beacon-chain:justification-and-finality / missing_input_validation class-level evidence; no individual incident is claimed as proof"
@@ -1355,7 +1365,9 @@
       "shard": "checklist-high-angle",
       "bug_bounty_area": "consensus/slashing",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "liveness_only": false,
       "x_dataset_evidence": "ethereum-vuln-dataset: beacon-chain:slashing / integer_overflow_underflow class-level evidence; no individual incident is claimed as proof"
@@ -1376,10 +1388,1862 @@
       "shard": "checklist-high-angle",
       "bug_bounty_area": "consensus/finality",
       "attacker_controlled": true,
-      "entry_points": ["CallbackHandler"],
+      "entry_points": [
+        "CallbackHandler"
+      ],
       "exploitability": "external-attack",
       "liveness_only": false,
       "x_dataset_evidence": "ethereum-vuln-dataset: beacon-chain:justification-and-finality / missing_input_validation class-level evidence; no individual incident is claimed as proof"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-001",
+      "theorem": "EthVulnFormalProps.entry_02e19ccf58f8c45a_resource_bounds",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "02e19ccf58f8c45a",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "02e19ccf58f8c45a — libp2p DoS vulnerability from lack of resource management",
+      "text": "libp2pでは攻撃者ノードが被害者ノードに小さなメモリチャンクを際限なく確保させ続けることができ、最終的にOOM killerによって強制終了させられる。ピアごとのリソース上限が破られている。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "p2p",
+        "execution",
+        "CWE-770"
+      ],
+      "bug_bounty_area": "execution/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-002",
+      "theorem": "EthVulnFormalProps.entry_11641305ff48c094_resource_bounds",
+      "label": "p2p-interface",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "11641305ff48c094",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "11641305ff48c094 — libp2p DoS vulnerability from lack of resource management",
+      "text": "同じlibp2pのリソース管理上の欠陥が、コンセンサスレイヤーのp2pインターフェース経由でも顕在化した。攻撃者主導のメモリ確保が上限なく増大する。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "p2p-interface",
+        "consensus",
+        "CWE-770"
+      ],
+      "bug_bounty_area": "consensus/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-003",
+      "theorem": "EthVulnFormalProps.entry_18c4c57dddc34f3e_resource_bounds",
+      "label": "database",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "18c4c57dddc34f3e",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "18c4c57dddc34f3e — This patch should still be considered bleeding-edge. We advise exchanges and other users running business-critical appli",
+      "text": "Geth v1.4.13は、2016年のネットワークDoS攻撃に対するホットフィックスである。この攻撃は価格設定が過小なオペレーションを悪用し、状態肥大化と処理コストを持続可能な上限を超えて増大させた。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "database",
+        "execution",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "execution/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-MS-001",
+      "theorem": "EthVulnFormalProps.entry_228c807be670b220_memory_safety",
+      "label": "evm",
+      "x_layer": "EthVulnFormalProps/Props/MemorySafety.lean",
+      "x_entry_id": "228c807be670b220",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "228c807be670b220 — Go Ethereum Denial of Service",
+      "text": "cmd/evmは細工されたバイトコードに対してSEGVを起こす。信頼できないバイトコードから到達可能な範囲外アクセスがプロセスをクラッシュさせる。",
+      "type": "invariant",
+      "assertion": "idx in accesses(input) -> idx < size(object)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "memory-safety",
+        "missing_bounds_check",
+        "evm",
+        "execution",
+        "CWE-119"
+      ],
+      "bug_bounty_area": "execution/memory-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "memory-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-001",
+      "theorem": "EthVulnFormalProps.entry_26333a99f530c12b_availability_robustness",
+      "label": "other",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "26333a99f530c12b",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "26333a99f530c12b — :warning: Lighthouse v8.2.0 is a **high-priority** release containing fixes for several security vulnerabilities, as wel",
+      "text": "Lighthouse v8.2.0はビーコンノードの複数のセキュリティ脆弱性に対する修正を含むが、アドバイザリは詳細を明らかにしていない。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "other",
+        "other",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-001",
+      "theorem": "EthVulnFormalProps.entry_271695669fe1a228_arithmetic_safety",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "271695669fe1a228",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "271695669fe1a228 — Integer overflow in github.com/gorilla/websocket",
+      "text": "gorilla/websocketはフレーム長の整数オーバーフローにより、細工されたフレームが長さの計算を破ってDoSを引き起こす。長さの算術がラップアラウンドし、そこから導かれるリソース上限が機能しなくなる。",
+      "type": "invariant",
+      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "arithmetic-safety",
+        "integer_overflow_underflow",
+        "p2p",
+        "execution",
+        "CWE-190"
+      ],
+      "bug_bounty_area": "execution/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-002",
+      "theorem": "EthVulnFormalProps.entry_2b3def4a540f08df_arithmetic_safety",
+      "label": "opcodes",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "2b3def4a540f08df",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "2b3def4a540f08df — CVE-2021-41272",
+      "text": "BesuのSHL/SHR/SAR再実装は、上位ビットが立った値に対して符号型変換の誤りを持ち込んだため、シフト結果がEVM仕様から乖離する(CVE-2021-41272)。",
+      "type": "invariant",
+      "assertion": "shift >= 256 (incl. any shift >= 2^31) -> evmShl(shift,v) = 0 and evmShr(shift,v) = 0",
+      "severity": "HIGH",
+      "covers_hint": [
+        "arithmetic-safety",
+        "consensus_divergence",
+        "opcodes",
+        "execution",
+        "CWE-191"
+      ],
+      "bug_bounty_area": "execution/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-IV-001",
+      "theorem": "EthVulnFormalProps.entry_3f495d3767bd5a5f_input_validation",
+      "label": "beacon-chain:execution-payload",
+      "x_layer": "EthVulnFormalProps/Props/InputValidation.lean",
+      "x_entry_id": "3f495d3767bd5a5f",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "3f495d3767bd5a5f — Run sim single node test with Geth catalyst to finality",
+      "text": "catalystモードの実際のGethに対してmerge実行ペイロードフローの相互運用テストを行ったところ、ペイロード処理における検証・ハンドリングの不備が明らかになり、シミュレーションがfinalityに到達するためには修正が必要だった。",
+      "type": "invariant",
+      "assertion": "handler(s,i) = ok(s') -> valid(i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "input-validation",
+        "missing_input_validation",
+        "beacon-chain:execution-payload",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/input-validation",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "input-validation"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-002",
+      "theorem": "EthVulnFormalProps.entry_42783aef3977582f_availability_robustness",
+      "label": "other",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "42783aef3977582f",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "42783aef3977582f — Stable**: Since releasing reth 0.2.0-beta.6 in April 2024, there have been no crash reports, a requirement for any high ",
+      "text": "Reth 1.0のリリースエントリであり、そのセキュリティ上の内容は、高稼働率の本番運用に求められる堅牢化の主張(beta.6以降クラッシュ報告なし)である。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "other",
+        "other",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-001",
+      "theorem": "EthVulnFormalProps.entry_475682d10d661b75_spec_equivalence",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "475682d10d661b75",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "475682d10d661b75 — Ethereum 2.0 Networking Specification",
+      "text": "Eth2ネットワーキング(Req/Resp)仕様の統合であり、クライアント実装が個別のアドホックな挙動ではなく単一の正典wireプロトコルに準拠するようにするものである。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "other",
+        "p2p",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-003",
+      "theorem": "EthVulnFormalProps.entry_4773ad178a1b0415_availability_robustness",
+      "label": "rpc",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "4773ad178a1b0415",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "4773ad178a1b0415 — A fix of critical bug during live sync that could lead to panic or bad state (#6821)",
+      "text": "重大なライブ同期バグはノードをパニックさせるか、不正な状態を残す可能性があった。同期中の未処理の条件が、クラッシュしないことと状態の整合性の両方を破る。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "missing_input_validation",
+        "rpc",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-004",
+      "theorem": "EthVulnFormalProps.entry_498f88c549b37c7c_availability_robustness",
+      "label": "validator",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "498f88c549b37c7c",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "498f88c549b37c7c — A crash on start-up after running the client with `--history:prune` option - \"backfill block must have a summary\".",
+      "text": "Nimbusは`--history:prune`を指定した起動時にクラッシュする('backfill block must have a summary')。正当な設定から到達可能なアサーションがノードを異常終了させる。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "missing_input_validation",
+        "validator",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/availability-robustness",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-004",
+      "theorem": "EthVulnFormalProps.entry_4bb523e194701da7_resource_bounds",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "4bb523e194701da7",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "4bb523e194701da7 — Go-Ethereum vulnerable to denial of service via malicious p2p message",
+      "text": "Gethのp2pハンドラは細工されたメッセージごとにgoroutineを生成しており、攻撃者にメモリ消費を無制限に増大させることを許していた。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "p2p",
+        "execution",
+        "CWE-770"
+      ],
+      "bug_bounty_area": "execution/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-002",
+      "theorem": "EthVulnFormalProps.entry_4f09bedbf1707694_spec_equivalence",
+      "label": "fork-choice",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "4f09bedbf1707694",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "4f09bedbf1707694 — Implement Kintsugi specs :tea: (the Merge November sprint PR)",
+      "text": "Kintsugiのmerge仕様実装PRであり、クライアントをmergeのために定義されたconsensus-specの状態遷移およびengineセマンティクスに合わせるものである。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "missing_input_validation",
+        "fork-choice",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-005",
+      "theorem": "EthVulnFormalProps.entry_6746c31d67430ea7_resource_bounds",
+      "label": "p2p-interface",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "6746c31d67430ea7",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "6746c31d67430ea7 — Upgraded Netty dependency to include fixes for two HIGH severity security vulnerabilities (CVE-2021-37136 and CVE-2021-3",
+      "text": "TekuはNettyをアップグレードしてCVE-2021-37136/37137を修正した。これはデコーダの欠陥により、細工された入力が過剰なリソース消費(DoS)を引き起こすものだった。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "p2p-interface",
+        "consensus",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "consensus/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-003",
+      "theorem": "EthVulnFormalProps.entry_6c13a1c54cea1ce2_spec_equivalence",
+      "label": "beacon-chain:registry-updates",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "6c13a1c54cea1ce2",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "6c13a1c54cea1ce2 — Grandine 2.0.5 is a high-priority release for mainnet users - it contains security fixes and performance optimisations.",
+      "text": "Grandine 2.0.5はepoch処理(process_registry_updatesの再利用)に関わるセキュリティリリースである。レジストリ更新処理はconsensus specと一致していなければならない。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "other",
+        "beacon-chain:registry-updates",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-005",
+      "theorem": "EthVulnFormalProps.entry_71a24007e8915533_availability_robustness",
+      "label": "rpc",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "71a24007e8915533",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "71a24007e8915533 — A few fixes for Polygon, incl. a fix for a critical start up issue which causes a panic if you run Milestones with an ex",
+      "text": "ErigonのPolygonは、外部RPCデーモンとともにMilestonesを実行すると起動時にパニックする。サポートされている構成において到達可能なパニックである。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "other",
+        "rpc",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-MS-002",
+      "theorem": "EthVulnFormalProps.entry_74709c65793547a0_memory_safety",
+      "label": "sync",
+      "x_layer": "EthVulnFormalProps/Props/MemorySafety.lean",
+      "x_entry_id": "74709c65793547a0",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "74709c65793547a0 — Go Ethereum LES protocol implementation vulnerable to Denial of Service",
+      "text": "GethのLES GetBlockHeadersMsgハンドラは攻撃者が影響を及ぼせる符号付き配列インデックスを使用しており、アクセス違反を引き起こしていた。信頼できない入力に対する範囲・符号の検証が欠けていた。",
+      "type": "invariant",
+      "assertion": "idx in accesses(input) -> idx < size(object)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "memory-safety",
+        "missing_bounds_check",
+        "sync",
+        "execution",
+        "CWE-125"
+      ],
+      "bug_bounty_area": "execution/memory-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "memory-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-004",
+      "theorem": "EthVulnFormalProps.entry_7482623489bc990c_spec_equivalence",
+      "label": "beacon-chain:justification-and-finality",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "7482623489bc990c",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "7482623489bc990c — feat: eip-8025 optional execution proofs",
+      "text": "EIP-8025のオプショナルな実行証明がLodestarに実装され、3クライアントによる相互運用テストで検証された。証明の取り扱いはEIPの定めに従い、各クライアント間で一致していなければならない。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "missing_input_validation",
+        "beacon-chain:justification-and-finality",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-006",
+      "theorem": "EthVulnFormalProps.entry_762246407b6270cf_resource_bounds",
+      "label": "txpool",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "762246407b6270cf",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "762246407b6270cf — Denial of Service in Go-Ethereum",
+      "text": "高ガス価格の未来トランザクションを5120件含む1つのメッセージが、Gethのtxpool内の保留トランザクションを全て消去してしまう。プールの受理・追い出しの設計が、安価な攻撃者入力による共有リソースの枯渇を許していた。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "txpool",
+        "execution",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "execution/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-007",
+      "theorem": "EthVulnFormalProps.entry_7a01ac34bb8f8f97_resource_bounds",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "7a01ac34bb8f8f97",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "7a01ac34bb8f8f97 — go-ethereum is vulnerable to high CPU usage leading to DoS via malicious p2p message",
+      "text": "特別に細工されたp2pメッセージがgo-ethereumで高いCPU使用率を引き起こす。メッセージごとの処理コストに上限が設けられていない。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "p2p",
+        "execution",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "execution/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-006",
+      "theorem": "EthVulnFormalProps.entry_82bd894e6ef4c96a_availability_robustness",
+      "label": "crypto",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "82bd894e6ef4c96a",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "82bd894e6ef4c96a — golang.org/x/crypto/ssh Denial of service via crafted Signer",
+      "text": "x/crypto/sshのAddHostKeyは細工されたSignerを渡すとサーバをクラッシュさせうる。暗号処理経路上の想定外の値がプロセスを異常終了させる。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "unhandled_error_or_nil",
+        "crypto",
+        "execution",
+        "CWE-20"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-CA-001",
+      "theorem": "EthVulnFormalProps.entry_8dc5f046b9907f2a_crypto_auth_integrity",
+      "label": "crypto",
+      "x_layer": "EthVulnFormalProps/Props/CryptoAuthIntegrity.lean",
+      "x_entry_id": "8dc5f046b9907f2a",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "8dc5f046b9907f2a — Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
+      "text": "ServerConfig.PublicKeyCallbackの誤用は認可の迂回を許してしまう。認証の判断が実際に使用された鍵から切り離されうる。",
+      "type": "invariant",
+      "assertion": "accepts(k,a) = true -> Valid(k,a); established(s,k,a) -> accepts(k,a) = true",
+      "severity": "HIGH",
+      "covers_hint": [
+        "crypto-auth-integrity",
+        "missing_input_validation",
+        "crypto",
+        "execution",
+        "CWE-287"
+      ],
+      "bug_bounty_area": "execution/crypto-auth-integrity",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "crypto-auth-integrity"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-008",
+      "theorem": "EthVulnFormalProps.entry_93a34a4a3b58f64f_resource_bounds",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "93a34a4a3b58f64f",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "93a34a4a3b58f64f — golang.org/x/crypto Vulnerable to Denial of Service (DoS) via Slow or Incomplete Key Exchange",
+      "text": "遅い、あるいは未完了のSSH鍵交換により、サーバは保留中のコンテンツを上限なくバッファリングしてしまう(DoS)。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "p2p",
+        "execution",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "execution/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-009",
+      "theorem": "EthVulnFormalProps.entry_9497bc683371db42_resource_bounds",
+      "label": "p2p-interface",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "9497bc683371db42",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "9497bc683371db42 — libp2p DoS vulnerability from lack of resource management",
+      "text": "同じlibp2pのリソース管理上の欠陥である。攻撃者主導の小さなメモリ確保が積み重なり、被害者ノードのメモリを増大させてOOM killに至る。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "p2p-interface",
+        "consensus",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "consensus/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-005",
+      "theorem": "EthVulnFormalProps.entry_94e5ca105ce4f0b9_spec_equivalence",
+      "label": "fork-choice",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "94e5ca105ce4f0b9",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "94e5ca105ce4f0b9 — Grandine 2.0.4 is a high-priority release for mainnet users - it contains security fixes and performance optimisations.",
+      "text": "Grandine 2.0.4はfork-choice領域のセキュリティリリースであり、データセット上はconsensus divergence(コンセンサス分岐)として分類されている。fork-choiceの結果はconsensus specと一致していなければならない。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "consensus_divergence",
+        "fork-choice",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-007",
+      "theorem": "EthVulnFormalProps.entry_97363609784b4bd5_availability_robustness",
+      "label": "build-ci",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "97363609784b4bd5",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "97363609784b4bd5 — Grandine 2.0.3 is a high-priority release for mainnet users, as it contains security fixes and performance optimisations",
+      "text": "Grandine 2.0.3はメインネット利用者向けの高優先度セキュリティリリースであり、内容は明らかにされていない。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "other",
+        "build-ci",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-008",
+      "theorem": "EthVulnFormalProps.entry_9a16fbc5d8f36a00_availability_robustness",
+      "label": "beacon-chain:execution-payload",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "9a16fbc5d8f36a00",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "9a16fbc5d8f36a00 — Grandine 2.0.2 is a high-priority release for mainnet users, as it contains security fixes and performance optimisations",
+      "text": "Grandine 2.0.2はexecution-payload領域の高優先度セキュリティリリースであり、内容は明らかにされていない。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "other",
+        "beacon-chain:execution-payload",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-010",
+      "theorem": "EthVulnFormalProps.entry_a0de2557672715e7_resource_bounds",
+      "label": "other",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "a0de2557672715e7",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "a0de2557672715e7 — :warning: Lighthouse v8.1.2 is a **high-priority** patch release with further security-critical fixes atop v8.1.1.",
+      "text": "Lighthouse v8.1.2はv8.1.x系のセキュリティクリティカルなパッチシリーズの一部であり、同シリーズ中で開示されているv8.1.3はp2pのリソース枯渇を修正している。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "other",
+        "other",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-MS-003",
+      "theorem": "EthVulnFormalProps.entry_a35bfa6a16c0e362_memory_safety",
+      "label": "evm",
+      "x_layer": "EthVulnFormalProps/Props/MemorySafety.lean",
+      "x_entry_id": "a35bfa6a16c0e362",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "a35bfa6a16c0e362 — CVE-2018-20421",
+      "text": "Geth 1.8.19では、EVMメモリ上で動的配列の長さを書き換えた後に1箇所へ書き込むだけで、巨大なメモリ消費を強制できる。長さのメタデータと実際の確保量が乖離し、確保量に上限を設ける保証が破られる。",
+      "type": "invariant",
+      "assertion": "idx in accesses(input) -> idx < size(object)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "memory-safety",
+        "missing_bounds_check",
+        "evm",
+        "execution",
+        "CWE-119"
+      ],
+      "bug_bounty_area": "execution/memory-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "memory-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-009",
+      "theorem": "EthVulnFormalProps.entry_a4feb077db6061c1_availability_robustness",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "a4feb077db6061c1",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "a4feb077db6061c1 — go-ethereum is vulnerable to DoS via malicious p2p message affecting a vulnerable node",
+      "text": "細工されたp2pメッセージがgo-ethereumノードをシャットダウンまたはクラッシュさせる(CWE-248: 捕捉されない例外)。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "unhandled_error_or_nil",
+        "p2p",
+        "execution",
+        "CWE-248"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-006",
+      "theorem": "EthVulnFormalProps.entry_a528f483050329a6_spec_equivalence",
+      "label": "sync",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "a528f483050329a6",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "a528f483050329a6 — Bump EIP-8025 `MAX_PROOF_SIZE` to 400 KiB",
+      "text": "EIP-8025のMAX_PROOF_SIZEは、実際に観測された証明がこの定数を超えていたため300KiBから400KiBへ引き上げられた。プロトコル定数は仕様レベルの実際の要件と各クライアント間で同一に一致していなければならず、そうでなければ有効なデータが拒否されてしまう。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "consensus_divergence",
+        "sync",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-010",
+      "theorem": "EthVulnFormalProps.entry_a81de2d1facebe2f_availability_robustness",
+      "label": "other",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "a81de2d1facebe2f",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "a81de2d1facebe2f — This release contains a high-severity security fix, found by the Go Ethereum team.",
+      "text": "Go Ethereumチームが発見した非開示の高深刻度の修正を含むErigonのリリースである。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "other",
+        "other",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-007",
+      "theorem": "EthVulnFormalProps.entry_b1a6e88b2f095f12_spec_equivalence",
+      "label": "rpc",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "b1a6e88b2f095f12",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "b1a6e88b2f095f12 — feat(trie): geth-compatible zero hashes for non-existent accounts in eth_getProof",
+      "text": "存在しないアカウントに対するeth_getProofは、geth互換のゼロハッシュを返さなければならない。同じ状態に対するRPCレスポンスは各クライアント間で一致していなければならない。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "missing_input_validation",
+        "rpc",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-011",
+      "theorem": "EthVulnFormalProps.entry_b7463c929025ca0a_resource_bounds",
+      "label": "rpc",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "b7463c929025ca0a",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "b7463c929025ca0a — ‼️ high-severity security issue fixup ‼️",
+      "text": "RPCの最適化を伴う高深刻度のRPCセキュリティ修正であり、データセット上の根本原因はresource_exhaustion(リソース枯渇)である。RPCリクエストのコストが許容上限を超えていた。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "rpc",
+        "execution",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "execution/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SF-001",
+      "theorem": "EthVulnFormalProps.entry_b89b66ccf953baca_serialization_fidelity",
+      "label": "beacon-chain:attestation",
+      "x_layer": "EthVulnFormalProps/Props/SerializationFidelity.lean",
+      "x_entry_id": "b89b66ccf953baca",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "b89b66ccf953baca — 2 changes getting us closer to interop",
+      "text": "ハッシュ値が正しいエンコーディングではなくバイト配列としてJSONにシリアライズされ、bootstrap ENRからattestationのビットフィールドが欠落していた。エンコーディングが相互運用シリアライゼーションのルールに従っていなかった。",
+      "type": "invariant",
+      "assertion": "dec(enc(a)) = some(a)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "serialization-fidelity",
+        "serialization_bug",
+        "beacon-chain:attestation",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/serialization-fidelity",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "liveness_only": false,
+      "shard": "serialization-fidelity"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-003",
+      "theorem": "EthVulnFormalProps.entry_ba1acd77a48c7f43_arithmetic_safety",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "ba1acd77a48c7f43",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "ba1acd77a48c7f43 — go-ethereum vulnerable to DoS via malicious p2p message",
+      "text": "細工されたp2pメッセージがgo-ethereumの整数オーバーフローを悪用し、ノードに非常に大量のメモリを消費させる。オーバーフローする長さ・サイズの算術が確保量の上限を無効化する。",
+      "type": "invariant",
+      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "arithmetic-safety",
+        "integer_overflow_underflow",
+        "p2p",
+        "execution",
+        "CWE-190"
+      ],
+      "bug_bounty_area": "execution/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-004",
+      "theorem": "EthVulnFormalProps.entry_bc36f78358adeec5_arithmetic_safety",
+      "label": "beacon-chain:slashing",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "bc36f78358adeec5",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "bc36f78358adeec5 — AttesterSlashing number overflow",
+      "text": "Lodestarはuint64をJSのnumber型で表現していたため、細工されたAttesterSlashing/ProposerSlashingの値がオーバーフローし、コンセンサス分岐を招きうる。仕様が定める64ビット演算が正確には実装されていなかった。",
+      "type": "invariant",
+      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "arithmetic-safety",
+        "integer_overflow_underflow",
+        "beacon-chain:slashing",
+        "consensus",
+        "CWE-190"
+      ],
+      "bug_bounty_area": "consensus/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-005",
+      "theorem": "EthVulnFormalProps.entry_besu_ghsa_advisory_GHSA_4456_w38r_m53x_arithmetic_safety",
+      "label": "gas",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "besu:ghsa-advisory:GHSA-4456-w38r-m53x",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "besu:ghsa-advisory:GHSA-4456-w38r-m53x — Gas allocation error in CALL operations in Besu EVM [GHSA-4456-w38r-m53x CVE-2022-36025]",
+      "text": "BesuのCALLオペレーションにおける利用可能ガス量の計算には32ビットの符号あり・なしの誤りがあり、呼び出し先コントラクトに誤ったガス量を渡してしまう。これにより実行がEVM仕様から乖離する(CVE-2022-36025)。",
+      "type": "invariant",
+      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "severity": "CRITICAL",
+      "covers_hint": [
+        "arithmetic-safety",
+        "integer_overflow_underflow",
+        "gas",
+        "execution",
+        "CWE-190"
+      ],
+      "bug_bounty_area": "execution/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-006",
+      "theorem": "EthVulnFormalProps.entry_besu_hyperledger_besu_GHSA_7pg2_p5vj_xp5h_arithmetic_safety",
+      "label": "evm",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "besu:hyperledger-besu:GHSA-7pg2-p5vj-xp5h",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "besu:hyperledger-besu:GHSA-7pg2-p5vj-xp5h — SHL, SHR, and SAR operations trigger native exception at key values",
+      "text": "BesuのSHL/SHR/SARは、負数を表す32ビット値に対する符号型変換の誤りにより、ネイティブ例外を発生させ、EVM仕様とは異なるシフトセマンティクスをもたらす。",
+      "type": "invariant",
+      "assertion": "shift >= 256 (incl. any shift >= 2^31) -> shl/shr = 0 and sar = sign-fill(v)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "arithmetic-safety",
+        "missing_input_validation",
+        "evm",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-011",
+      "theorem": "EthVulnFormalProps.entry_c3970363b1e95aa8_availability_robustness",
+      "label": "other",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "c3970363b1e95aa8",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "c3970363b1e95aa8 — x/crypto/ssh vulnerable to panic via malformed packets",
+      "text": "x/crypto/sshは、AES-GCM/ChaCha20Poly1305下で平文が空の不正な形式のパケットに対してパニックする。不正な形式の入力が拒否されずにパニックへ到達してしまう。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "missing_input_validation",
+        "other",
+        "execution",
+        "CWE-20"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-CA-002",
+      "theorem": "EthVulnFormalProps.entry_c976633ee45dd987_crypto_auth_integrity",
+      "label": "crypto",
+      "x_layer": "EthVulnFormalProps/Props/CryptoAuthIntegrity.lean",
+      "x_entry_id": "c976633ee45dd987",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "c976633ee45dd987 — Improper Verification of Cryptographic Signature in golang.org/x/crypto",
+      "text": "x/crypto/sshは公開鍵署名の検証中にパニックする。検証経路そのものが敵対的な鍵によってクラッシュさせられうるが、検証は全域的かつ正しくなければならない。",
+      "type": "invariant",
+      "assertion": "accepts(k,a) = true -> Valid(k,a); established(s,k,a) -> accepts(k,a) = true",
+      "severity": "HIGH",
+      "covers_hint": [
+        "crypto-auth-integrity",
+        "missing_input_validation",
+        "crypto",
+        "execution",
+        "CWE-20"
+      ],
+      "bug_bounty_area": "execution/crypto-auth-integrity",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "crypto-auth-integrity"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-CA-003",
+      "theorem": "EthVulnFormalProps.entry_d29c5b0777a57b29_crypto_auth_integrity",
+      "label": "crypto",
+      "x_layer": "EthVulnFormalProps/Props/CryptoAuthIntegrity.lean",
+      "x_entry_id": "d29c5b0777a57b29",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "d29c5b0777a57b29 — golang.org/x/crypto/ssh Man-in-the-Middle attack",
+      "text": "x/crypto/sshはデフォルトではホスト鍵を検証しておらず(HostKeyCallback未設定)、中間者攻撃を可能にしていた。デフォルトで検証が省略されることは認証の健全性を破る。",
+      "type": "invariant",
+      "assertion": "accepts(k,a) = true -> Valid(k,a); established(s,k,a) -> accepts(k,a) = true",
+      "severity": "HIGH",
+      "covers_hint": [
+        "crypto-auth-integrity",
+        "missing_input_validation",
+        "crypto",
+        "execution",
+        "CWE-295"
+      ],
+      "bug_bounty_area": "execution/crypto-auth-integrity",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "crypto-auth-integrity"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-012",
+      "theorem": "EthVulnFormalProps.entry_d5796321d9ebf1ae_resource_bounds",
+      "label": "rpc",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "d5796321d9ebf1ae",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "d5796321d9ebf1ae — go-ethereum vulnerable to denial of service via crafted GraphQL query",
+      "text": "geth --http --graphqlに対する細工されたGraphQLクエリは、無制限のメモリ消費とデーモンのハングを引き起こす。クエリのコストに上限が設けられていない。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "rpc",
+        "execution",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "execution/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-IV-002",
+      "theorem": "EthVulnFormalProps.entry_d6a02420f6ae46dd_input_validation",
+      "label": "rpc",
+      "x_layer": "EthVulnFormalProps/Props/InputValidation.lean",
+      "x_entry_id": "d6a02420f6ae46dd",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "d6a02420f6ae46dd — Go Ethereum Improper Input Validation",
+      "text": "TraceChainは終了ブロックが開始ブロックより後であることを検証していなかった。RPCパラメータの前提条件がチェックされていなかった。",
+      "type": "invariant",
+      "assertion": "handler(s,i) = ok(s') -> valid(i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "input-validation",
+        "missing_input_validation",
+        "rpc",
+        "execution",
+        "CWE-20"
+      ],
+      "bug_bounty_area": "execution/input-validation",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "input-validation"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SI-001",
+      "theorem": "EthVulnFormalProps.entry_d73c7daa388f8462_state_integrity",
+      "label": "block-processing",
+      "x_layer": "EthVulnFormalProps/Props/StateIntegrity.lean",
+      "x_entry_id": "d73c7daa388f8462",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "d73c7daa388f8462 — This is a security-critical release that fixes a regression in v1.9.4 where blocks",
+      "text": "Geth v1.9.5は、v1.9.4のリグレッションでマイナーが不正な状態を持つブロックを生成していた問題を修正する。生成されるブロックは状態遷移関数の下で有効でなければならない。",
+      "type": "invariant",
+      "assertion": "Inv(s) -> Inv(step(s,i))",
+      "severity": "HIGH",
+      "covers_hint": [
+        "state-integrity",
+        "consensus_divergence",
+        "block-processing",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/state-integrity",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "liveness_only": false,
+      "shard": "state-integrity"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-012",
+      "theorem": "EthVulnFormalProps.entry_d77e6d7be5ad3831_availability_robustness",
+      "label": "crypto",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "d77e6d7be5ad3831",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "d77e6d7be5ad3831 — Helm uses crypto package vulnerable to panic from malformed X.509 certificate",
+      "text": "Goのcryptoパッケージは(Helm経由で)不正な形式のX.509証明書に対してパニックする。信頼できない不正な形式の入力が、パースエラーではなくパニックに到達してしまう。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "unhandled_error_or_nil",
+        "crypto",
+        "execution",
+        "CWE-20"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-008",
+      "theorem": "EthVulnFormalProps.entry_dc7e3fa111ce0e2a_spec_equivalence",
+      "label": "beacon-chain:execution-payload",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "dc7e3fa111ce0e2a",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "dc7e3fa111ce0e2a — rename random to prevRandao as per the kiln v2 specs",
+      "text": "Kiln v2ではrandomがprevRandaoへと改名された。クライアントは仕様のフィールド名・セマンティクスを同一に用いなければならず、そうでなければengine APIの相互運用が壊れてしまう。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "consensus_divergence",
+        "beacon-chain:execution-payload",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-013",
+      "theorem": "EthVulnFormalProps.entry_ded5a1dd6fea6e65_resource_bounds",
+      "label": "p2p-interface",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "ded5a1dd6fea6e65",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "ded5a1dd6fea6e65 — :warning: Lighthouse v8.1.3 is a **high-priority** patch release with further security-critical fixes atop v8.1.2.",
+      "text": "Lighthouse v8.1.3はセキュリティクリティカルなパッチであり、データセット上の根本原因はp2pインターフェースにおけるresource_exhaustion(リソース枯渇)である。ピア主導のリソース消費が上限を超えていた。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "resource_exhaustion",
+        "p2p-interface",
+        "consensus",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "consensus/resource-bounds",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-013",
+      "theorem": "EthVulnFormalProps.entry_dfc686972ac72690_availability_robustness",
+      "label": "p2p",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "dfc686972ac72690",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "dfc686972ac72690 — golang.org/x/crypto/ssh NULL Pointer Dereference vulnerability",
+      "text": "x/crypto/sshは細工された認証リクエストによりnilポインタ参照を起こす。検証されていない入力がnil参照に到達し、サーバをクラッシュさせる。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "unhandled_error_or_nil",
+        "p2p",
+        "execution",
+        "CWE-476"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-IV-003",
+      "theorem": "EthVulnFormalProps.entry_e667b69b60df12fe_input_validation",
+      "label": "other",
+      "x_layer": "EthVulnFormalProps/Props/InputValidation.lean",
+      "x_entry_id": "e667b69b60df12fe",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "e667b69b60df12fe — This is a critical security update. All users should update immediately.",
+      "text": "Teku 21.12.1はlog4j(CVE-2021-44228)の対応時期にリリースされた重大なセキュリティアップデートであり、Tekuはこの中でlog4jのアップグレードを提供した。信頼できないデータがログ処理パイプラインによって実行可能な指令として解釈されてはならない。",
+      "type": "invariant",
+      "assertion": "handler(s,i) = ok(s') -> valid(i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "input-validation",
+        "other",
+        "other",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/input-validation",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "input-validation"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-007",
+      "theorem": "EthVulnFormalProps.entry_e9e9bc9f0e5c5042_arithmetic_safety",
+      "label": "gas",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "e9e9bc9f0e5c5042",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "e9e9bc9f0e5c5042 — CVE-2022-36025",
+      "text": "CVE-2022-36025は、BesuのCALLにおける利用可能ガス量の32ビット変換誤りの記録である。誤った数値変換により、EVM仕様に対してコントラクトへ渡されるガス量が変わってしまう。",
+      "type": "invariant",
+      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "arithmetic-safety",
+        "integer_overflow_underflow",
+        "gas",
+        "execution",
+        "CWE-190"
+      ],
+      "bug_bounty_area": "execution/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-008",
+      "theorem": "EthVulnFormalProps.entry_ea812e5ad2a3da8e_arithmetic_safety",
+      "label": "transactions",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "ea812e5ad2a3da8e",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "ea812e5ad2a3da8e — CVE-2025-29072",
+      "text": "Nethermind Junoでは、Sierraバイトコードの伸長処理における整数オーバーフローにより、悪意ある入力が無限ループと高いCPU使用率を引き起こしうる。オーバーフローした算術がループ終了条件とコスト上限を無効化する。",
+      "type": "invariant",
+      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "arithmetic-safety",
+        "integer_overflow_underflow",
+        "transactions",
+        "execution",
+        "CWE-190"
+      ],
+      "bug_bounty_area": "execution/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-RB-014",
+      "theorem": "EthVulnFormalProps.entry_ece24a10f23119be_resource_bounds",
+      "label": "beacon-chain:attestation",
+      "x_layer": "EthVulnFormalProps/Props/ResourceBounds.lean",
+      "x_entry_id": "ece24a10f23119be",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "ece24a10f23119be — Improve validator monitor experience for high validator counts (#3728)",
+      "text": "バリデータモニタはバリデータごとのメトリクスを出力しており、バリデータ数が数千に達するとそのカーディナリティによってPrometheusが動かなくなってしまった。モニタリング出力のカーディナリティには上限が保たれていなければならない。",
+      "type": "invariant",
+      "assertion": "usage(s) <= bound and step(s,i) in {ok(s'), reject(s')} -> usage(s') <= bound",
+      "severity": "HIGH",
+      "covers_hint": [
+        "resource-bounds",
+        "missing_input_validation",
+        "beacon-chain:attestation",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/resource-bounds",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "liveness_only": true,
+      "shard": "resource-bounds"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-MS-004",
+      "theorem": "EthVulnFormalProps.entry_eff1234250453226_memory_safety",
+      "label": "rpc",
+      "x_layer": "EthVulnFormalProps/Props/MemorySafety.lean",
+      "x_entry_id": "eff1234250453226",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "eff1234250453226 — github.com/buger/jsonparser: bump 1.1.1 → 1.1.2 to address CVE-2026-32285 (HIGH, CVSS 7.5 —",
+      "text": "jsonparserのCVE-2026-32285(範囲外読み取り)は、Erigonにおける依存ライブラリのバージョン更新によって修正された。パース処理がバッファの範囲を超えて読み取っていた。",
+      "type": "invariant",
+      "assertion": "idx in accesses(input) -> idx < size(object)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "memory-safety",
+        "missing_bounds_check",
+        "rpc",
+        "execution",
+        "CWE-125"
+      ],
+      "bug_bounty_area": "execution/memory-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "memory-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-CA-004",
+      "theorem": "EthVulnFormalProps.entry_f6053ce4214c0e2f_crypto_auth_integrity",
+      "label": "p2p-interface",
+      "x_layer": "EthVulnFormalProps/Props/CryptoAuthIntegrity.lean",
+      "x_entry_id": "f6053ce4214c0e2f",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "f6053ce4214c0e2f — Analysis of the network shows a concerning portion of users are running Lighthouse with a version prior to `v1.2.0`. The",
+      "text": "v1.2.0より前のLighthouseは、コアとなる暗号ライブラリの脆弱性(データセット上の根本原因はcrypto_misuse)にさらされている。暗号処理層は方式を正しく実装しなければならない。",
+      "type": "invariant",
+      "assertion": "accepts(k,a) = true -> Valid(k,a); established(s,k,a) -> accepts(k,a) = true",
+      "severity": "HIGH",
+      "covers_hint": [
+        "crypto-auth-integrity",
+        "crypto_misuse",
+        "p2p-interface",
+        "consensus",
+        "CWE-20"
+      ],
+      "bug_bounty_area": "consensus/crypto-auth-integrity",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "crypto-auth-integrity"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SI-002",
+      "theorem": "EthVulnFormalProps.entry_f81c1c6c4cd53ffb_state_integrity",
+      "label": "beacon-chain:slashing",
+      "x_layer": "EthVulnFormalProps/Props/StateIntegrity.lean",
+      "x_entry_id": "f81c1c6c4cd53ffb",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "f81c1c6c4cd53ffb — Although these bugs were *not* security risks, they caused significant user frustration during the holiday period. We ap",
+      "text": "Lighthouse v1.0.6では、slasherデータベースが不正な状態になっていた(また--beacon-nodeが無視されていた)。保存されているslasherレコードが有効性を失い、保存状態の整合性を破っていた。",
+      "type": "invariant",
+      "assertion": "Inv(s) -> Inv(step(s,i))",
+      "severity": "HIGH",
+      "covers_hint": [
+        "state-integrity",
+        "missing_input_validation",
+        "beacon-chain:slashing",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/state-integrity",
+      "attacker_controlled": false,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "local-attack",
+      "liveness_only": false,
+      "shard": "state-integrity"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-009",
+      "theorem": "EthVulnFormalProps.entry_f960a5728e79e59b_spec_equivalence",
+      "label": "engine-api",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "f960a5728e79e59b",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "f960a5728e79e59b — feat: Check CL/Reth capability compatibility",
+      "text": "RethはFusakaフォークを越えて古いCLのまま動作し続け、有効なブロックを生成できなくなった。EL/CLの機能バージョンは、仕様に準拠した挙動のために有効なフォーク仕様と互換性を保たなければならない。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "consensus_divergence",
+        "engine-api",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-014",
+      "theorem": "EthVulnFormalProps.entry_geth_ethereum_go_ethereum_GHSA_2gjw_fg97_vg3r_availability_robustness",
+      "label": "crypto",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "geth:ethereum-go-ethereum:GHSA-2gjw-fg97-vg3r",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "geth:ethereum-go-ethereum:GHSA-2gjw-fg97-vg3r — DoS via malicious p2p message",
+      "text": "細工されたp2pメッセージがGethノードをシャットダウンまたはクラッシュさせうる(v1.16.9/v1.17.0で修正)。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "HIGH",
+      "covers_hint": [
+        "availability-robustness",
+        "resource_exhaustion",
+        "crypto",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-010",
+      "theorem": "EthVulnFormalProps.entry_geth_ethereum_go_ethereum_GHSA_69v6_xc2j_r2jf_spec_equivalence",
+      "label": "precompiles",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "geth:ethereum-go-ethereum:GHSA-69v6-xc2j-r2jf",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "geth:ethereum-go-ethereum:GHSA-69v6-xc2j-r2jf — Shallow copy in the 0x4 precompile could lead to EVM memory corruption",
+      "text": "Gethの0x4 dataCopyプリコンパイルは浅いコピーしか行っておらず、EVMメモリ破壊とチェーン分岐を招きうる。脆弱なノードは正典チェーンを拒否してしまう。コピーのセマンティクスが仕様の値渡しセマンティクスから乖離していた。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "improper_state_update",
+        "precompiles",
+        "execution",
+        "CWE-439"
+      ],
+      "bug_bounty_area": "execution/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-011",
+      "theorem": "EthVulnFormalProps.entry_geth_ethereum_go_ethereum_GHSA_9856_9gg9_qcmq_spec_equivalence",
+      "label": "opcodes",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "geth:ethereum-go-ethereum:GHSA-9856-9gg9-qcmq",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "geth:ethereum-go-ethereum:GHSA-9856-9gg9-qcmq — RETURNDATA corruption via datacopy",
+      "text": "datacopy経由のRETURNDATA破壊である。EVMメモリ破壊のバグにより、脆弱なノードは異なるstateRootを算出し、正典チェーンに対するコンセンサスエラーを引き起こす。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "consensus_divergence",
+        "opcodes",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AS-009",
+      "theorem": "EthVulnFormalProps.entry_geth_ethereum_go_ethereum_GHSA_jm5c_rv3w_w83m_arithmetic_safety",
+      "label": "opcodes",
+      "x_layer": "EthVulnFormalProps/Props/ArithmeticSafety.lean",
+      "x_entry_id": "geth:ethereum-go-ethereum:GHSA-jm5c-rv3w-w83m",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "geth:ethereum-go-ethereum:GHSA-jm5c-rv3w-w83m — Denial of service via `MulMod`",
+      "text": "mulmod(a,b,0)はブロック処理中にGethをパニックさせる。仕様は法が0のMULMODの結果を0と定義しているが、実装の部分演算はクラッシュしてしまう。",
+      "type": "invariant",
+      "assertion": "evmMulMod(a, b, 0) = 0 (MULMOD is total; modulus 0 yields 0, never a crash)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "arithmetic-safety",
+        "integer_overflow_underflow",
+        "opcodes",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/arithmetic-safety",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "arithmetic-safety"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-012",
+      "theorem": "EthVulnFormalProps.entry_geth_ethereum_go_ethereum_GHSA_xw37_57qp_9mm4_spec_equivalence",
+      "label": "transactions",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "geth:ethereum-go-ethereum:GHSA-xw37-57qp-9mm4",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "geth:ethereum-go-ethereum:GHSA-xw37-57qp-9mm4 — Consensus flaw during block processing",
+      "text": "ブロック処理中のコンセンサス上の欠陥により、特定のトランザクション列が脆弱なバージョンのGethに正典チェーンを拒否させることができた。ブロック処理が仕様の状態遷移から乖離していた。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "consensus_divergence",
+        "transactions",
+        "execution",
+        "N/A"
+      ],
+      "bug_bounty_area": "execution/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-AR-015",
+      "theorem": "EthVulnFormalProps.entry_geth_ghsa_advisory_GHSA_m6gx_rhvj_fh52_availability_robustness",
+      "label": "other",
+      "x_layer": "EthVulnFormalProps/Props/AvailabilityRobustness.lean",
+      "x_entry_id": "geth:ghsa-advisory:GHSA-m6gx-rhvj-fh52",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "geth:ghsa-advisory:GHSA-m6gx-rhvj-fh52 — Denial of service due to Go CVE-2020-28362 [GHSA-m6gx-rhvj-fh52 CVE-2020-28362]",
+      "text": "脆弱なGoバージョンでビルドされたGethはCVE-2020-28362(信頼できない入力から到達可能なmath/bigのパニック)を引き継ぎ、重大なDoSとなる。敵対的な入力に対する暗号処理経路の算術がノードをクラッシュさせてはならない。",
+      "type": "invariant",
+      "assertion": "forall s i, handler(s,i) != crash",
+      "severity": "CRITICAL",
+      "covers_hint": [
+        "availability-robustness",
+        "resource_exhaustion",
+        "other",
+        "execution",
+        "CWE-400"
+      ],
+      "bug_bounty_area": "execution/availability-robustness",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": true,
+      "shard": "availability-robustness"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-SE-013",
+      "theorem": "EthVulnFormalProps.entry_lighthouse_sigp_lighthouse_GHSA_wm9c_xvqq_5c28_spec_equivalence",
+      "label": "beacon-chain:sync-committee",
+      "x_layer": "EthVulnFormalProps/Props/SpecEquivalence.lean",
+      "x_entry_id": "lighthouse:sigp-lighthouse:GHSA-wm9c-xvqq-5c28",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "lighthouse:sigp-lighthouse:GHSA-wm9c-xvqq-5c28 — Incorrect processing of effective balances in Electra epoch processing",
+      "text": "Lighthouse v7.0.0-betaのprocess_epochは、Electraネットワーク上で実効残高を誤って処理していた。epoch処理はconsensus specの遷移と一致していなければならず、結果として得られる残高状態も正しくなければならない。",
+      "type": "invariant",
+      "assertion": "validFor(s,i) -> impl(s,i) = spec(s,i)",
+      "severity": "HIGH",
+      "covers_hint": [
+        "spec-equivalence",
+        "missing_input_validation",
+        "beacon-chain:sync-committee",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/spec-equivalence",
+      "attacker_controlled": true,
+      "entry_points": [
+        "FunctionCall"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "spec-equivalence"
+    },
+    {
+      "property_id": "PROP-lean-ethvuln-IV-004",
+      "theorem": "EthVulnFormalProps.entry_teku_ghsa_advisory_GHSA_mwfw_vm54_g3p7_input_validation",
+      "label": "p2p-interface",
+      "x_layer": "EthVulnFormalProps/Props/InputValidation.lean",
+      "x_entry_id": "teku:ghsa-advisory:GHSA-mwfw-vm54-g3p7",
+      "x_origin": "data/theorem_map_table.json + data/classification.json (generated by scripts/generate_theorem_map.py)",
+      "x_dataset_evidence": "teku:ghsa-advisory:GHSA-mwfw-vm54-g3p7 — Potential remote code exploit in log4j dependency [GHSA-mwfw-vm54-g3p7 CVE-2021-44228]",
+      "text": "Tekuの依存ライブラリにおけるlog4j CVE-2021-44228である。攻撃者が制御できる文字列がロガーに到達すると、リモートコード実行を引き起こしうる。信頼できないデータが無害なテキストではなく実行可能なlookup指令として解釈されていた。",
+      "type": "invariant",
+      "assertion": "handler(s,i) = ok(s') -> valid(i)",
+      "severity": "CRITICAL",
+      "covers_hint": [
+        "input-validation",
+        "missing_input_validation",
+        "p2p-interface",
+        "consensus",
+        "N/A"
+      ],
+      "bug_bounty_area": "consensus/input-validation",
+      "attacker_controlled": true,
+      "entry_points": [
+        "CallbackHandler"
+      ],
+      "exploitability": "external-attack",
+      "liveness_only": false,
+      "shard": "input-validation"
     }
-  ]
+  ],
+  "ethvuln_source": "NyxFoundation/ethereum-vuln-dataset",
+  "ethvuln_ref": "c7c4ccbc46aaaeb8b4d3abf18a81f587d2ba017e"
 }
