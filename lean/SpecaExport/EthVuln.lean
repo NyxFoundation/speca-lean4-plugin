@@ -7,8 +7,10 @@ ethereum-vuln-dataset トラック(M2 Track C / c-1)のルートモジュール�
 すべての命題は型検査を通らなければならない。
 
 各宣言の完全修飾名は `EthVulnFormalProps.*`(名前空間は移植元の
-eth-vuln-formal-props パッケージのまま)。`theorem_map.json` の
-`PROP-lean-ethvuln-*` エントリがこの名前で各定理を参照する。
+eth-vuln-formal-props パッケージのまま)。`theorem_map_ethvuln.json` の
+`PROP-lean-ethvuln-*` エントリがこの名前で各定理を参照し、exporter は
+`lake exe speca-export-ethvuln`(`MainEthVuln.lean`)で本モジュールを
+runtime に読み込んで解決する(gasper 用 `speca-export` は読み込まない)。
 -/
 import SpecaExport.EthVuln.Common
 import SpecaExport.EthVuln.Props.ArithmeticSafety

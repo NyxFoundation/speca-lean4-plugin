@@ -86,6 +86,9 @@ Data inputs (all versioned in-repo):
 | `data/findings_map.json` | DEPRECATED prose recall table, reported as `recall_prose_deprecated` only |
 | `tests/fixtures/bug_bounty_scope.sample.json` | sample `BUG_BOUNTY_SCOPE.json` (real one comes from the speca run) |
 | `tests/fixtures/theorem_health.sample.json` | sample exporter output for Lean-free tests |
+| `theorem_map_ethvuln.json` | ethvuln track (speca#146 c-1): 66 `PROP-lean-ethvuln-*` entries for the in-repo `SpecaExport.EthVuln` statements; names its exporter (`lean_exe: speca-export-ethvuln`); see `docs/ethvuln-track.md` |
+| `tests/fixtures/theorem_health.ethvuln.sample.json` | real `speca-export-ethvuln` output for the 66 (all `unknown`: proofs are `sorry` stubs) — Lean-free tests / CI |
+| `tests/fixtures/bug_bounty_scope.ethvuln.sample.json` | sample full-node scope (both layers) for the ethvuln track |
 
 The precision benchmark corpus is not vendored: restore it with
 `gh release download bench-rq2a-20260508-speca --repo NyxFoundation/speca` and

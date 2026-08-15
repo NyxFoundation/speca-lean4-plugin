@@ -72,6 +72,12 @@ def _tail(text: str, n: int = 2000) -> str:
 def _run_lean(theorem_map: dict[str, Any]) -> dict[str, Any]:
     """Write the target list and invoke `lake exe speca-export`, returning parsed health.
 
+    A map may name a different executable of the same workspace in `lean_exe`
+    (theorem_map_ethvuln.json -> `speca-export-ethvuln`, whose entry point loads
+    the in-repo `SpecaExport.EthVuln` modules); the default is the gasper
+    exporter. `x_src_roots` (optional) lists extra `--src-root` dirs, relative
+    to the workspace, for the A7 verbatim proof-source slices.
+
     The exporter writes its health JSON to a file (`--output`), NOT to stdout:
     on a cold lake workspace, `lake exe` emits toolchain-download, dependency-
     fetch and build progress on stdout before the executable even runs
@@ -86,11 +92,14 @@ def _run_lean(theorem_map: dict[str, Any]) -> dict[str, Any]:
     targets_path = workdir / "speca_export.targets"
     targets_path.write_text("\n".join(targets) + "\n", encoding="utf-8")
     out_path = workdir / "health.json"
+    lean_exe = str(theorem_map.get("lean_exe") or "speca-export")
     cmd = [
-        "lake", "exe", "speca-export",
+        "lake", "exe", lean_exe,
         "--targets", str(targets_path),
         "--output", str(out_path),
     ]
+    for root in theorem_map.get("x_src_roots") or []:
+        cmd += ["--src-root", str(root)]
     proc = subprocess.run(cmd, cwd=str(_LEAN_DIR), capture_output=True, text=True)
     # Forward build/toolchain noise so it is never silently discarded.
     if proc.stdout:

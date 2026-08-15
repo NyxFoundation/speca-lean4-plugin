@@ -36,16 +36,21 @@ into SPECA `01e` security properties.
 > hand-written text is not Lean-verified, only the theorem it descends from
 > is. Design: [`docs/high-angle-checklist.md`](docs/high-angle-checklist.md).
 
-## Two formalization targets
+## Three formalization targets
 
-| track | source | layer | map | workspace |
+| track | source | layer | map | workspace / exporter |
 |---|---|---|---|---|
-| **gasper** | [`gasper-lean4`](https://github.com/NyxFoundation/gasper-lean4) (git dep) | consensus — Casper FFG accountable safety | `theorem_map.json` | `lean/` (Lean 4.31.0) |
-| **ethtotal** | [`eth-total-supply-safety`](https://github.com/NyxFoundation/eth-total-supply-safety) (submodule at `external/`) | execution — total-supply & ledger accounting | `theorem_map_ethtotal.json` | `lean-ethtotal/` (Lean 4.33.0-rc1) |
+| **gasper** | [`gasper-lean4`](https://github.com/NyxFoundation/gasper-lean4) (git dep) | consensus — Casper FFG accountable safety | `theorem_map.json` | `lean/` (Lean 4.31.0), `lake exe speca-export` |
+| **ethtotal** | [`eth-total-supply-safety`](https://github.com/NyxFoundation/eth-total-supply-safety) (submodule at `external/`) | execution — total-supply & ledger accounting | `theorem_map_ethtotal.json` | `lean-ethtotal/` (Lean 4.33.0-rc1), `lake exe speca-export` |
+| **ethvuln** | in-repo `lean/SpecaExport/EthVuln/` (from [`ethereum-vuln-dataset`](https://github.com/NyxFoundation/ethereum-vuln-dataset) Critical/High, speca#146) | consensus + execution — the invariant each real client bug broke | `theorem_map_ethvuln.json` | `lean/` (Lean 4.31.0), `lake exe speca-export-ethvuln` |
 
 Everything below describes the gasper track unless stated otherwise; the second
 track has its own end-to-end write-up in
-[`docs/ethtotal-track.md`](docs/ethtotal-track.md). Short version: all **3333**
+[`docs/ethtotal-track.md`](docs/ethtotal-track.md), the third in
+[`docs/ethvuln-track.md`](docs/ethvuln-track.md) (66 statements, **proofs
+deferred** — every one is a `sorry` stub and the exporter reports it
+`lean_status: unknown`; the map never claims otherwise). Short version of the
+EthTotal track: all **3333**
 theorems of the EthTotal development are exported and certified
 (`lean_status: proved`, zero non-builtin axioms), every one of them is bucketed
 by a reviewable triage so the `Lemmata/` layer is swept rather than sampled, 176
@@ -61,10 +66,14 @@ ones through `data/anchor_map_execution.json` to
 symbols, each row verified (file + line) against a pinned checkout by
 `tools/build-el-anchor-map.py`.
 
-The two tracks share one exporter: `SpecaExport` is parameterized by a
+The three tracks share one exporter: `SpecaExport` is parameterized by a
 `ProjectConfig` (namespace, project name, model assumptions), with
 `gasperConfig` holding exactly the previous hardcoded values — the gasper export
-is byte-compatible, `gasper_axioms` included.
+is byte-compatible, `gasper_axioms` included. Each track has its own entry
+point (`lean/Main.lean`, `lean-ethtotal/Main.lean`, `lean/MainEthVuln.lean`)
+that imports that track's root modules and passes them to `driverMain`; a map
+that is not the gasper one names its executable in `lean_exe` so
+`emit-01e --map <map> --run-lean` invokes the right one.
 
 ## Why a plugin (not vendored into speca)
 

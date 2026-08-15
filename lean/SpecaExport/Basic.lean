@@ -7,8 +7,9 @@ import Lean.DocString
 -- NOTE: this module is *project-agnostic* — it imports no formalization.
 -- Which project's modules are loaded (and which namespace counts as
 -- "project-local") is decided by the workspace entry point: `lean/Main.lean`
--- for gasper-lean4, `lean-ethtotal/Main.lean` for eth-total-supply-safety.
--- Both pass a `ProjectConfig` (below) into `classifyAll`/`render`.
+-- for gasper-lean4, `lean-ethtotal/Main.lean` for eth-total-supply-safety,
+-- `lean/MainEthVuln.lean` for the in-repo ethereum-vuln-dataset track.
+-- Each passes a `ProjectConfig` (below) into `classifyAll`/`render`.
 
 /-!
 Proof-health export for the SPECA Lean4 plugin.
@@ -131,6 +132,20 @@ universe/type parameters) stay depend-allowed under rule 2. -/
 def ethTotalConfig : ProjectConfig where
   nsPrefix := `EthTotal
   projectName := "EthTotal"
+
+/-- ethereum-vuln-dataset track (`EthVulnFormalProps.*`, speca#146 c-1): the
+Critical/High vulnerability invariants placed in this repo under
+`lean/SpecaExport/EthVuln/`. Statements type-check; proofs are deferred `sorry`
+stubs, which `classify` reports honestly as `lean_status = "unknown"` /
+`sorry_free = false` -- never `proved`.
+
+No model-assumption list: each proposition is stated over its own small
+abstract model (`ResourceModel`, `Handler`, `ValidatedBy`, ...) and every
+`Prop` hypothesis is an obligation the client implementation must actually
+establish, so all of them are must-establish under rule 3's honest default. -/
+def ethVulnConfig : ProjectConfig where
+  nsPrefix := `EthVulnFormalProps
+  projectName := "EthVulnFormalProps"
 
 /-- Per-hypothesis classification record. -/
 structure HypothesisInfo where
