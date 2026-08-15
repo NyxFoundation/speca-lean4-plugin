@@ -128,6 +128,12 @@ were repaired. The resulting concrete artifact is
 `outputs/20260814-ethtotal/01e_PARTIAL_ethtotal.json`; quality judging remains a separate
 step and is not represented by this fidelity count.
 
+`outputs/20260814-ethtotal/01e_PARTIAL_ethtotal.json` is the single reviewer-facing
+01e for this track. Each new run replaces it with the latest validated result.
+Intermediate emits and improvement proposals stay under the ignored `.work/`
+directory; optional quality reports live under `quality/`. Reviewers should read
+only the canonical 01e. Changes between revisions remain visible in git history.
+
 The historical generation run was the `--cover-all` mode: every CRITICAL/HIGH base entry with no
 concrete CHK twin is concretized against the most dataset-prevalent
 critical/high defect class for its label, judged blind by a **cross-family**

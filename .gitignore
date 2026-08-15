@@ -25,6 +25,9 @@ lean-ethtotal/health.json
 # work
 *.targets
 improve_run*/
+# Intermediate self-improvement artifacts stay out of the reviewer-facing
+# output directory; the canonical 01e and quality reports are copied out.
+outputs/**/.work/
 # root-level scratch emits only — outputs/<date>-<title>/01e_PARTIAL_*.json
 # is the versioned audit source and must stay tracked
 /01e_*.json

@@ -164,10 +164,15 @@ fidelity repair pass, the packet judge scored 3.467 against the 2.169
 reference mean and still met the configured reference bar; the closure-aware
 fidelity pass completed for all 45 packets.
 
+For reviewer ergonomics, this path is the single canonical 01e for the track.
+Each new run replaces it with the latest validated result; intermediate 01e
+emits are kept only in the ignored run workspace, and before/after history is
+reviewed through git.
+
 For the existing 345 properties, a conservative non-LLM materializer now
 attaches the same root-plus-closure packet shape directly from the Lean export.
 Thus the full artifact has 390/390 packets and 1,712 root-closure records in
-the 176 distinct theorem roots. The LLM wording loop is parallelized and
-reproducible for the full set, but a full 390-item run depends on the available
-LLM provider quota; the completed few-shot score above is for the original 45
-CHK surface.
+the 176 distinct theorem roots. The full Cloud Opus run then judged and
+improved all 390 properties: the overall mean rose from 2.242 to 3.149 and
+the configured reference bar was met. The quality evidence is in
+`outputs/20260814-ethtotal/quality/`; it is supplementary to the canonical 01e.
