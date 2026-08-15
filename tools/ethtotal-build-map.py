@@ -67,6 +67,8 @@ def main() -> int:
     ap.add_argument("--generated", default=str(_ROOT / "data" / "ethtotal_generated_properties.json"),
                     help="stage-2 CHK-* proposals from tools/generate-properties.py "
                          "(and sharpened in place by the improve loop); skipped when absent")
+    ap.add_argument("--packets", default=str(_ROOT / "data" / "ethtotal_audit_packets.json"),
+                    help="proof-aware packets for existing theorem roots; skipped when absent")
     ap.add_argument("--vulns-csv", default=str(_ROOT / "data" / "ethtotal_vulns_high.csv"))
     ap.add_argument("--out", default=str(_ROOT / "theorem_map_ethtotal.json"))
     args = ap.parse_args()
@@ -86,6 +88,12 @@ def main() -> int:
     inv = json.loads(Path(args.inventory).read_text(encoding="utf-8"))
     triage = json.loads(Path(args.triage).read_text(encoding="utf-8"))
     cur = json.loads(Path(args.curation).read_text(encoding="utf-8"))
+    packet_overlay = {}
+    packet_path = Path(args.packets)
+    if packet_path.exists():
+        packet_doc = json.loads(packet_path.read_text(encoding="utf-8"))
+        packet_overlay = {p["theorem"]: p for p in packet_doc.get("packets", [])}
+        print(f"loaded {len(packet_overlay)} existing-theorem audit packets")
     health_doc = json.loads(health_path.read_text(encoding="utf-8"))
     health = {t["name"]: t for t in health_doc["theorems"]}
     # the export size reported in x_stats is the FULL export's, so the map is
@@ -151,7 +159,7 @@ def main() -> int:
             return
         seen.add(name)
         d = decl[name]
-        entries.append({
+        entry = {
             "property_id": prop_id(theme),
             "theorem": name,
             "label": theme["label"],
@@ -168,7 +176,10 @@ def main() -> int:
             "exploitability": theme["exploitability"],
             "liveness_only": False,
             "shard": theme["shard"],
-        })
+        }
+        if name in packet_overlay:
+            entry.update(packet_overlay[name])
+        entries.append(entry)
 
     # 1. reviewed entries
     for c in cur["curated"]:

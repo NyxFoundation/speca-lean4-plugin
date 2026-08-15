@@ -26,7 +26,8 @@ Loop (matches the #88 comment verbatim):
   1. generate  — reuse the existing emit-01e / CHK-15 output (NOT re-implemented)
   2. judge     — score every item on the five axes
   3. improve   — low scorers get (a) the item, (b) the judge critique,
-                 (c) matching vuln-dataset rows, and are sharpened
+                 (c) matching vuln-dataset classes and safe few-shot style
+                     cards, and are sharpened
   4. re-judge  — repeat 2-3
   5. converge  — stop only when BOTH hold: the score distribution meets the
                  reference bar AND the last `plateau_rounds` rounds are flat
@@ -49,6 +50,7 @@ import re
 import statistics
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Callable
 
@@ -269,10 +271,14 @@ def judge_item(
 
 
 def judge_items(
-    items: list[dict[str, str]], judge_fn: LLMFn, retries: int = 1, retry_wait: float = 0.0
+    items: list[dict[str, str]], judge_fn: LLMFn, retries: int = 1, retry_wait: float = 0.0,
+    workers: int = 1,
 ) -> list[dict[str, Any]]:
     if not items:
         raise JudgeError("no items to judge")
+    if workers > 1:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            return list(pool.map(lambda it: judge_item(it, judge_fn, retries, retry_wait), items))
     return [judge_item(it, judge_fn, retries, retry_wait) for it in items]
 
 
@@ -366,8 +372,125 @@ def select_evidence(
     return [{k: v.get(k, "") for k in keep} for v in pool[:n]]
 
 
+# These are deliberately style cards, not vulnerability descriptions. The
+# dataset selects which cards are shown, but the cards contain no client,
+# function, exploit path, or protocol claim that could contaminate a
+# proof-derived property. This keeps the dataset in its intended role:
+# teaching the shape of a professional audit check, not supplying semantics.
+_FEW_SHOT_STYLE_CARDS: dict[str, dict[str, str]] = {
+    "integer_overflow_underflow": {
+        "weak": "Check arithmetic for overflow or underflow.",
+        "strong": (
+            "For every path that evaluates an unsigned subtraction x-y, verify "
+            "that x >= y has been established for the same x and y before the "
+            "operation; flag any path where the result can wrap, saturate, or "
+            "differ from the intended difference."
+        ),
+        "lesson": "Name the operation, operand-bound, operand identity, and observable arithmetic failure.",
+    },
+    "missing_bounds_check": {
+        "weak": "Validate indexes before using them.",
+        "strong": (
+            "Before using an attacker-controlled index to access a collection, "
+            "verify that the index is within the collection's current bounds on "
+            "every path; flag validation of a different index, validation after "
+            "the access, or a stale length."
+        ),
+        "lesson": "Bind the guard to the exact value, collection, snapshot, and order of use.",
+    },
+    "consensus_divergence": {
+        "weak": "Make all implementations agree.",
+        "strong": (
+            "For the same accepted input and pre-state, compare the externally "
+            "observable result across every implementation path; flag any "
+            "difference caused by parsing, arithmetic, default-value, or error "
+            "handling semantics."
+        ),
+        "lesson": "Specify the shared input/state and the exact observable equality to compare.",
+    },
+    "improper_state_update": {
+        "weak": "Check that state updates are correct.",
+        "strong": (
+            "After the state transition, verify the exact fields that must change "
+            "and the fields that must remain unchanged, including the ordering "
+            "of dependent writes; flag any stale read, omitted update, or change "
+            "to an unrelated field."
+        ),
+        "lesson": "Separate post-state equality, preserved fields, and write ordering.",
+    },
+    "logic_error_invariant_violation": {
+        "weak": "Preserve the invariant.",
+        "strong": (
+            "For every transition satisfying the stated preconditions, recompute "
+            "the invariant from the post-state rather than trusting a cached or "
+            "partial value; flag any transition that violates the exact relation."
+        ),
+        "lesson": "Turn the invariant into a repeatable post-state check with a concrete mismatch.",
+    },
+}
+
+
+def select_few_shot_examples(
+    label: str,
+    root_cause: str,
+    vulns: list[dict[str, str]],
+    n: int = 2,
+) -> list[dict[str, str]]:
+    """Select safe, dataset-indexed style cards for the improve prompt.
+
+    Raw dataset titles and attack paths are intentionally excluded. Rows
+    determine which failure classes are relevant and provide provenance IDs;
+    the card supplies a defensive weak/strong rewrite pattern. This makes the
+    step reproducible without letting a historical incident invent facts that
+    are absent from the Lean packet.
+    """
+    target = root_cause or "logic_error_invariant_violation"
+    ranked = [
+        v for v in vulns
+        if v.get("label") == label and v.get("root_cause") == target
+    ]
+    ranked += [
+        v for v in vulns
+        if v.get("root_cause") == target and v not in ranked
+    ]
+    ranked += [
+        v for v in vulns
+        if v.get("label") == label and v not in ranked
+    ]
+    ranked += [v for v in vulns if v not in ranked]
+
+    out: list[dict[str, str]] = []
+    seen_classes: set[str] = set()
+    for row in ranked:
+        cause = row.get("root_cause", "") or target
+        card = _FEW_SHOT_STYLE_CARDS.get(cause)
+        if card is None or cause in seen_classes:
+            continue
+        seen_classes.add(cause)
+        out.append({
+            "dataset_id": row.get("id", ""),
+            "severity": row.get("severity", ""),
+            "label": row.get("label", ""),
+            "root_cause": cause,
+            **card,
+        })
+        if len(out) >= n:
+            break
+
+    if not out and target in _FEW_SHOT_STYLE_CARDS:
+        out.append({
+            "dataset_id": "class-template",
+            "severity": "",
+            "label": label,
+            "root_cause": target,
+            **_FEW_SHOT_STYLE_CARDS[target],
+        })
+    return out
+
+
 def build_improve_prompt(
-    prop: dict[str, Any], scored: dict[str, Any], evidence: list[dict[str, str]]
+    prop: dict[str, Any], scored: dict[str, Any], evidence: list[dict[str, str]],
+    few_shot: list[dict[str, str]] | None = None,
 ) -> str:
     ev_lines = "\n".join(
         f"- [{e['id']}] {e['severity']} — {e['label']} / {e['root_cause']}"
@@ -388,6 +511,30 @@ def build_improve_prompt(
             f"- theorem conclusion: {prop.get('lean_conclusion', '')}\n"
             f"- referenced objects: {ref_names}\n\n"
         )
+    packet = prop.get("audit_packet")
+    packet_lines = ""
+    if isinstance(packet, dict):
+        packet_lines = (
+            "Proof-aware audit packet (semantic anchor; do not weaken or replace it):\n"
+            f"{json.dumps(packet, ensure_ascii=False, indent=2)}\n\n"
+        )
+    few_shot = few_shot or []
+    style_lines = ""
+    if few_shot:
+        cards = []
+        for i, card in enumerate(few_shot, 1):
+            cards.append(
+                f"Style example {i} (dataset class {card['label']} / "
+                f"{card['root_cause']}; source id {card['dataset_id']}):\n"
+                f"WEAK: {card['weak']}\n"
+                f"STRONG: {card['strong']}\n"
+                f"LESSON: {card['lesson']}"
+            )
+        style_lines = (
+            "Few-shot style cards (teaching material only; not Lean evidence):\n"
+            + "\n\n".join(cards)
+            + "\n\n"
+        )
     return (
         # Defensive framing up front, and only failure-CLASS signals below (no
         # exploit title / attack-path): a specific-incident framing tripped the
@@ -399,6 +546,8 @@ def build_improve_prompt(
         f"TEXT: {prop.get('text', '')}\n"
         f"ASSERTION: {prop.get('assertion', '')}\n\n"
         f"{lean_lines}"
+        f"{packet_lines}"
+        f"{style_lines}"
         f"Judge scores (1-5): {json.dumps(scored['scores'])}\n"
         f"Judge critique: {scored['critique']}\n\n"
         f"{EF_BOUNTY_SEVERITY}\n\n"
@@ -409,6 +558,13 @@ def build_improve_prompt(
         "Rewrite the item to raise the weak axes. Rules:\n"
         "- Keep the same underlying invariant; sharpen it to the code-level "
         "condition and concrete failure mode an implementation would hit.\n"
+        "- The nested audit packet is the semantic source of truth; improve only "
+        "the top-level text/assertion and do not invent a fact absent from it.\n"
+        "- Use the few-shot cards to match their level of concreteness: name the "
+        "operation, guard, exact operands/state, expected result, and flag "
+        "condition. Do not copy their semantics into this property.\n"
+        "- The dataset is teaching material only. Never mention a dataset case, "
+        "client, exploit path, or historical incident in the output.\n"
         "- Stay general: NEVER name a specific client or implementation "
         "(e.g. a client name from the evidence) in the rewritten item.\n"
         "- ONE auditable concern only. Do NOT bundle several checks; if the "
@@ -486,6 +642,8 @@ def improve_loop(
     evidence_n: int = 3,
     retries: int = 1,
     retry_wait: float = 0.0,
+    workers: int = 1,
+    initial_scored: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Judge -> improve -> re-judge until convergence.
 
@@ -505,16 +663,31 @@ def improve_loop(
         raise JudgeError("duplicate or missing property_id among input properties")
 
     def _judge_all(only_ids: set[str] | None, prev: dict[str, dict] | None) -> dict[str, dict]:
-        out: dict[str, dict] = {}
-        for pid, p in by_id.items():
+        def one(pair: tuple[str, dict[str, Any]]) -> tuple[str, dict[str, Any]]:
+            pid, p = pair
             if only_ids is not None and pid not in only_ids and prev is not None:
-                out[pid] = prev[pid]
-                continue
+                return pid, prev[pid]
             item = {"id": pid, "check": str(p.get("text", "")), "detail": str(p.get("assertion", ""))}
-            out[pid] = judge_item(item, judge_fn, retries, retry_wait)
-        return out
+            return pid, judge_item(item, judge_fn, retries, retry_wait)
+        pairs = list(by_id.items())
+        if workers > 1:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                return dict(pool.map(one, pairs))
+        return dict(one(pair) for pair in pairs)
 
-    scored = _judge_all(None, None)
+    if initial_scored is not None:
+        expected = set(by_id)
+        actual = set(initial_scored)
+        if actual != expected:
+            missing = sorted(expected - actual)
+            extra = sorted(actual - expected)
+            raise JudgeError(
+                "initial judge report does not match properties "
+                f"(missing={missing[:5]}, extra={extra[:5]})"
+            )
+        scored = dict(initial_scored)
+    else:
+        scored = _judge_all(None, None)
     dist = score_distribution(list(scored.values()))
     history = [dist["overall_mean"]]
     meets, gaps = meets_reference_bar(dist, reference, axis_tolerance)
@@ -540,16 +713,35 @@ def improve_loop(
         low = select_low_items(list(scored.values()), reference, low_axis)
         improvements: list[dict[str, str]] = []
         changed: set[str] = set()
-        for s in sorted(low, key=lambda s: s["id"]):
+        def improve_one(s: dict[str, Any]) -> tuple[dict[str, str], dict[str, Any] | None, str]:
             pid = s["id"]
             prop = by_id[pid]
             evidence = select_evidence(str(prop.get("label", "")), vulns, evidence_n)
-            new_prop, reason = apply_improvement(
-                prop, improve_fn(build_improve_prompt(prop, s, evidence))
+            few_shot = select_few_shot_examples(
+                str(prop.get("label", "")),
+                str(prop.get("x_defect_class", "") or prop.get("root_cause", "")),
+                vulns,
             )
-            improvements.append({"id": pid, "result": reason})
+            new_prop, reason = apply_improvement(
+                prop, improve_fn(build_improve_prompt(prop, s, evidence, few_shot))
+            )
+            record = {
+                "id": pid,
+                "result": reason,
+                "few_shot_dataset_ids": [e["dataset_id"] for e in few_shot],
+                "few_shot_classes": [e["root_cause"] for e in few_shot],
+            }
+            return record, new_prop, pid
+        ordered_low = sorted(low, key=lambda s: s["id"])
+        if workers > 1:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                improved = list(pool.map(improve_one, ordered_low))
+        else:
+            improved = [improve_one(s) for s in ordered_low]
+        for record, new_prop, pid in improved:
+            improvements.append(record)
             if new_prop is not None and any(
-                new_prop.get(k) != prop.get(k) for k in MUTABLE_FIELDS
+                new_prop.get(k) != by_id[pid].get(k) for k in MUTABLE_FIELDS
             ):
                 by_id[pid] = new_prop
                 changed.add(pid)

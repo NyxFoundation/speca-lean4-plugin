@@ -33,6 +33,7 @@ from speca_lean4.judge import (
     plateaued,
     score_distribution,
     select_evidence,
+    select_few_shot_examples,
     select_low_items,
     split_cmd,
 )
@@ -282,6 +283,34 @@ def test_evidence_selection_is_deterministic_on_real_data():
     vulns = load_vulns(_DATA / "ethereum_vulns.csv")
     assert select_evidence("beacon-chain:slashing", vulns) == \
         select_evidence("beacon-chain:slashing", vulns)
+
+
+def test_few_shot_cards_are_specific_but_non_operational():
+    vulns = [{
+        "id": "V1", "severity": "High", "label": "evm",
+        "root_cause": "integer_overflow_underflow",
+        "title": "must not appear", "attack_path": "must not appear",
+    }]
+    cards = select_few_shot_examples("evm", "integer_overflow_underflow", vulns)
+    assert cards and cards[0]["dataset_id"] == "V1"
+    assert "same x and y" in cards[0]["strong"]
+    assert "title" not in cards[0] and "attack_path" not in cards[0]
+
+
+def test_improve_prompt_can_include_few_shot_style_cards():
+    scored = {"id": "CHK-T-01", "scores": dict(_scores(4)),
+              "overall": 4.0, "critique": "make the operation concrete"}
+    cards = select_few_shot_examples(
+        "evm", "missing_bounds_check", [{
+            "id": "V2", "severity": "High", "label": "evm",
+            "root_cause": "missing_bounds_check",
+        }]
+    )
+    prompt = build_improve_prompt(_PROP, scored, [], cards)
+    assert "Few-shot style cards" in prompt
+    assert "same x and y" not in prompt
+    assert "current bounds" in prompt
+    assert "not Lean evidence" in prompt
 
 
 def test_improve_prompt_carries_item_critique_and_evidence():

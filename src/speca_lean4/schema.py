@@ -116,8 +116,9 @@ class Property:
     # there would imply a per-property decision nobody made.
     spec_reference_basis: str | None = None
     # Proof-aware stage-2 provenance. These identify the exact Lean evidence
-    # payload and the one obligation selected by the generator; they are
-    # additive documentation fields and do not certify the checklist prose.
+    # payload and the proof-frontier packet generated from its full closure;
+    # they are additive documentation fields and do not certify prose by
+    # themselves.
     x_evidence_id: str | None = None
     x_evidence_sha256: str | None = None
     x_evidence_kind: str | None = None
@@ -127,6 +128,12 @@ class Property:
     x_lean_obligation: str | None = None
     x_lean_obligation_head: str | None = None
     x_lean_obligation_name: str | None = None
+    # Root-centered audit packet synthesized from the proof-DAG closure.
+    audit_packet: dict[str, Any] | None = None
+    # Machine-readable closure/provenance carried in 01e.
+    x_lean_obligations: list[dict] | None = None
+    x_proof_closure: list[dict] | None = None
+    x_proof_dependency_stats: dict[str, int] | None = None
     # E1 (issue #7): Executable decidable Bool checker / constructive witness
     # for this property's theorem (from data/checker_map.json). Non-null only
     # where a REAL Executable counterpart exists.
@@ -144,6 +151,8 @@ class Property:
         "x_evidence_id", "x_evidence_sha256", "x_evidence_kind",
         "x_fidelity_verdict", "x_fidelity_reason", "x_fidelity_model",
         "x_lean_obligation", "x_lean_obligation_head", "x_lean_obligation_name",
+        "audit_packet", "x_lean_obligations", "x_proof_closure",
+        "x_proof_dependency_stats",
     )
 
     def to_dict(self) -> dict[str, Any]:
@@ -248,6 +257,14 @@ def validate_property(d: dict[str, Any]) -> list[str]:
         v = d.get(key)
         if v is not None and not isinstance(v, str):
             problems.append(f"{key} must be a string")
+    if d.get("audit_packet") is not None and not isinstance(d["audit_packet"], dict):
+        problems.append("audit_packet must be an object")
+    if d.get("x_lean_obligations") is not None and not isinstance(d["x_lean_obligations"], list):
+        problems.append("x_lean_obligations must be a list")
+    if d.get("x_proof_closure") is not None and not isinstance(d["x_proof_closure"], list):
+        problems.append("x_proof_closure must be a list")
+    if d.get("x_proof_dependency_stats") is not None and not isinstance(d["x_proof_dependency_stats"], dict):
+        problems.append("x_proof_dependency_stats must be an object")
     basis = d.get("spec_reference_basis")
     if basis is not None and basis not in SPEC_REFERENCE_BASES:
         problems.append(f"spec_reference_basis {basis!r} not in {sorted(SPEC_REFERENCE_BASES)}")

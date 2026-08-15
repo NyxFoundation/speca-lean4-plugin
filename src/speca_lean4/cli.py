@@ -536,7 +536,7 @@ def cmd_judge(args: argparse.Namespace) -> int:
               f"(id prefix: {args.id_prefix or 'none'})", file=sys.stderr)
         return 2
     ref_dist, ref_items, ref_source = _reference_distribution(args, judge_fn)
-    scored = judge_items(ours_items, judge_fn, args.retries, args.retry_wait)
+    scored = judge_items(ours_items, judge_fn, args.retries, args.retry_wait, args.workers)
     ours_dist = score_distribution(scored)
     meets, gaps = meets_reference_bar(ours_dist, ref_dist, args.axis_tolerance)
     report = {
@@ -600,6 +600,11 @@ def cmd_improve(args: argparse.Namespace) -> int:
         plateau_rounds=args.plateau_rounds, plateau_delta=args.plateau_delta,
         axis_tolerance=args.axis_tolerance,
         retries=args.retries, retry_wait=args.retry_wait,
+        workers=args.workers,
+        initial_scored=(
+            {str(item["id"]): item for item in _load_json(args.initial_report).get("items", [])}
+            if args.initial_report else None
+        ),
     )
 
     out_dir = Path(args.out_dir)
@@ -781,6 +786,8 @@ def build_parser() -> argparse.ArgumentParser:
     j.add_argument("--id-prefix", help="only judge properties whose property_id starts with this (e.g. CHK-)")
     _add_judge_common_args(j)
     j.add_argument("--out", help="write the full JSON judge report here")
+    j.add_argument("--workers", type=int, default=8,
+                   help="parallel judge LLM calls (default 8)")
     j.add_argument(
         "--strict", action="store_true",
         help="exit non-zero when the score distribution is below the reference bar",
@@ -806,10 +813,17 @@ def build_parser() -> argparse.ArgumentParser:
              "eval denominator (default: data/ethereum_vulns.csv)",
     )
     i.add_argument("--out-dir", required=True, help="write score_log.json + improved_01e.json here")
+    i.add_argument(
+        "--initial-report",
+        help="reuse the target scores from a previous `judge --out` report "
+             "instead of re-judging the same properties",
+    )
     i.add_argument("--max-rounds", type=int, default=6, help="hard cap on improve rounds (default 6)")
     i.add_argument("--low-axis", type=int, default=3, help="an item with any axis <= this is an improve candidate (default 3)")
     i.add_argument("--plateau-rounds", type=int, default=3, help="rounds that must be flat to call 頭打ち (default 3)")
     i.add_argument("--plateau-delta", type=float, default=0.05, help="max overall-mean gain still counted as flat (default 0.05)")
+    i.add_argument("--workers", type=int, default=8,
+                   help="parallel judge/improve LLM calls (default 8)")
     i.add_argument(
         "--strict", action="store_true",
         help="exit non-zero when the loop ends without convergence",

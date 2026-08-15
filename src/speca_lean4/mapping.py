@@ -412,6 +412,10 @@ def build_property(
         x_lean_obligation=entry.get("x_lean_obligation"),
         x_lean_obligation_head=entry.get("x_lean_obligation_head"),
         x_lean_obligation_name=entry.get("x_lean_obligation_name"),
+        audit_packet=entry.get("audit_packet"),
+        x_lean_obligations=entry.get("x_lean_obligations"),
+        x_proof_closure=entry.get("x_proof_closure"),
+        x_proof_dependency_stats=entry.get("x_proof_dependency_stats"),
     )
 
 

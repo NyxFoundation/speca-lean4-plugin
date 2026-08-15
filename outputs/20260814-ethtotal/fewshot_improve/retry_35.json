@@ -1,0 +1,251 @@
+{
+  "phase": "01e",
+  "provider": "lean",
+  "gasper_source": "NyxFoundation/eth-total-supply-safety",
+  "gasper_ref": "a21b9f1b639e5b18a7e18d4757d330cdfda52b80",
+  "source": "NyxFoundation/eth-total-supply-safety",
+  "ref": "a21b9f1b639e5b18a7e18d4757d330cdfda52b80",
+  "spec_anchor_tables": [
+    {
+      "reference_prefix": "execution-specs",
+      "spec_source": "ethereum/execution-specs",
+      "spec_revision": "6e4808927cb7140f05c43890b48630afcc368d91",
+      "spec_fork": "prague",
+      "table": "data/anchor_map_execution.json",
+      "verification": "every symbol located in the pinned checkout (file/line recorded per row)"
+    }
+  ],
+  "x_improve_note": "proposal output of `speca-lean4 improve` (speca#88 stage-2 loop); the canonical checklist source stays theorem_map.json — landing these rewrites there is a reviewed, manual step",
+  "x_fidelity_review": {
+    "model_command": "claude -p",
+    "health_source": "lean-ethtotal/health.json",
+    "input_count": 1,
+    "output_count": 1,
+    "faithful_or_repaired": 1
+  },
+  "properties": [
+    {
+      "property_id": "CHK-GEN-35",
+      "text": "On the balance-subtracting debit of requested amount v from a live account s, verify the burn recorded in the accounting record equals min(v, bal(s)) against the same pre-state balance the debit uses, and is never the raw v when v > bal(s).",
+      "type": "invariant",
+      "assertion": "s in live => rec.burn == min(v, bal_pre(s)) && (v > bal_pre(s) => rec.burn == bal_pre(s) && rec.burn != v)",
+      "severity": "HIGH",
+      "covers": "process_message",
+      "reachability": {
+        "classification": "external-reachable",
+        "entry_points": [
+          "FunctionCall"
+        ],
+        "attacker_controlled": true,
+        "bug_bounty_scope": "in-scope"
+      },
+      "bug_bounty_eligible": true,
+      "exploitability": "external-attack",
+      "lean_status": "descends-from-proved",
+      "lean_artifact": "NyxFoundation/eth-total-supply-safety@a21b9f1b639e5b18a7e18d4757d330cdfda52b80:EthTotal/Extentions/SaturatedBurn.lean#reported_burn_is_saturated",
+      "label": "evm",
+      "lean_statement": "∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (s : A) (v : Nat) (hs : List.instMembership.mem L.live s),\n  Eq (EthTotal.Accounting.ofSetBalSub L s v hs).burn (instMinNat.min v (L.bal s))",
+      "lean_hypotheses": [
+        {
+          "class": "depend-allowed",
+          "head": "",
+          "name": "A",
+          "type": "Type u"
+        },
+        {
+          "class": "depend-allowed",
+          "head": "DecidableEq",
+          "name": "inst._@.EthTotal.Extentions.SaturatedBurn.4156964302._hygCtx._hyg.3",
+          "type": "DecidableEq A"
+        },
+        {
+          "class": "depend-allowed",
+          "head": "EthTotal.Ledger",
+          "name": "L",
+          "type": "EthTotal.Ledger A"
+        },
+        {
+          "class": "depend-allowed",
+          "head": "",
+          "name": "s",
+          "type": "A"
+        },
+        {
+          "class": "depend-allowed",
+          "head": "Nat",
+          "name": "v",
+          "type": "Nat"
+        },
+        {
+          "class": "must-establish",
+          "head": "Membership.mem",
+          "name": "hs",
+          "type": "List.instMembership.mem L.live s"
+        }
+      ],
+      "lean_must_establish": [
+        "List.instMembership.mem L.live s"
+      ],
+      "lean_referenced_defs": [
+        "EthTotal.Ledger",
+        "EthTotal.Ledger.live",
+        "EthTotal.Accounting.burn",
+        "EthTotal.Ledger.setBal",
+        "EthTotal.Ledger.bal",
+        "EthTotal.Accounting.ofSetBalSub"
+      ],
+      "lean_referenced_defs_expanded": [
+        {
+          "kind": "structure",
+          "name": "EthTotal.Ledger",
+          "pp": "structure EthTotal.Ledger : Type u → Type u\n  live : {A : Type u} → EthTotal.Ledger A → List A\n  live_distinct : ∀ {A : Type u} (self : EthTotal.Ledger A), EthTotal.Distinct self.live\n  bal : {A : Type u} → EthTotal.Ledger A → A → Nat\n  bal_live : ∀ {A : Type u} (self : EthTotal.Ledger A) (a : A), Ne (self.bal a) 0 → List.instMembership.mem self.live a"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Ledger.live",
+          "pp": "def EthTotal.Ledger.live : {A : Type u} → EthTotal.Ledger A → List A :=\n  fun A self => self.1"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Accounting.burn",
+          "pp": "def EthTotal.Accounting.burn : {A : Type u} → {L L' : EthTotal.Ledger A} → EthTotal.Accounting L L' → Nat :=\n  fun A L L' self => self.1"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Ledger.setBal",
+          "pp": "def EthTotal.Ledger.setBal : {A : Type u} →\n  [inst : DecidableEq A] →\n    (L : EthTotal.Ledger A) → (a : A) → Nat → List.instMembership.mem L.live a → EthTotal.Ledger A :=\n  fun {A} [inst : DecidableEq A] L a v ha => L.setBalOfPoint a (fun b => inst b a) v ha"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Ledger.bal",
+          "pp": "def EthTotal.Ledger.bal : {A : Type u} → EthTotal.Ledger A → A → Nat :=\n  fun A self => self.3"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Accounting.ofSetBalSub",
+          "pp": "def EthTotal.Accounting.ofSetBalSub : {A : Type u} →\n  [inst : DecidableEq A] →\n    (L : EthTotal.Ledger A) →\n      (s : A) →\n        (v : Nat) →\n          (hs : List.instMembership.mem L.live s) → EthTotal.Accounting L (L.setBal s (instHSub.hSub (L.bal s) v) hs) :=\n  fun {A} [DecidableEq A] L s v hs =>\n  { burn := instMinNat.min v (L.bal s), mint := 0, balanced := EthTotal.Ledger.acc_setBal_sub L s v hs }"
+        },
+        {
+          "kind": "inductive",
+          "name": "EthTotal.Distinct",
+          "pp": "inductive EthTotal.Distinct : {A : Type u} → List A → Prop\n  | EthTotal.Distinct.nil : ∀ {A : Type u}, EthTotal.Distinct List.nil\n  | EthTotal.Distinct.cons : ∀ {A : Type u} {a : A} {l : List A},\n  Not (List.instMembership.mem l a) → EthTotal.Distinct l → EthTotal.Distinct (List.cons a l)"
+        },
+        {
+          "kind": "structure",
+          "name": "EthTotal.Accounting",
+          "pp": "structure EthTotal.Accounting : {A : Type u} → EthTotal.Ledger A → EthTotal.Ledger A → Type\n  burn : {A : Type u} → {L L' : EthTotal.Ledger A} → EthTotal.Accounting L L' → Nat\n  mint : {A : Type u} → {L L' : EthTotal.Ledger A} → EthTotal.Accounting L L' → Nat\n  balanced : ∀ {A : Type u} {L L' : EthTotal.Ledger A} (self : EthTotal.Accounting L L'),\n  Eq (instHAdd.hAdd L'.supply self.burn) (instHAdd.hAdd L.supply self.mint)"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Ledger.setBalOfPoint",
+          "pp": "def EthTotal.Ledger.setBalOfPoint : {A : Type u} →\n  (L : EthTotal.Ledger A) →\n    (a : A) → ((b : A) → Decidable (Eq b a)) → Nat → List.instMembership.mem L.live a → EthTotal.Ledger A :=\n  fun {A} L a dec v ha =>\n  { live := L.live, live_distinct := L.live_distinct, bal := fun b => ite (Eq b a) v (L.bal b),\n    bal_live := EthTotal.Ledger.setBalOfPoint._proof_1 L a dec v ha }"
+        },
+        {
+          "kind": "theorem",
+          "name": "EthTotal.Ledger.acc_setBal_sub",
+          "pp": "theorem EthTotal.Ledger.acc_setBal_sub : ∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (s : A) (v : Nat) (hs : List.instMembership.mem L.live s),\n  Eq (instHAdd.hAdd (L.setBal s (instHSub.hSub (L.bal s) v) hs).supply (instMinNat.min v (L.bal s)))\n    (instHAdd.hAdd L.supply 0)"
+        }
+      ],
+      "lean_proof_provenance": "hand-written",
+      "lean_proof_code": "fun {A} [DecidableEq A] L s v hs => rfl",
+      "lean_conclusion": "Eq (EthTotal.Accounting.ofSetBalSub L s v hs).burn (instMinNat.min v (L.bal s))",
+      "lean_proof_source": "theorem reported_burn_is_saturated [DecidableEq A] (L : Ledger A) (s : A)\n    (v : ℕ) (hs : s ∈ L.live) :\n    (Accounting.ofSetBalSub L s v hs).burn = min v (L.bal s) := rfl",
+      "spec_reference": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py#process_message",
+      "spec_reference_basis": "label-default",
+      "x_evidence_id": "lean-health:EthTotal.reported_burn_is_saturated:d9a50215a9030533",
+      "x_evidence_sha256": "d9a50215a903053372d8ebf99f1523a9646cab0fa25467615f489e99279efa20",
+      "x_evidence_kind": "live-export",
+      "x_fidelity_verdict": "repaired",
+      "x_fidelity_reason": "FACT-4/OBS-4 promote the caller-side hypothesis hs (s ∈ L.live) into an implementation obligation demanding refusal or a liveness check for non-live sources; the theorem only assumes membership and says nothing about behavior without it. It belongs in preconditions, not as a derived check. Rewritten to a single concern: the recorded burn is the saturated min(v, bal_pre(s)).",
+      "x_fidelity_model": "claude -p",
+      "audit_packet": {
+        "guarantee": "For a burn of requested amount v debited from a live account s via the balance-subtracting update, the burn recorded in the accounting record is exactly the saturated value min(v, bal(s)) — never the unclamped request — and the accompanying state change is the point update setBal s (bal(s) - v) with mint = 0, so supply' + burn == supply + mint.",
+        "preconditions": [
+          "ROOT hypothesis hs: the debited account s is already a member of the ledger's live account list (s ∈ L.live). This is a caller-side precondition supplied as a witness argument to setBal and ofSetBalSub; the evidence states nothing about behavior when it does not hold, so it scopes the check rather than generating one.",
+          "Model-level structure invariant (Ledger.live_distinct): the live account list is duplicate-free, so the point update on s is unambiguous. Not itself an implementation check derived from the conclusion.",
+          "Model-level structure invariant (Ledger.bal_live): any account with a non-zero balance is live.",
+          "Balances and the requested amount v are non-negative naturals; subtraction on balances is truncated (saturating at 0). No word size or maximum value is implied by the evidence."
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-1",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Exact equality (not a bound, not a boolean): the burn field of the accounting record produced by the balance-subtracting operation equals min(v, bal(s)), where v is the requested amount and bal(s) the pre-state balance of the source.",
+            "check": "Drive the burn operation on a live source with requested amounts spanning v < bal(s), v == bal(s), and v > bal(s) (including bal(s) == 0 and v far above any live balance), then read the burn amount the implementation records for that operation.",
+            "expected": "recorded_burn == min(v, bal(s)) in every case; for v > bal(s) it is exactly bal(s), and for bal(s) == 0 it is 0.",
+            "flag_if": "The recorded burn equals the unclamped request v when v > bal(s), or is computed from a value never clamped against the pre-state balance, or is derived from a wrapped/underflowed difference."
+          },
+          {
+            "fact_id": "FACT-2",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Conservation, preserved at the strength of Ledger.acc_setBal_sub (the balanced field of Accounting): post-state supply plus min(v, bal(s)) equals pre-state supply plus mint, with mint = 0 on this operation — the recorded burn accounts for exactly the value removed from supply.",
+            "check": "For each such burn, recompute total_supply' + recorded_burn and total_supply + recorded_mint from independently summed state, and compare.",
+            "expected": "total_supply' + recorded_burn == total_supply + 0, and the actual balance decrement of s equals the recorded burn.",
+            "flag_if": "Supply drops by more or less than the recorded burn, mint is non-zero on this path, or the externally visible burn diverges from the value actually removed from the account."
+          },
+          {
+            "fact_id": "FACT-3",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "The accompanying state update is the point update setBal s (bal(s) - v) hs, i.e. bal'(b) = if b = s then bal(s) - v else bal(b): the target balance is set via truncated subtraction and every other account's balance, and the live list itself, is returned unchanged.",
+            "check": "Snapshot all account balances and the live account set before and after the operation, including the v > bal(s) case, and diff them.",
+            "expected": "Only s changes; bal'(s) == bal(s) - recorded_burn == max(0, bal(s) - v), never negative and never wrapped; the live account list is unchanged.",
+            "flag_if": "Another account's balance changes, s's new balance is not the truncated difference, or the balance underflows/wraps to a large value when v > bal(s)."
+          }
+        ],
+        "derived_obligations": [
+          {
+            "obligation_id": "OBS-1",
+            "check": "Property/fuzz test over (bal, v) pairs concentrated near the boundary v == bal(s) and at the extremes bal(s) == 0 and v == 0, asserting the recorded burn against an independently computed min(v, bal(s)).",
+            "expected": "recorded_burn == min(v, bal(s)) with no off-by-one at v == bal(s).",
+            "flag_if": "Any pair yields a recorded burn greater than bal(s) or greater than v.",
+            "supports": [
+              "FACT-1"
+            ]
+          },
+          {
+            "obligation_id": "OBS-2",
+            "check": "Cross-check the burn amount surfaced to consumers of the accounting record against the delta actually applied to s and to total supply, on the same operation.",
+            "expected": "All three agree: recorded burn == balance delta of s == supply delta.",
+            "flag_if": "The consumer-visible burn is computed from the requested amount while the state change uses the saturated amount (or vice versa) — a divergence in supply accounting.",
+            "supports": [
+              "FACT-1",
+              "FACT-2"
+            ]
+          },
+          {
+            "obligation_id": "OBS-3",
+            "check": "Review the subtraction applied to the balance for truncated (not wrapping, not signed) semantics, and confirm no caller path reaches the balance write with an amount that was clamped for only one of the two outputs.",
+            "expected": "The debit is saturated against the available pre-state balance for both the state write and the burn record, from the same read.",
+            "flag_if": "The clamp exists on only one of the two outputs (state vs. record), or a caller bypasses it.",
+            "supports": [
+              "FACT-1",
+              "FACT-3"
+            ]
+          }
+        ],
+        "derivation": "The root theorem is a definitional identity for the recorded burn: (Accounting.ofSetBalSub L s v hs).burn = min v (L.bal s). Its only hypothesis beyond typing is the membership witness hs : s ∈ L.live, which is a caller-supplied precondition scoping the statement — the evidence gives no post-condition for a non-live source, so hs is recorded under preconditions and generates no obligation. The accounting value is constructed together with the transition L → L.setBal s (L.bal s - v) hs, so the recorded burn (FACT-1) and the point update with truncated subtraction (FACT-3) are two halves of one operation and are checked jointly; setBalOfPoint supplies the 'other accounts and live list unchanged' shape. The balanced field, discharged by Ledger.acc_setBal_sub, is the stronger statement supply' + min v (bal s) = supply + 0 and is kept at that strength as FACT-2 rather than weakened to 'some burn was recorded'. A missing clamp manifests as recorded_burn = v (or a wrapped balance) when v > bal(s), desynchronizing supply accounting. Nothing here names a fee, a client component, or a word-size bound: the evidence is over Nat balances in a generic ledger.",
+        "omitted_facts": []
+      },
+      "x_lean_obligations": [
+        {
+          "name": "hs",
+          "type": "List.instMembership.mem L.live s",
+          "head": "Membership.mem",
+          "class": "must-establish"
+        }
+      ],
+      "x_proof_closure": [],
+      "x_proof_dependency_stats": {
+        "theorem_records": 0,
+        "reachable_constants": 6,
+        "unresolved_or_non_theorem_constants": 6
+      }
+    }
+  ]
+}

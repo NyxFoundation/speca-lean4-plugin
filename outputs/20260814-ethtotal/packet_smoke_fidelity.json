@@ -1,0 +1,359 @@
+{
+  "x_fidelity_review": {
+    "model_command": "claude -p",
+    "health_source": "lean-ethtotal/health.json",
+    "input_count": 1,
+    "output_count": 1,
+    "faithful_or_repaired": 1
+  },
+  "properties": [
+    {
+      "property_id": "CHK-GEN-01",
+      "theorem": "EthTotal.Ledger.destroy_guard_invalidated_by_credit",
+      "label": "opcodes",
+      "x_layer": "Extentions/CreditErase.lean",
+      "lowering": "verbatim",
+      "text": "For an account in the live list, verify that after its balance is written to 0, a later write of (current balance + v) with v != 0 reads back as exactly v, hence nonzero: the zero write must not make subsequent balance updates sticky or no-ops.",
+      "type": "invariant",
+      "assertion": "a in L.live && v != 0 => bal(setBal(setBal(L,a,0), a, bal+v), a) == v && != 0",
+      "severity": "HIGH",
+      "x_origin": "generated (stage-2 new-property step, tools/generate-properties.py)",
+      "x_defect_class": "consensus_divergence",
+      "x_judged_overall": null,
+      "audit_packet": {
+        "guarantee": "Writing an account's balance to 0 is not a terminal or sticky state in the ledger model: for an account a in the live list, a following write of (current balance of a) + v with v != 0 makes the balance accessor return exactly v, hence nonzero. The prior zero value has no influence on the result of the later write.",
+        "preconditions": [
+          "Account a is a member of the live list (ha : a in L.live) for both writes; the statement says nothing about accounts absent from the live list (caller-side precondition of setBal, not an implementation check).",
+          "The written amount v is nonzero (hv : v != 0); v == 0 is outside the statement (caller-side side condition).",
+          "The live list is duplicate-free (Ledger.live_distinct) and the balance is read through the single accessor Ledger.bal, so there is one balance value per account and no alternate accessor is consulted.",
+          "The read after the writes is taken from the updated ledger returned by the writes, not from the pre-write ledger value."
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-1",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: for a in the live list and v != 0, the balance of a after the zero write followed by the +v write is not 0.",
+            "check": "Write the balance of a live account a to 0, then write (balance of a) + v for some v != 0 to the same account, then read the balance of a through the balance accessor.",
+            "expected": "The read returns a nonzero balance.",
+            "flag_if": "The read returns 0, i.e. the second write is discarded or suppressed because the balance of a was 0."
+          },
+          {
+            "fact_id": "FACT-2",
+            "source_fact_ids": [
+              "L001"
+            ],
+            "claim": "Stronger exact form (do not weaken to merely nonzero): the balance of a after the zero write and the +v write equals exactly v.",
+            "check": "Compare the balance of a after the zero-then-add-v sequence against v, over several v values and several pre-zero balances of a.",
+            "expected": "balance(a) == v exactly, independent of the balance a held before the zero write.",
+            "flag_if": "balance(a) != v: any residue of the pre-zero balance surviving (balance == old + v), truncation, saturation, or a partial write."
+          },
+          {
+            "fact_id": "FACT-3",
+            "source_fact_ids": [
+              "L003"
+            ],
+            "claim": "Zero-write guard: immediately after writing 0 to a, the balance of a is exactly 0.",
+            "check": "Read the balance of a right after the zero write and before the second write.",
+            "expected": "balance(a) == 0 exactly.",
+            "flag_if": "balance(a) != 0 after the zero write, i.e. the zero write leaves a residual balance visible to a later read."
+          },
+          {
+            "fact_id": "FACT-4",
+            "source_fact_ids": [
+              "L002"
+            ],
+            "claim": "Write-then-read agreement: for an account in the live list, writing balance v and reading the same account back yields exactly v.",
+            "check": "For a live account a, write an arbitrary balance v (including 0, small, and large values) and immediately read the balance of a.",
+            "expected": "The read returns exactly the value just written, for every v including 0.",
+            "flag_if": "The read returns a stale, defaulted, clamped, or otherwise transformed value instead of the value written."
+          },
+          {
+            "fact_id": "FACT-5",
+            "source_fact_ids": [
+              "L004"
+            ],
+            "claim": "Underlying pointwise update: the point update at a returns exactly the written value when a is read back, regardless of the prior value at a.",
+            "check": "Exercise the pointwise balance-update primitive used by both writes: write v at a and read a, across a matrix of prior balances at a (0, nonzero, large).",
+            "expected": "The read at a is exactly v in every case; the prior balance at a has no influence.",
+            "flag_if": "The result depends on the prior balance at a, or the update is skipped/no-oped for particular prior values such as 0."
+          }
+        ],
+        "derived_obligations": [
+          {
+            "obligation_id": "OBS-1",
+            "check": "Confirm the second write is not short-circuited by the current balance being 0: the update path must apply the written value even when the target's prior balance is 0.",
+            "expected": "The write of (balance of a) + v lands whenever v != 0, so the read-back is exactly v and not 0.",
+            "flag_if": "A zero prior balance routes the write into a no-op or skip branch, or the written value is coerced back to 0 before it is stored.",
+            "supports": [
+              "FACT-1",
+              "FACT-2",
+              "FACT-5"
+            ]
+          },
+          {
+            "obligation_id": "OBS-2",
+            "check": "Confirm both writes and the final read address the same balance entry for a, consistent with the live list being duplicate-free and Ledger.bal being the single accessor.",
+            "expected": "Exactly one balance entry exists for a; the second write updates the entry the zero write cleared, and the read observes that entry.",
+            "flag_if": "Duplicate or shadow entries for a exist so the second write updates one entry while the read observes another still holding 0, or a second accessor returns a different balance for a.",
+            "supports": [
+              "FACT-3",
+              "FACT-4",
+              "FACT-5"
+            ]
+          },
+          {
+            "obligation_id": "OBS-3",
+            "check": "Confirm the two writes compose in sequence: the value used by the second write is the balance read from the ledger produced by the zero write, and the final read is taken from the ledger produced by the second write.",
+            "expected": "The chained sequence reads back exactly v; no intermediate ledger version is dropped or re-read from a stale snapshot.",
+            "flag_if": "The second write is computed from or applied to the pre-zero ledger, or the final read is served from a ledger version predating the second write.",
+            "supports": [
+              "FACT-1",
+              "FACT-2",
+              "FACT-3"
+            ]
+          }
+        ],
+        "derivation": "L004 gives that the pointwise balance update stores exactly the written value at the target account, independent of the prior value there. L002 lifts this to Ledger.setBal for an account in the live list: read-back equals the value written, for any value including 0. L003 instantiates that at 0, giving the zero-write guard: right after the zero write, bal(a) == 0. L001 chains L003 and L002: the second write stores bal(a) + v where bal(a) is 0, so the read-back is exactly v. The root conclusion then uses v != 0 to conclude the final balance is not 0. The audit checks the full chain (exact zeroing, exact write-back, exact final value v) rather than only the nonzero endpoint, because an implementation that retains the pre-zero residue still satisfies 'nonzero' while violating the stronger L001 equality. Live membership and v != 0 are caller-side preconditions of the statement and are therefore stated as preconditions, not as implementation obligations.",
+        "omitted_facts": []
+      },
+      "shard": "checklist-generated",
+      "x_evidence_id": "lean-health:EthTotal.Ledger.destroy_guard_invalidated_by_credit:a1e86036a56b0faf",
+      "x_evidence_sha256": "a1e86036a56b0faf1cd4a406c819f2592adcf8976472db4451cb3d01521f69ad",
+      "x_evidence_kind": "live-export",
+      "x_lean_obligations": [
+        {
+          "name": "ha",
+          "type": "List.instMembership.mem L.live a",
+          "head": "Membership.mem",
+          "class": "must-establish"
+        },
+        {
+          "name": "hv",
+          "type": "Ne v 0",
+          "head": "Ne",
+          "class": "must-establish"
+        }
+      ],
+      "x_proof_closure": [
+        {
+          "fact_id": "L001",
+          "theorem": "EthTotal.Ledger.bal_credit_after_zero",
+          "statement": "∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (a : A) (ha : List.instMembership.mem L.live a) (v : Nat),\n  Eq (((L.setBal a 0 ha).setBal a (instHAdd.hAdd ((L.setBal a 0 ha).bal a) v) ha).bal a) v",
+          "conclusion": "Eq (((L.setBal a 0 ha).setBal a (instHAdd.hAdd ((L.setBal a 0 ha).bal a) v) ha).bal a) v",
+          "obligations": [
+            {
+              "name": "A",
+              "type": "Type u",
+              "head": "",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "inst._@.EthTotal.Extentions.CreditErase.3565302179._hygCtx._hyg.3",
+              "type": "DecidableEq A",
+              "head": "DecidableEq",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "L",
+              "type": "EthTotal.Ledger A",
+              "head": "EthTotal.Ledger",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "a",
+              "type": "A",
+              "head": "",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "ha",
+              "type": "List.instMembership.mem L.live a",
+              "head": "Membership.mem",
+              "class": "must-establish"
+            },
+            {
+              "name": "v",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            }
+          ],
+          "depends_on": [
+            "L002",
+            "L003"
+          ],
+          "proof_constants": [
+            "EthTotal.Ledger",
+            "EthTotal.Ledger.live",
+            "EthTotal.Ledger.bal",
+            "EthTotal.Ledger.setBal",
+            "EthTotal.Ledger.setBal_bal_self",
+            "EthTotal.Ledger.destroy_guard"
+          ],
+          "lean_status": "proved"
+        },
+        {
+          "fact_id": "L002",
+          "theorem": "EthTotal.Ledger.setBal_bal_self",
+          "statement": "∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (a : A) (v : Nat) (ha : List.instMembership.mem L.live a),\n  Eq ((L.setBal a v ha).bal a) v",
+          "conclusion": "Eq ((L.setBal a v ha).bal a) v",
+          "obligations": [
+            {
+              "name": "A",
+              "type": "Type u",
+              "head": "",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "inst",
+              "type": "DecidableEq A",
+              "head": "DecidableEq",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "L",
+              "type": "EthTotal.Ledger A",
+              "head": "EthTotal.Ledger",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "a",
+              "type": "A",
+              "head": "",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "v",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "ha",
+              "type": "List.instMembership.mem L.live a",
+              "head": "Membership.mem",
+              "class": "must-establish"
+            }
+          ],
+          "depends_on": [
+            "L004"
+          ],
+          "proof_constants": [
+            "EthTotal.Ledger",
+            "EthTotal.Ledger.live",
+            "EthTotal.Ledger.setBalOfPoint_bal_self"
+          ],
+          "lean_status": "proved"
+        },
+        {
+          "fact_id": "L003",
+          "theorem": "EthTotal.Ledger.destroy_guard",
+          "statement": "∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (a : A) (ha : List.instMembership.mem L.live a),\n  Eq ((L.setBal a 0 ha).bal a) 0",
+          "conclusion": "Eq ((L.setBal a 0 ha).bal a) 0",
+          "obligations": [
+            {
+              "name": "A",
+              "type": "Type u",
+              "head": "",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "inst._@.EthTotal.Lemmata.Derives.Guard.280123068._hygCtx._hyg.3",
+              "type": "DecidableEq A",
+              "head": "DecidableEq",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "L",
+              "type": "EthTotal.Ledger A",
+              "head": "EthTotal.Ledger",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "a",
+              "type": "A",
+              "head": "",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "ha",
+              "type": "List.instMembership.mem L.live a",
+              "head": "Membership.mem",
+              "class": "must-establish"
+            }
+          ],
+          "depends_on": [
+            "L002"
+          ],
+          "proof_constants": [
+            "EthTotal.Ledger",
+            "EthTotal.Ledger.live",
+            "EthTotal.Ledger.setBal_bal_self"
+          ],
+          "lean_status": "proved"
+        },
+        {
+          "fact_id": "L004",
+          "theorem": "EthTotal.Ledger.setBalOfPoint_bal_self",
+          "statement": "∀ {A : Type u} (L : EthTotal.Ledger A) (a : A) (dec : (b : A) → Decidable (Eq b a)) (v : Nat)\n  (ha : List.instMembership.mem L.live a), Eq ((L.setBalOfPoint a dec v ha).bal a) v",
+          "conclusion": "Eq ((L.setBalOfPoint a dec v ha).bal a) v",
+          "obligations": [
+            {
+              "name": "A",
+              "type": "Type u",
+              "head": "",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "L",
+              "type": "EthTotal.Ledger A",
+              "head": "EthTotal.Ledger",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "a",
+              "type": "A",
+              "head": "",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "dec",
+              "type": "(b : A) → Decidable (Eq b a)",
+              "head": "Decidable",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "v",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "ha",
+              "type": "List.instMembership.mem L.live a",
+              "head": "Membership.mem",
+              "class": "must-establish"
+            }
+          ],
+          "depends_on": [],
+          "proof_constants": [
+            "EthTotal.Ledger",
+            "EthTotal.Ledger.live",
+            "EthTotal.Ledger.bal"
+          ],
+          "lean_status": "proved"
+        }
+      ],
+      "x_proof_dependency_stats": {
+        "theorem_records": 4,
+        "reachable_constants": 8,
+        "unresolved_or_non_theorem_constants": 4
+      },
+      "x_fidelity_verdict": "repaired",
+      "x_fidelity_reason": "The item and packet import SELFDESTRUCT semantics, account existence/pruning, and state-root divergence from the label, defect class, and theorem name. The Lean evidence only covers Ledger.setBal writes and Ledger.bal read-back on a live account: setting the balance to 0 then writing bal+v with v != 0 reads back exactly v. Ledger has no destroy marker, no account removal, and no state commitment, so 'destroyed/nonexistent/pruned' and consensus-root checks are unsupported. The exact-equality stre",
+      "x_fidelity_model": "claude -p"
+    }
+  ]
+}

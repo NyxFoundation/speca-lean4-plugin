@@ -1,0 +1,2549 @@
+{
+  "reference": {
+    "n": 52,
+    "axis_means": {
+      "specificity": 1.423,
+      "implementation_readiness": 2.038,
+      "generality": 3.346,
+      "actionability": 1.519,
+      "granularity": 2.519
+    },
+    "overall_mean": 2.169,
+    "overall_median": 2.0,
+    "overall_min": 1
+  },
+  "params": {
+    "max_rounds": 3,
+    "low_axis": 3,
+    "plateau_rounds": 3,
+    "plateau_delta": 0.05,
+    "axis_tolerance": 0.25
+  },
+  "rounds": [
+    {
+      "round": 0,
+      "distribution": {
+        "n": 45,
+        "axis_means": {
+          "specificity": 3.111,
+          "implementation_readiness": 3.156,
+          "generality": 4.333,
+          "actionability": 3.178,
+          "granularity": 3.911
+        },
+        "overall_mean": 3.538,
+        "overall_median": 3.4,
+        "overall_min": 2
+      },
+      "meets_reference_bar": true,
+      "bar_gaps": [],
+      "n_improve_candidates": 0,
+      "improvements": [],
+      "items": [
+        {
+          "id": "CHK-GEN-01",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3,
+          "critique": "Weakest on specificity: it restates the setBal/bal lemma without naming any code area, field, or cache structure. Implementation_readiness and actionability suffer likewise — stale zero/empty-account caching is a genuine failure surface, but no flag, journal, or invalidation path is pinned, so the auditor must locate it unaided. Bundles the arithmetic property with cache invalidation."
+        },
+        {
+          "id": "CHK-GEN-02",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 3,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.6,
+          "critique": "Weakest on specificity and actionability: it restates a spec equation (post.live == eraseLive(setBal(L,a,0),a).live) in prose without naming any code area, field, or function in a real implementation. Implementation_readiness is low — no concrete failure surface (ordering, index shifting, dangling reference, zero-balance edge case) is pinned; 'no other path amending it' is untestable as written."
+        },
+        {
+          "id": "CHK-GEN-03",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity and actionability: it is a logic restatement of a state invariant with no code area, field, or update path named (account deletion/pruning, empty-account cleanup, balance-zeroing writes). Implementation_readiness is low too — no concrete failure mode pinned, so an auditor must reformulate it before checking anything."
+        },
+        {
+          "id": "CHK-GEN-04",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest is actionability: it states the invariant to confirm but not where to look — the insertion/registration paths that could admit a duplicate — nor what a violation looks like in code. Specificity is slightly soft too: no container type, field, or removal primitive (single-occurrence erase vs set delete) is named."
+        },
+        {
+          "id": "CHK-GEN-05",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.6,
+          "critique": "Weakest on specificity and actionability: it names arithmetic width as the concern but never points at a concrete field, type, or code site (no named supply/balance variable, no bound like 2^64 or u256-vs-u64), so the auditor must locate the recomputation sites and decide what 'wide enough' means. The DETAIL line restates the CHECK as pseudo-predicates rather than adding a locatable condition or a visible violation signature."
+        },
+        {
+          "id": "CHK-GEN-06",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest on specificity and actionability: the read-after-write condition is stated precisely, but no code area is named — no state-object/journal/cache layer, no balance field, no candidate call sites (transfer, gas refund, fee payment). The auditor must first locate multi-write operations themselves. Failure mode (stale pre-sequence snapshot) is concrete; scope is single and portable."
+        },
+        {
+          "id": "CHK-GEN-07",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.2,
+          "critique": "Weakest on implementation_readiness: it restates a set-membership lemma without naming a real failure surface (e.g. floating-point/BigInt zero comparison, signed-zero, sparse-map default values, mutation during filtering). Specificity and actionability suffer too — 'the routine building the retained-key list' names no concrete function, module, or field, so the auditor must first locate it and infer what a violation looks like."
+        },
+        {
+          "id": "CHK-GEN-08",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest are specificity and actionability: it names the arithmetic pattern and exact invariant (moved == min(d,b), remainder + moved == pre-balance) but not a concrete function, field, or module, so the auditor must first locate all saturating-subtraction debit sites and infer what 'recorded moved amount' maps to in the codebase. Otherwise a sharp, single, portable check."
+        },
+        {
+          "id": "CHK-GEN-09",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3.4,
+          "critique": "Weakest on specificity/actionability: DETAIL is a symbolic invariant over abstract pre/post state, not a pointed code location (no accessor, no supply-tracking field, no arithmetic op). Implementation_readiness names a real surface (supply accounting on zeroing/self-transfer) but doesn't pin the failure mode (underflow, double-decrement, dust-pruning). Granularity bundles two distinct checks."
+        },
+        {
+          "id": "CHK-GEN-10",
+          "scores": {
+            "specificity": 1,
+            "implementation_readiness": 2,
+            "generality": 3,
+            "actionability": 2,
+            "granularity": 3
+          },
+          "overall": 2.2,
+          "critique": "Weakest on specificity and actionability: this is a verbatim Lean-style lemma about support(f, k::l) with no file, function, or code construct named, and no statement of what a violation would look like in code. Implementation_readiness is near-bottom — zero-value pruning is a real surface (map/storage enumeration), but no failure mode is pinned. Granularity is single-concern yet trivially narrow."
+        },
+        {
+          "id": "CHK-GEN-11",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest are implementation_readiness and generality: it prescribes rejection as the only acceptable handling, so a correct net-zero self-transfer would be falsely flagged, and it never names the actual failure mode (stale read of bal(escrow) captured before the debit, inflating balance). Otherwise a tight, single-concern aliasing check."
+        },
+        {
+          "id": "CHK-GEN-12",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on the concrete failure surface (truncated unsigned subtraction, two ordering guards). Weakest: granularity/generality — it bundles two distinct guards plus a necessity claim into one item, and the unnamed 'split total' with used/limit/fee_floor/price terms reads as one protocol's naming; no function or module is named, so the auditor must locate the site themselves."
+        },
+        {
+          "id": "CHK-GEN-13",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.2,
+          "critique": "Weakest on specificity and implementation_readiness: the DETAIL is a trace-predicate restatement of the invariant, naming no concrete field, constructor, or config source in code. It pins no failure mode (stale/shadowed config, caller-supplied override, default-initialized target), so an auditor must translate it into what a burn-emitting call site actually looks like."
+        },
+        {
+          "id": "CHK-GEN-14",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a formal monotonicity predicate (post.bal <= pre.bal) without naming any module, function, or write site, and pins no failure mode (overflow, signed/unsigned mix, refund/credit path). Actionability suffers likewise — the auditor must first enumerate 'balance-writing paths' themselves and judge whether increases are legitimate."
+        },
+        {
+          "id": "CHK-GEN-15",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 5,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 3,
+          "critique": "Weakest on specificity, implementation_readiness, and actionability: it restates a conservation theorem in prose and math, naming no module, balance field, or mutation path. No failure mode is pinned (rounding direction, overflow, self-transfer, pruned/dust accounts silently dropped), so the auditor must reformulate it into concrete checks before touching code."
+        },
+        {
+          "id": "CHK-GEN-16",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest are implementation_readiness and actionability: \"total supply\" is a model-level invariant rarely materialized as a client variable, and the prescribed order (zero bal, then live.remove) is one model's encoding — real clients delete the account object wholesale, so the auditor must restate the check as \"balance debited exactly once, no re-credit on revert/re-creation\"."
+        },
+        {
+          "id": "CHK-GEN-17",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on the concrete failure surface (unsigned subtraction wraparound guarded by an ordering precondition). Weakest axes: generality and actionability — the bare symbols e/P/D and the phrase \"(escrow + credited) - deducted\" assume the reader already maps them to named fields/functions, so the auditor must resolve which balance accessors those are before searching. Granularity slightly diluted by bundling the guard-exists and path-not-taken conditions."
+        },
+        {
+          "id": "CHK-GEN-18",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity, implementation_readiness, and actionability: total >= a is a tautology for unsigned math unless overflow/wraparound is the real concern, which the item never names. No module, field, or accumulator is identified, and the assertion restates a spec lemma rather than pinning a failure mode (wrapping add, signed cast, lossy float) an auditor could locate in code."
+        },
+        {
+          "id": "CHK-GEN-19",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest: specificity and actionability. The arithmetic condition is exact, but the item never names a function, module, or call site — and the bare symbols e, P, D are undefined here, so an auditor must resolve them from external context before grepping. Overflow of e+P itself is left unaddressed."
+        },
+        {
+          "id": "CHK-GEN-20",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a proof side-condition (live_accounts equality) without naming any code area, storage structure, or iteration routine, and never pins the concrete failure mode auditors care about — account creation, zero-balance pruning, or touched/empty-account deletion silently altering the iterated set. Scope and single-concern framing are fine."
+        },
+        {
+          "id": "CHK-GEN-21",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest is specificity: it names the balance-write path and the enumeration source but not the concrete structure (account map, dirty set, cached index) to inspect. Implementation_readiness is close behind — the omission risk is real, yet the mechanism (lazy account insert, zero-balance pruning, stale index) is left implicit rather than pinned."
+        },
+        {
+          "id": "CHK-GEN-22",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a conservation invariant in prose plus formula without naming any code area, field, or arithmetic surface (no mention of integer width, rounding, or the live-list dedup that actually breaks supply sums). Actionability suffers too — the auditor must translate supply(L) into concrete accounting code themselves."
+        },
+        {
+          "id": "CHK-GEN-23",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.2,
+          "critique": "Weakest on specificity and actionability: it restates a proof-level distinction (supply-invariant but set-distinct) without naming any code area — no state-transition function, account-map field, or empty-account pruning path. The auditor must first translate 'live-account set' into the implementation's storage/deletion code and invent what the violation looks like."
+        },
+        {
+          "id": "CHK-GEN-24",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a supply-conservation invariant without naming any module, field, accumulator, or credit path in code, and pins no concrete failure mode (no overflow/width/ordering/partial-batch-rollback surface). Granularity suffers slightly from bundling the global equation with the per-credit mint-event logging requirement."
+        },
+        {
+          "id": "CHK-GEN-25",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4,
+          "critique": "Weakest is granularity: it bundles the insufficient-balance rejection, the atomicity of partial writes, and the saturating/wrapping subtraction into one item, each of which is a separate code site. Specificity is solid but stops at 'balance-transfer path' without naming the debit helper or integer width."
+        },
+        {
+          "id": "CHK-GEN-26",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Strongest on implementation readiness: pins truncating subtraction, write-ordering, and the d==s aliasing case as concrete failure modes. Granularity is weakest — it bundles three related but distinct checks (pre-write guard, saturating-sub, self-transfer aliasing) under one item, so a violation could be any of three, slightly diluting the single-concern focus."
+        },
+        {
+          "id": "CHK-GEN-27",
+          "scores": {
+            "specificity": 1,
+            "implementation_readiness": 1,
+            "generality": 3,
+            "actionability": 2,
+            "granularity": 3
+          },
+          "overall": 2,
+          "critique": "Weakest: specificity and implementation_readiness. It is a verbatim restatement of a Lean lemma (all-mints-zero implies non-increasing supply) with no file, function, field, or arithmetic surface named, and the hypothesis is so degenerate no real implementation could fail it. Actionability suffers too: the auditor must invent the actual check (burn accounting, overflow, account liveness) themselves."
+        },
+        {
+          "id": "CHK-GEN-28",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; names the exact debit-path conditions and ordering (checks before write). Weakest axes: implementation_readiness and granularity — it pins guard presence but not the concrete failure mode (unsigned underflow wrapping, TOCTOU across intermediate writes, signed/width mismatch), and bundles two distinct guards (account existence, sufficient balance) into one item."
+        },
+        {
+          "id": "CHK-GEN-29",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity, implementation_readiness, and actionability: it restates a conservation invariant in math notation without naming any code area, balance field, accounting path (fee burn, refunds, withdrawals, self-destruct), or concrete failure mode such as overflow, double-counting of deleted accounts, or dust-rounding. An auditor must reformulate it entirely before checking code."
+        },
+        {
+          "id": "CHK-GEN-30",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 2
+          },
+          "overall": 3.2,
+          "critique": "Weakest is granularity: three distinct concerns bundled (write-before-erase ordering, exactly-one-event emission, global supply conservation). implementation_readiness is mid — stale-balance-after-erase is a real surface but no failure mode is pinned (no width, bounds, or reentrancy hook). Specificity leans on spec-side names (setBal/eraseLive) rather than code identifiers."
+        },
+        {
+          "id": "CHK-GEN-31",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4,
+          "critique": "Weakest is granularity: bundles a conservation equality (P == R+T+B) with a balance-sufficiency bound, two separable concerns, plus an ordering requirement. Specificity is next: symbols P/R/T/B are protocol-level placeholders with no named function, field, or debit site, and the sum's overflow behavior is left unpinned."
+        },
+        {
+          "id": "CHK-GEN-32",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.2,
+          "critique": "Weakest on specificity and implementation_readiness: it names the condition (membership test before balance write) but not the concrete code surface — which map/set, which write path, or whether stale/lazy-loaded caches count as \"live\". Failure mode is implied (credit to untracked account) rather than pinned; no guidance on where such writes typically live."
+        },
+        {
+          "id": "CHK-GEN-33",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.2,
+          "critique": "Weakest is implementation_readiness: it names the duplicate-insertion invariant but not the concrete failure surface or consequence (e.g. list-backed set with O(n) scan, duplicate warm-address entries skewing gas/refund accounting). Specificity also generic — 'live account set' and 'append path' are spec-level names, no concrete field, container type, or call site."
+        },
+        {
+          "id": "CHK-GEN-34",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.4,
+          "critique": "Weakest are specificity and actionability: the item is an algebraic identity with no pointer to a function, field, or integer type, so the auditor must first locate the settlement code themselves. Implementation_readiness gestures at truncated subtraction but never pins the failure mode (unsigned underflow? division rounding? width?)."
+        },
+        {
+          "id": "CHK-GEN-35",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest axes are specificity and actionability: the exact predicate (reported_burn == min(requested, balance_before)) is pinned, but no module, function, or record type is named, so the auditor must first locate every balance-decrement write site and its accounting emission. Failure mode (raw rather than saturated amount) is otherwise concrete, general, and single-concern."
+        },
+        {
+          "id": "CHK-GEN-36",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strongest on failure mode: saturating unsigned subtraction clamping a debit and inflating supply is a concrete, cross-implementation arithmetic surface. Weakest on specificity/actionability — \"any balance-mutating transfer path\" names no function, module, or type, leaving the auditor to enumerate the paths. Granularity dips slightly: the self-transfer supply-invariance clause is a distinct check appended to the underflow concern."
+        },
+        {
+          "id": "CHK-GEN-37",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 3
+          },
+          "overall": 2.6,
+          "critique": "Weakest on specificity and implementation_readiness: it restates the formal invariant (post.balance <= pre.balance) without naming any balance-mutating function, field, or arithmetic surface, and pins no failure mode (underflow wraparound, unsigned subtraction, reward credit on a burn path). Actionability suffers too — the auditor must first enumerate which transitions count as balance-non-increasing."
+        },
+        {
+          "id": "CHK-GEN-38",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 3,
+            "actionability": 2,
+            "granularity": 3
+          },
+          "overall": 2.4,
+          "critique": "Weakest on implementation_readiness and specificity: it restates a Lean confinement lemma against empty mint/burn-site lists — a vacuous condition no real implementation surface (width, bounds, caps, termination) can fail. 'Code path appending an event' names an area but no field, comparison, or failure mode. Actionability suffers: 'mint site' is undefined in code terms, and it bundles two fields."
+        },
+        {
+          "id": "CHK-GEN-39",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 3,
+            "actionability": 2,
+            "granularity": 3
+          },
+          "overall": 2.4,
+          "critique": "Weakest on specificity, implementation_readiness and actionability: it restates a formal trace predicate over abstract fields (mintSite/burnSite) rather than naming real code paths, and pins no failure surface — no arithmetic, bounds, or overflow mode. The auditor must first map \"trace\" and \"declared_burn_sites\" onto actual code before anything is checkable; two conjuncts add mild bundling."
+        },
+        {
+          "id": "CHK-GEN-40",
+          "scores": {
+            "specificity": 1,
+            "implementation_readiness": 1,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.4,
+          "critique": "Weakest on specificity and implementation_readiness: it is a verbatim restatement of a monotonicity theorem (forall a in pre.live, post.bal(a) <= pre.bal(a)) with no module, function, field, or comparison site named, and no concrete failure surface — no integer width, signedness, iteration over the live set, or missing-account default. Actionability suffers accordingly; an auditor must invent the code mapping."
+        },
+        {
+          "id": "CHK-GEN-41",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; the state-tracking/accounting invariant applies to any balance-mutation path. Weakest on specificity and actionability: it names the condition (membership under the same address key before zeroing) but not the concrete code surface — which functions, which map, or what key mismatch (checksummed vs raw, stale cache entry) looks like in source. Failure mode is stated as an equation rather than a code smell an auditor can grep for."
+        },
+        {
+          "id": "CHK-GEN-42",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.6,
+          "critique": "Weakest on specificity and actionability: it states a set-disjointness identity in spec-like notation (bal, live, extras) without naming any code area, accumulator variable, or where extra terms (treasury, burn, pending) typically enter, so the auditor must first map abstract symbols onto the codebase. Failure mode is double-counting only, unpinned to a concrete surface."
+        },
+        {
+          "id": "CHK-GEN-43",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3.2,
+          "critique": "Weakest is implementation_readiness: supply conservation is stated as a spec equality with no concrete failure surface — no overflow/wraparound, width, or accounting-path failure mode named. Actionability suffers because real clients never re-derive supply as a sum over live accounts per transition, so the auditor must reformulate it into mint/burn bookkeeping paths. Granularity bundles derivation, equality, and rejection."
+        },
+        {
+          "id": "CHK-GEN-44",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the zero-default condition precisely but leaves the code site abstract ('the routine enumerating live keys')—no field, container type, or deletion path. Implementation readiness pins a plausible failure (zero entry leaking into enumeration) without tying it to a concrete surface like delete-on-zero-write or iteration ordering. Granularity slightly bundles omission plus insertion-invariance."
+        },
+        {
+          "id": "CHK-GEN-45",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 5,
+          "critique": "Strongest axes throughout; weakest is arguably granularity, since it lumps truncating and saturating debits into one check and states both a code pattern and a supply-invariant consequence — but these are the same concern. Specificity names the exact operation pairing (sat_sub debit vs full credit) on the underinflow path, a real overflow/underflow surface."
+        }
+      ]
+    },
+    {
+      "round": 1,
+      "distribution": {
+        "n": 45,
+        "axis_means": {
+          "specificity": 3.733,
+          "implementation_readiness": 3.711,
+          "generality": 4.533,
+          "actionability": 3.689,
+          "granularity": 4
+        },
+        "overall_mean": 3.933,
+        "overall_median": 4.2,
+        "overall_min": 2
+      },
+      "meets_reference_bar": true,
+      "bar_gaps": [],
+      "n_improve_candidates": 30,
+      "improvements": [
+        {
+          "id": "CHK-GEN-01",
+          "result": "rejected: text 270 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-02",
+          "result": "rejected: text 262 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-03",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-04",
+          "result": "rejected: text 284 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-05",
+          "result": "rejected: text 294 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-07",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-09",
+          "result": "rejected: text 275 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-10",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-13",
+          "result": "rejected: text 287 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-14",
+          "result": "rejected: text 283 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-15",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-16",
+          "result": "rejected: text 296 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-18",
+          "result": "rejected: text 303 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-20",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-22",
+          "result": "rejected: text 261 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-23",
+          "result": "rejected: text 262 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-24",
+          "result": "rejected: text 263 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-25",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-27",
+          "result": "rejected: text 268 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-29",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-30",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-31",
+          "result": "rejected: text 294 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-33",
+          "result": "rejected: text 270 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-34",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-37",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-38",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-39",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-40",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-42",
+          "result": "rejected: text 292 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-43",
+          "result": "rejected: text 261 chars > 260 (granularity/length cap)"
+        }
+      ],
+      "items": [
+        {
+          "id": "CHK-GEN-01",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3,
+          "critique": "Weakest on specificity: it restates the setBal/bal lemma without naming any code area, field, or cache structure. Implementation_readiness and actionability suffer likewise — stale zero/empty-account caching is a genuine failure surface, but no flag, journal, or invalidation path is pinned, so the auditor must locate it unaided. Bundles the arithmetic property with cache invalidation."
+        },
+        {
+          "id": "CHK-GEN-02",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 3,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.6,
+          "critique": "Weakest on specificity and actionability: it restates a spec equation (post.live == eraseLive(setBal(L,a,0),a).live) in prose without naming any code area, field, or function in a real implementation. Implementation_readiness is low — no concrete failure surface (ordering, index shifting, dangling reference, zero-balance edge case) is pinned; 'no other path amending it' is untestable as written."
+        },
+        {
+          "id": "CHK-GEN-03",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the credit/delete-prune paths but keeps 'live account set' and 'state-commit' as abstract set membership rather than the concrete structure (accounts map, dirty/touched set, trie node) and field to inspect. Granularity slightly bundles a commit-time invariant assertion with a per-write-path audit; failure mode (orphaned balance / resurrection) is implied, not stated."
+        },
+        {
+          "id": "CHK-GEN-04",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest is actionability: it states the invariant to confirm but not where to look — the insertion/registration paths that could admit a duplicate — nor what a violation looks like in code. Specificity is slightly soft too: no container type, field, or removal primitive (single-occurrence erase vs set delete) is named."
+        },
+        {
+          "id": "CHK-GEN-05",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.6,
+          "critique": "Weakest on specificity and actionability: it names arithmetic width as the concern but never points at a concrete field, type, or code site (no named supply/balance variable, no bound like 2^64 or u256-vs-u64), so the auditor must locate the recomputation sites and decide what 'wide enough' means. The DETAIL line restates the CHECK as pseudo-predicates rather than adding a locatable condition or a visible violation signature."
+        },
+        {
+          "id": "CHK-GEN-06",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest on specificity and actionability: the read-after-write condition is stated precisely, but no code area is named — no state-object/journal/cache layer, no balance field, no candidate call sites (transfer, gas refund, fee payment). The auditor must first locate multi-write operations themselves. Failure mode (stale pre-sequence snapshot) is concrete; scope is single and portable."
+        },
+        {
+          "id": "CHK-GEN-07",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Strongest on specificity and generality: it names the exact predicate (membership iff nonzero) and the exact wrong test (truthiness/empty-encoding proxy). Weakest is granularity — it bundles the retention biconditional with the zero-test canonicalization, two related but separable checks. implementation_readiness names the surface and a plausible failure mode but stops short of pinning the concrete type/encoding mismatch."
+        },
+        {
+          "id": "CHK-GEN-08",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest are specificity and actionability: it names the arithmetic pattern and exact invariant (moved == min(d,b), remainder + moved == pre-balance) but not a concrete function, field, or module, so the auditor must first locate all saturating-subtraction debit sites and infer what 'recorded moved amount' maps to in the codebase. Otherwise a sharp, single, portable check."
+        },
+        {
+          "id": "CHK-GEN-09",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3.4,
+          "critique": "Weakest on specificity/actionability: DETAIL is a symbolic invariant over abstract pre/post state, not a pointed code location (no accessor, no supply-tracking field, no arithmetic op). Implementation_readiness names a real surface (supply accounting on zeroing/self-transfer) but doesn't pin the failure mode (underflow, double-decrement, dust-pruning). Granularity bundles two distinct checks."
+        },
+        {
+          "id": "CHK-GEN-10",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the write path and the zero-value condition but not the concrete artifact (storage-trie node deletion, account-slot map insert) an auditor greps for. Granularity slightly diluted by folding three consequences (enumeration, support set, root hash) into one check, though they share a single root cause."
+        },
+        {
+          "id": "CHK-GEN-11",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest are implementation_readiness and generality: it prescribes rejection as the only acceptable handling, so a correct net-zero self-transfer would be falsely flagged, and it never names the actual failure mode (stale read of bal(escrow) captured before the debit, inflating balance). Otherwise a tight, single-concern aliasing check."
+        },
+        {
+          "id": "CHK-GEN-12",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on the concrete failure surface (truncated unsigned subtraction, two ordering guards). Weakest: granularity/generality — it bundles two distinct guards plus a necessity claim into one item, and the unnamed 'split total' with used/limit/fee_floor/price terms reads as one protocol's naming; no function or module is named, so the auditor must locate the site themselves."
+        },
+        {
+          "id": "CHK-GEN-13",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.2,
+          "critique": "Weakest on specificity and implementation_readiness: the DETAIL is a trace-predicate restatement of the invariant, naming no concrete field, constructor, or config source in code. It pins no failure mode (stale/shadowed config, caller-supplied override, default-initialized target), so an auditor must translate it into what a burn-emitting call site actually looks like."
+        },
+        {
+          "id": "CHK-GEN-14",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a formal monotonicity predicate (post.bal <= pre.bal) without naming any module, function, or write site, and pins no failure mode (overflow, signed/unsigned mix, refund/credit path). Actionability suffers likewise — the auditor must first enumerate 'balance-writing paths' themselves and judge whether increases are legitimate."
+        },
+        {
+          "id": "CHK-GEN-15",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 2
+          },
+          "overall": 3,
+          "critique": "Weakest is granularity: it bundles three concerns (snapshot re-read atomicity, src==dst aliasing, pruned-account accounting) under one global conservation invariant. Specificity/actionability suffer too — no concrete function, field, or code path is named, and the auditor must translate the sum-over-live-balances formula into an inspectable code condition themselves."
+        },
+        {
+          "id": "CHK-GEN-16",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest are implementation_readiness and actionability: \"total supply\" is a model-level invariant rarely materialized as a client variable, and the prescribed order (zero bal, then live.remove) is one model's encoding — real clients delete the account object wholesale, so the auditor must restate the check as \"balance debited exactly once, no re-credit on revert/re-creation\"."
+        },
+        {
+          "id": "CHK-GEN-17",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on the concrete failure surface (unsigned subtraction wraparound guarded by an ordering precondition). Weakest axes: generality and actionability — the bare symbols e/P/D and the phrase \"(escrow + credited) - deducted\" assume the reader already maps them to named fields/functions, so the auditor must resolve which balance accessors those are before searching. Granularity slightly diluted by bundling the guard-exists and path-not-taken conditions."
+        },
+        {
+          "id": "CHK-GEN-18",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity, implementation_readiness, and actionability: total >= a is a tautology for unsigned math unless overflow/wraparound is the real concern, which the item never names. No module, field, or accumulator is identified, and the assertion restates a spec lemma rather than pinning a failure mode (wrapping add, signed cast, lossy float) an auditor could locate in code."
+        },
+        {
+          "id": "CHK-GEN-19",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest: specificity and actionability. The arithmetic condition is exact, but the item never names a function, module, or call site — and the bare symbols e, P, D are undefined here, so an auditor must resolve them from external context before grepping. Overflow of e+P itself is left unaddressed."
+        },
+        {
+          "id": "CHK-GEN-20",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4,
+          "critique": "Weakest is granularity: it bundles keyset equality with a second, separate supply-iteration-set assertion and lists three distinct failure modes (creation, pruning, touched-deletion) under one check. Specificity next: 'balance-mutation path' and 'supply_iter_set' name no concrete function, field, or accessor, so the auditor still has to locate the enumeration site themselves."
+        },
+        {
+          "id": "CHK-GEN-21",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest is specificity: it names the balance-write path and the enumeration source but not the concrete structure (account map, dirty set, cached index) to inspect. Implementation_readiness is close behind — the omission risk is real, yet the mechanism (lazy account insert, zero-balance pruning, stale index) is left implicit rather than pinned."
+        },
+        {
+          "id": "CHK-GEN-22",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a conservation invariant in prose plus formula without naming any code area, field, or arithmetic surface (no mention of integer width, rounding, or the live-list dedup that actually breaks supply sums). Actionability suffers too — the auditor must translate supply(L) into concrete accounting code themselves."
+        },
+        {
+          "id": "CHK-GEN-23",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.2,
+          "critique": "Weakest on specificity and actionability: it restates a proof-level distinction (supply-invariant but set-distinct) without naming any code area — no state-transition function, account-map field, or empty-account pruning path. The auditor must first translate 'live-account set' into the implementation's storage/deletion code and invent what the violation looks like."
+        },
+        {
+          "id": "CHK-GEN-24",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a supply-conservation invariant without naming any module, field, accumulator, or credit path in code, and pins no concrete failure mode (no overflow/width/ordering/partial-batch-rollback surface). Granularity suffers slightly from bundling the global equation with the per-credit mint-event logging requirement."
+        },
+        {
+          "id": "CHK-GEN-25",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 4.8,
+          "critique": "Strongest on specificity and actionability: names the helper, the exact comparison (bal(sender) < value), and the ordering violation (state write before check). Weakest is implementation_readiness (4) — it pins ordering/atomicity as the failure surface but leaves the concrete mechanism implicit (e.g. journaling, revert-snapshot, or non-rolled-back nonce/gas writes)."
+        },
+        {
+          "id": "CHK-GEN-26",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Strongest on implementation readiness: pins truncating subtraction, write-ordering, and the d==s aliasing case as concrete failure modes. Granularity is weakest — it bundles three related but distinct checks (pre-write guard, saturating-sub, self-transfer aliasing) under one item, so a violation could be any of three, slightly diluting the single-concern focus."
+        },
+        {
+          "id": "CHK-GEN-27",
+          "scores": {
+            "specificity": 1,
+            "implementation_readiness": 1,
+            "generality": 3,
+            "actionability": 2,
+            "granularity": 3
+          },
+          "overall": 2,
+          "critique": "Weakest: specificity and implementation_readiness. It is a verbatim restatement of a Lean lemma (all-mints-zero implies non-increasing supply) with no file, function, field, or arithmetic surface named, and the hypothesis is so degenerate no real implementation could fail it. Actionability suffers too: the auditor must invent the actual check (burn accounting, overflow, account liveness) themselves."
+        },
+        {
+          "id": "CHK-GEN-28",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; names the exact debit-path conditions and ordering (checks before write). Weakest axes: implementation_readiness and granularity — it pins guard presence but not the concrete failure mode (unsigned underflow wrapping, TOCTOU across intermediate writes, signed/width mismatch), and bundles two distinct guards (account existence, sufficient balance) into one item."
+        },
+        {
+          "id": "CHK-GEN-29",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4.2,
+          "critique": "Weakest is granularity: it bundles three concerns — delta-pairing/conservation, a mint/burn counter, and checked u256 wrap-rejection — each separately auditable. Actionability is slightly dinged because 'each state-transition handler' and the distinct-live-account summation leave the enumeration to the auditor; the wrap and pairing checks are otherwise directly locatable."
+        },
+        {
+          "id": "CHK-GEN-30",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Weakest is granularity: it bundles two related but distinct concerns — snapshot-before-erase ordering and checked full-width subtraction — either of which could fail independently. Other axes are strong: it names the exact ordering, the arithmetic width, the overflow mode, and the concrete failure signature (post-erase default-0 used as burn amount)."
+        },
+        {
+          "id": "CHK-GEN-31",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4,
+          "critique": "Weakest is granularity: bundles a conservation equality (P == R+T+B) with a balance-sufficiency bound, two separable concerns, plus an ordering requirement. Specificity is next: symbols P/R/T/B are protocol-level placeholders with no named function, field, or debit site, and the sum's overflow behavior is left unpinned."
+        },
+        {
+          "id": "CHK-GEN-32",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.2,
+          "critique": "Weakest on specificity and implementation_readiness: it names the condition (membership test before balance write) but not the concrete code surface — which map/set, which write path, or whether stale/lazy-loaded caches count as \"live\". Failure mode is implied (credit to untracked account) rather than pinned; no guidance on where such writes typically live."
+        },
+        {
+          "id": "CHK-GEN-33",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.2,
+          "critique": "Weakest is implementation_readiness: it names the duplicate-insertion invariant but not the concrete failure surface or consequence (e.g. list-backed set with O(n) scan, duplicate warm-address entries skewing gas/refund accounting). Specificity also generic — 'live account set' and 'append path' are spec-level names, no concrete field, container type, or call site."
+        },
+        {
+          "id": "CHK-GEN-34",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Weakest on granularity and generality: it bundles three distinct concerns — pre-subtraction guard ordering (U<=G, f<=p), product-width/overflow, and the exact conservation identity summing to G*p — into one item, and the symbol-level formulation (G, U, p, f) presumes one protocol's prepaid-charge naming, needing translation for other settlement implementations."
+        },
+        {
+          "id": "CHK-GEN-35",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest axes are specificity and actionability: the exact predicate (reported_burn == min(requested, balance_before)) is pinned, but no module, function, or record type is named, so the auditor must first locate every balance-decrement write site and its accounting emission. Failure mode (raw rather than saturated amount) is otherwise concrete, general, and single-concern."
+        },
+        {
+          "id": "CHK-GEN-36",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strongest on failure mode: saturating unsigned subtraction clamping a debit and inflating supply is a concrete, cross-implementation arithmetic surface. Weakest on specificity/actionability — \"any balance-mutating transfer path\" names no function, module, or type, leaving the auditor to enumerate the paths. Granularity dips slightly: the self-transfer supply-invariance clause is a distinct check appended to the underflow concern."
+        },
+        {
+          "id": "CHK-GEN-37",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on failure mode (unsigned wrap on balance debit). Weakest: granularity and actionability — it bundles the checked_sub/underflow-reject requirement with a separate 'no credit path, post > pre invalid' clause, and never names a module, function, or state-write site, so the auditor must first classify which transitions count as balance-non-increasing."
+        },
+        {
+          "id": "CHK-GEN-38",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest is implementation_readiness: it names an allowlist-membership condition but not the concrete failure mode (validation placed after state mutation, `none` treated as a bypass default, per-event vs per-batch checking). Specificity also leans generic — 'the event-append path for the accumulator under audit' points at a code area without naming the entry point or message type an auditor should open."
+        },
+        {
+          "id": "CHK-GEN-39",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4,
+          "critique": "Weakest is implementation_readiness: it frames a conservation invariant over balance credits but never pins a concrete failure mode (unchecked mint path, refund double-credit, overflow-wrapped delta). Specificity is good — audit every balance credit — yet \"declared_issuance_sites\" is left to the auditor to enumerate, so the comparison set is not fully fixed."
+        },
+        {
+          "id": "CHK-GEN-40",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Strongest on specificity/actionability: names the exact comparison, width, signedness, and cast/wrap failure modes. Weakest: granularity — bundles three distinct defects (truncating cast, signedness, wrapping subtraction) into one item; generality slightly narrowed by assuming a u256-balance, live-account state model rather than any balance-conservation implementation."
+        },
+        {
+          "id": "CHK-GEN-41",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; the state-tracking/accounting invariant applies to any balance-mutation path. Weakest on specificity and actionability: it names the condition (membership under the same address key before zeroing) but not the concrete code surface — which functions, which map, or what key mismatch (checksummed vs raw, stale cache entry) looks like in source. Failure mode is stated as an equation rather than a code smell an auditor can grep for."
+        },
+        {
+          "id": "CHK-GEN-42",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.6,
+          "critique": "Weakest on specificity and actionability: it states a set-disjointness identity in spec-like notation (bal, live, extras) without naming any code area, accumulator variable, or where extra terms (treasury, burn, pending) typically enter, so the auditor must first map abstract symbols onto the codebase. Failure mode is double-counting only, unpinned to a concrete surface."
+        },
+        {
+          "id": "CHK-GEN-43",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3.2,
+          "critique": "Weakest is implementation_readiness: supply conservation is stated as a spec equality with no concrete failure surface — no overflow/wraparound, width, or accounting-path failure mode named. Actionability suffers because real clients never re-derive supply as a sum over live accounts per transition, so the auditor must reformulate it into mint/burn bookkeeping paths. Granularity bundles derivation, equality, and rejection."
+        },
+        {
+          "id": "CHK-GEN-44",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the zero-default condition precisely but leaves the code site abstract ('the routine enumerating live keys')—no field, container type, or deletion path. Implementation readiness pins a plausible failure (zero entry leaking into enumeration) without tying it to a concrete surface like delete-on-zero-write or iteration ordering. Granularity slightly bundles omission plus insertion-invariance."
+        },
+        {
+          "id": "CHK-GEN-45",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 5,
+          "critique": "Strongest axes throughout; weakest is arguably granularity, since it lumps truncating and saturating debits into one check and states both a code pattern and a supply-invariant consequence — but these are the same concern. Specificity names the exact operation pairing (sat_sub debit vs full credit) on the underinflow path, a real overflow/underflow surface."
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "distribution": {
+        "n": 45,
+        "axis_means": {
+          "specificity": 4.089,
+          "implementation_readiness": 4.111,
+          "generality": 4.733,
+          "actionability": 4,
+          "granularity": 4.156
+        },
+        "overall_mean": 4.218,
+        "overall_median": 4.2,
+        "overall_min": 2.8
+      },
+      "meets_reference_bar": true,
+      "bar_gaps": [],
+      "n_improve_candidates": 22,
+      "improvements": [
+        {
+          "id": "CHK-GEN-01",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-02",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-04",
+          "result": "rejected: text 266 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-05",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-09",
+          "result": "rejected: text 291 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-13",
+          "result": "rejected: text 262 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-14",
+          "result": "rejected: text 262 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-15",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-16",
+          "result": "rejected: text 280 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-18",
+          "result": "rejected: text 263 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-20",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-22",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-23",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-24",
+          "result": "rejected: assertion 172 chars > 160 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-27",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-29",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-31",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-33",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-38",
+          "result": "rejected: text 311 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-39",
+          "result": "rejected: text 308 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-42",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-43",
+          "result": "accepted"
+        }
+      ],
+      "items": [
+        {
+          "id": "CHK-GEN-01",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Strong: one concern, protocol-wide, with a clear violation signature (cached emptiness flag vs. commit-time balance read). Weakest are specificity and implementation_readiness — it names the pruning/commit stage but no concrete field, function, or state-cache structure, and the failure mode is staleness in general rather than a pinned ordering or width boundary."
+        },
+        {
+          "id": "CHK-GEN-02",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: \"same ledger snapshot\" names the mechanism abstractly without pinning a concrete field, function, or comparison an auditor can grep. Granularity is slightly diluted by bundling three re-insertion vectors (commit, cache flush, journal revert), which are distinct code paths with distinct failure modes."
+        },
+        {
+          "id": "CHK-GEN-03",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the credit/delete-prune paths but keeps 'live account set' and 'state-commit' as abstract set membership rather than the concrete structure (accounts map, dirty/touched set, trie node) and field to inspect. Granularity slightly bundles a commit-time invariant assertion with a per-write-path audit; failure mode (orphaned balance / resurrection) is implied, not stated."
+        },
+        {
+          "id": "CHK-GEN-04",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest is actionability: it states the invariant to confirm but not where to look — the insertion/registration paths that could admit a duplicate — nor what a violation looks like in code. Specificity is slightly soft too: no container type, field, or removal primitive (single-occurrence erase vs set delete) is named."
+        },
+        {
+          "id": "CHK-GEN-05",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Strongest on specificity and implementation readiness: it pins accumulator width, checked/trapping add, and narrowing store cast on a concrete arithmetic surface. Granularity is weakest — the appended recomputed_supply == exact_sum(balances) invariant is a separate conformance check bolted onto an otherwise single arithmetic-safety concern, mildly widening scope."
+        },
+        {
+          "id": "CHK-GEN-06",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest on specificity and actionability: the read-after-write condition is stated precisely, but no code area is named — no state-object/journal/cache layer, no balance field, no candidate call sites (transfer, gas refund, fee payment). The auditor must first locate multi-write operations themselves. Failure mode (stale pre-sequence snapshot) is concrete; scope is single and portable."
+        },
+        {
+          "id": "CHK-GEN-07",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Strongest on specificity and generality: it names the exact predicate (membership iff nonzero) and the exact wrong test (truthiness/empty-encoding proxy). Weakest is granularity — it bundles the retention biconditional with the zero-test canonicalization, two related but separable checks. implementation_readiness names the surface and a plausible failure mode but stops short of pinning the concrete type/encoding mismatch."
+        },
+        {
+          "id": "CHK-GEN-08",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest are specificity and actionability: it names the arithmetic pattern and exact invariant (moved == min(d,b), remainder + moved == pre-balance) but not a concrete function, field, or module, so the auditor must first locate all saturating-subtraction debit sites and infer what 'recorded moved amount' maps to in the codebase. Otherwise a sharp, single, portable check."
+        },
+        {
+          "id": "CHK-GEN-09",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3.4,
+          "critique": "Weakest on specificity/actionability: DETAIL is a symbolic invariant over abstract pre/post state, not a pointed code location (no accessor, no supply-tracking field, no arithmetic op). Implementation_readiness names a real surface (supply accounting on zeroing/self-transfer) but doesn't pin the failure mode (underflow, double-decrement, dust-pruning). Granularity bundles two distinct checks."
+        },
+        {
+          "id": "CHK-GEN-10",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the write path and the zero-value condition but not the concrete artifact (storage-trie node deletion, account-slot map insert) an auditor greps for. Granularity slightly diluted by folding three consequences (enumeration, support set, root hash) into one check, though they share a single root cause."
+        },
+        {
+          "id": "CHK-GEN-11",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest are implementation_readiness and generality: it prescribes rejection as the only acceptable handling, so a correct net-zero self-transfer would be falsely flagged, and it never names the actual failure mode (stale read of bal(escrow) captured before the debit, inflating balance). Otherwise a tight, single-concern aliasing check."
+        },
+        {
+          "id": "CHK-GEN-12",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on the concrete failure surface (truncated unsigned subtraction, two ordering guards). Weakest: granularity/generality — it bundles two distinct guards plus a necessity claim into one item, and the unnamed 'split total' with used/limit/fee_floor/price terms reads as one protocol's naming; no function or module is named, so the auditor must locate the site themselves."
+        },
+        {
+          "id": "CHK-GEN-13",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.2,
+          "critique": "Weakest on specificity and implementation_readiness: the DETAIL is a trace-predicate restatement of the invariant, naming no concrete field, constructor, or config source in code. It pins no failure mode (stale/shadowed config, caller-supplied override, default-initialized target), so an auditor must translate it into what a burn-emitting call site actually looks like."
+        },
+        {
+          "id": "CHK-GEN-14",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a formal monotonicity predicate (post.bal <= pre.bal) without naming any module, function, or write site, and pins no failure mode (overflow, signed/unsigned mix, refund/credit path). Actionability suffers likewise — the auditor must first enumerate 'balance-writing paths' themselves and judge whether increases are legitimate."
+        },
+        {
+          "id": "CHK-GEN-15",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 5,
+          "critique": "No weak axis. Names the exact code-level condition (dst balance re-read after debit write vs. stale snapshot), pins a classic aliasing failure mode with a conservation post-condition, and applies to any value-transfer implementation. Granularity: single concern; the src==dst short-circuit alternative is a legitimate variant, not bundling."
+        },
+        {
+          "id": "CHK-GEN-16",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest are implementation_readiness and actionability: \"total supply\" is a model-level invariant rarely materialized as a client variable, and the prescribed order (zero bal, then live.remove) is one model's encoding — real clients delete the account object wholesale, so the auditor must restate the check as \"balance debited exactly once, no re-credit on revert/re-creation\"."
+        },
+        {
+          "id": "CHK-GEN-17",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on the concrete failure surface (unsigned subtraction wraparound guarded by an ordering precondition). Weakest axes: generality and actionability — the bare symbols e/P/D and the phrase \"(escrow + credited) - deducted\" assume the reader already maps them to named fields/functions, so the auditor must resolve which balance accessors those are before searching. Granularity slightly diluted by bundling the guard-exists and path-not-taken conditions."
+        },
+        {
+          "id": "CHK-GEN-18",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity, implementation_readiness, and actionability: total >= a is a tautology for unsigned math unless overflow/wraparound is the real concern, which the item never names. No module, field, or accumulator is identified, and the assertion restates a spec lemma rather than pinning a failure mode (wrapping add, signed cast, lossy float) an auditor could locate in code."
+        },
+        {
+          "id": "CHK-GEN-19",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest: specificity and actionability. The arithmetic condition is exact, but the item never names a function, module, or call site — and the bare symbols e, P, D are undefined here, so an auditor must resolve them from external context before grepping. Overflow of e+P itself is left unaddressed."
+        },
+        {
+          "id": "CHK-GEN-20",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 3,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4,
+          "critique": "Weakest is generality: the key-set-identity invariant is tied to this model's supply fold, and real clients legitimately create or prune accounts, so it may not transfer. Specificity/actionability are held back by phrasing in model terms (balance_only_step, keys(post.accounts)) without naming the code area doing the map update."
+        },
+        {
+          "id": "CHK-GEN-21",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest is specificity: it names the balance-write path and the enumeration source but not the concrete structure (account map, dirty set, cached index) to inspect. Implementation_readiness is close behind — the omission risk is real, yet the mechanism (lazy account insert, zero-balance pruning, stale index) is left implicit rather than pinned."
+        },
+        {
+          "id": "CHK-GEN-22",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4.2,
+          "critique": "Weakest is granularity: bundles three distinct concerns — sender==recipient aliasing, duplicate live-list rows, and u256 checked arithmetic — across four different transfer paths, so a violation could be any of several unrelated defects. Specificity/actionability are slightly diluted because no concrete function or field name is given; the auditor must locate the balance-mutation sites themselves."
+        },
+        {
+          "id": "CHK-GEN-23",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: \"state-transition code\" names no concrete function, map, or emptiness predicate (nonce/code/balance), leaving the auditor to locate the pruning site. Granularity slightly bundles two obligations (preserve on zero delta; correct deletion predicate). Readiness pins the no-op-delta erasure mode well but not the width/representation surface."
+        },
+        {
+          "id": "CHK-GEN-24",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a supply-conservation invariant without naming any module, field, accumulator, or credit path in code, and pins no concrete failure mode (no overflow/width/ordering/partial-batch-rollback surface). Granularity suffers slightly from bundling the global equation with the per-credit mint-event logging requirement."
+        },
+        {
+          "id": "CHK-GEN-25",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 4.8,
+          "critique": "Strongest on specificity and actionability: names the helper, the exact comparison (bal(sender) < value), and the ordering violation (state write before check). Weakest is implementation_readiness (4) — it pins ordering/atomicity as the failure surface but leaves the concrete mechanism implicit (e.g. journaling, revert-snapshot, or non-rolled-back nonce/gas writes)."
+        },
+        {
+          "id": "CHK-GEN-26",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Strongest on implementation readiness: pins truncating subtraction, write-ordering, and the d==s aliasing case as concrete failure modes. Granularity is weakest — it bundles three related but distinct checks (pre-write guard, saturating-sub, self-transfer aliasing) under one item, so a violation could be any of three, slightly diluting the single-concern focus."
+        },
+        {
+          "id": "CHK-GEN-27",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4.2,
+          "critique": "Weakest is granularity: it bundles two distinct concerns — checked subtraction against live balance, and debit/credit atomicity — either of which is separately auditable. Specificity/actionability slightly short of 5: names operations and the wrap/skip failure modes, but not concrete field names, integer widths, or where balance state lives."
+        },
+        {
+          "id": "CHK-GEN-28",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; names the exact debit-path conditions and ordering (checks before write). Weakest axes: implementation_readiness and granularity — it pins guard presence but not the concrete failure mode (unsigned underflow wrapping, TOCTOU across intermediate writes, signed/width mismatch), and bundles two distinct guards (account existence, sufficient balance) into one item."
+        },
+        {
+          "id": "CHK-GEN-29",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; weakest on implementation_readiness and granularity. It names credit/debit pairing at write sites and cites refund/withdrawal/selfdestruct paths, but the failure mode stays accounting-abstract — no concrete break (unsigned underflow on debit, touched-account dedup, ordering of balance snapshot vs. write). 'Every balance-write call site in transaction and block processing' also widens one concern across several distinct subsystems."
+        },
+        {
+          "id": "CHK-GEN-30",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Weakest is granularity: it bundles two related but distinct concerns — snapshot-before-erase ordering and checked full-width subtraction — either of which could fail independently. Other axes are strong: it names the exact ordering, the arithmetic width, the overflow mode, and the concrete failure signature (post-erase default-0 used as burn amount)."
+        },
+        {
+          "id": "CHK-GEN-31",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Granularity is weakest: it fuses two distinct concerns — comparison width/wrapping fidelity and the check-precedes-write ordering — which could fail independently and would be audited separately. Actionability is slightly soft because it names the debit function but not how the balance-write path is identified in a codebase with multiple mutation sites. Specificity and failure-mode pinning are strong."
+        },
+        {
+          "id": "CHK-GEN-32",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.2,
+          "critique": "Weakest on specificity and implementation_readiness: it names the condition (membership test before balance write) but not the concrete code surface — which map/set, which write path, or whether stale/lazy-loaded caches count as \"live\". Failure mode is implied (credit to untracked account) rather than pinned; no guidance on where such writes typically live."
+        },
+        {
+          "id": "CHK-GEN-33",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 4.8,
+          "critique": "Strongest on specificity and actionability: it names the exact code condition (guard dominating append) and the visible violation (duplicate entries). Implementation_readiness is the weakest axis — duplicate accumulation in a warm/access-list set is a real surface, but the concrete downstream failure (gas mispricing, unbounded set growth, state-root divergence) is left unstated."
+        },
+        {
+          "id": "CHK-GEN-34",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Weakest on granularity and generality: it bundles three distinct concerns — pre-subtraction guard ordering (U<=G, f<=p), product-width/overflow, and the exact conservation identity summing to G*p — into one item, and the symbol-level formulation (G, U, p, f) presumes one protocol's prepaid-charge naming, needing translation for other settlement implementations."
+        },
+        {
+          "id": "CHK-GEN-35",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest axes are specificity and actionability: the exact predicate (reported_burn == min(requested, balance_before)) is pinned, but no module, function, or record type is named, so the auditor must first locate every balance-decrement write site and its accounting emission. Failure mode (raw rather than saturated amount) is otherwise concrete, general, and single-concern."
+        },
+        {
+          "id": "CHK-GEN-36",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strongest on failure mode: saturating unsigned subtraction clamping a debit and inflating supply is a concrete, cross-implementation arithmetic surface. Weakest on specificity/actionability — \"any balance-mutating transfer path\" names no function, module, or type, leaving the auditor to enumerate the paths. Granularity dips slightly: the self-transfer supply-invariance clause is a distinct check appended to the underflow concern."
+        },
+        {
+          "id": "CHK-GEN-37",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on failure mode (unsigned wrap on balance debit). Weakest: granularity and actionability — it bundles the checked_sub/underflow-reject requirement with a separate 'no credit path, post > pre invalid' clause, and never names a module, function, or state-write site, so the auditor must first classify which transitions count as balance-non-increasing."
+        },
+        {
+          "id": "CHK-GEN-38",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest is implementation_readiness: it names an allowlist-membership condition but not the concrete failure mode (validation placed after state mutation, `none` treated as a bypass default, per-event vs per-batch checking). Specificity also leans generic — 'the event-append path for the accumulator under audit' points at a code area without naming the entry point or message type an auditor should open."
+        },
+        {
+          "id": "CHK-GEN-39",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4,
+          "critique": "Weakest is implementation_readiness: it frames a conservation invariant over balance credits but never pins a concrete failure mode (unchecked mint path, refund double-credit, overflow-wrapped delta). Specificity is good — audit every balance credit — yet \"declared_issuance_sites\" is left to the auditor to enumerate, so the comparison set is not fully fixed."
+        },
+        {
+          "id": "CHK-GEN-40",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Strongest on specificity/actionability: names the exact comparison, width, signedness, and cast/wrap failure modes. Weakest: granularity — bundles three distinct defects (truncating cast, signedness, wrapping subtraction) into one item; generality slightly narrowed by assuming a u256-balance, live-account state model rather than any balance-conservation implementation."
+        },
+        {
+          "id": "CHK-GEN-41",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; the state-tracking/accounting invariant applies to any balance-mutation path. Weakest on specificity and actionability: it names the condition (membership under the same address key before zeroing) but not the concrete code surface — which functions, which map, or what key mismatch (checksummed vs raw, stale cache entry) looks like in source. Failure mode is stated as an equation rather than a code smell an auditor can grep for."
+        },
+        {
+          "id": "CHK-GEN-42",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4,
+          "critique": "Weakest is granularity: it bundles two checks — single-pass coverage of the live/non-deleted set, and disjointness of post-loop adjustments — either of which could stand alone. Specificity/readiness are good but stop short of naming the accumulator variable, width, or deletion predicate; the DETAIL's 'else total = true + bal(a)' clause is garbled and unusable."
+        },
+        {
+          "id": "CHK-GEN-43",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3.6,
+          "critique": "Weakest on actionability and granularity: no client actually stores a `post.supply` field or re-sums all live balances per block, so the auditor must first translate this into where value deltas are tracked. It also bundles two conjuncts (sum-equals-supply, and the burn/mint conservation equation) into one item."
+        },
+        {
+          "id": "CHK-GEN-44",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the zero-default condition precisely but leaves the code site abstract ('the routine enumerating live keys')—no field, container type, or deletion path. Implementation readiness pins a plausible failure (zero entry leaking into enumeration) without tying it to a concrete surface like delete-on-zero-write or iteration ordering. Granularity slightly bundles omission plus insertion-invariance."
+        },
+        {
+          "id": "CHK-GEN-45",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 5,
+          "critique": "Strongest axes throughout; weakest is arguably granularity, since it lumps truncating and saturating debits into one check and states both a code pattern and a supply-invariant consequence — but these are the same concern. Specificity names the exact operation pairing (sat_sub debit vs full credit) on the underinflow path, a real overflow/underflow surface."
+        }
+      ]
+    },
+    {
+      "round": 3,
+      "distribution": {
+        "n": 45,
+        "axis_means": {
+          "specificity": 4.2,
+          "implementation_readiness": 4.289,
+          "generality": 4.778,
+          "actionability": 4.111,
+          "granularity": 4.178
+        },
+        "overall_mean": 4.311,
+        "overall_median": 4.4,
+        "overall_min": 2.8
+      },
+      "meets_reference_bar": true,
+      "bar_gaps": [],
+      "n_improve_candidates": 14,
+      "improvements": [
+        {
+          "id": "CHK-GEN-04",
+          "result": "rejected: text 278 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-09",
+          "result": "rejected: text 282 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-13",
+          "result": "rejected: text 268 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-14",
+          "result": "rejected: text 389 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-16",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-18",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-20",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-22",
+          "result": "rejected: text 274 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-24",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-27",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-38",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-39",
+          "result": "accepted"
+        },
+        {
+          "id": "CHK-GEN-42",
+          "result": "rejected: text 270 chars > 260 (granularity/length cap)"
+        },
+        {
+          "id": "CHK-GEN-43",
+          "result": "rejected: text 273 chars > 260 (granularity/length cap)"
+        }
+      ],
+      "items": [
+        {
+          "id": "CHK-GEN-01",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Strong: one concern, protocol-wide, with a clear violation signature (cached emptiness flag vs. commit-time balance read). Weakest are specificity and implementation_readiness — it names the pruning/commit stage but no concrete field, function, or state-cache structure, and the failure mode is staleness in general rather than a pinned ordering or width boundary."
+        },
+        {
+          "id": "CHK-GEN-02",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: \"same ledger snapshot\" names the mechanism abstractly without pinning a concrete field, function, or comparison an auditor can grep. Granularity is slightly diluted by bundling three re-insertion vectors (commit, cache flush, journal revert), which are distinct code paths with distinct failure modes."
+        },
+        {
+          "id": "CHK-GEN-03",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the credit/delete-prune paths but keeps 'live account set' and 'state-commit' as abstract set membership rather than the concrete structure (accounts map, dirty/touched set, trie node) and field to inspect. Granularity slightly bundles a commit-time invariant assertion with a per-write-path audit; failure mode (orphaned balance / resurrection) is implied, not stated."
+        },
+        {
+          "id": "CHK-GEN-04",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.8,
+          "critique": "Weakest is actionability: it states the invariant to confirm but not where to look — the insertion/registration paths that could admit a duplicate — nor what a violation looks like in code. Specificity is slightly soft too: no container type, field, or removal primitive (single-occurrence erase vs set delete) is named."
+        },
+        {
+          "id": "CHK-GEN-05",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Strongest on specificity and implementation readiness: it pins accumulator width, checked/trapping add, and narrowing store cast on a concrete arithmetic surface. Granularity is weakest — the appended recomputed_supply == exact_sum(balances) invariant is a separate conformance check bolted onto an otherwise single arithmetic-safety concern, mildly widening scope."
+        },
+        {
+          "id": "CHK-GEN-06",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest on specificity and actionability: the read-after-write condition is stated precisely, but no code area is named — no state-object/journal/cache layer, no balance field, no candidate call sites (transfer, gas refund, fee payment). The auditor must first locate multi-write operations themselves. Failure mode (stale pre-sequence snapshot) is concrete; scope is single and portable."
+        },
+        {
+          "id": "CHK-GEN-07",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Strongest on specificity and generality: it names the exact predicate (membership iff nonzero) and the exact wrong test (truthiness/empty-encoding proxy). Weakest is granularity — it bundles the retention biconditional with the zero-test canonicalization, two related but separable checks. implementation_readiness names the surface and a plausible failure mode but stops short of pinning the concrete type/encoding mismatch."
+        },
+        {
+          "id": "CHK-GEN-08",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest are specificity and actionability: it names the arithmetic pattern and exact invariant (moved == min(d,b), remainder + moved == pre-balance) but not a concrete function, field, or module, so the auditor must first locate all saturating-subtraction debit sites and infer what 'recorded moved amount' maps to in the codebase. Otherwise a sharp, single, portable check."
+        },
+        {
+          "id": "CHK-GEN-09",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 3,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3.4,
+          "critique": "Weakest on specificity/actionability: DETAIL is a symbolic invariant over abstract pre/post state, not a pointed code location (no accessor, no supply-tracking field, no arithmetic op). Implementation_readiness names a real surface (supply accounting on zeroing/self-transfer) but doesn't pin the failure mode (underflow, double-decrement, dust-pruning). Granularity bundles two distinct checks."
+        },
+        {
+          "id": "CHK-GEN-10",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the write path and the zero-value condition but not the concrete artifact (storage-trie node deletion, account-slot map insert) an auditor greps for. Granularity slightly diluted by folding three consequences (enumeration, support set, root hash) into one check, though they share a single root cause."
+        },
+        {
+          "id": "CHK-GEN-11",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest are implementation_readiness and generality: it prescribes rejection as the only acceptable handling, so a correct net-zero self-transfer would be falsely flagged, and it never names the actual failure mode (stale read of bal(escrow) captured before the debit, inflating balance). Otherwise a tight, single-concern aliasing check."
+        },
+        {
+          "id": "CHK-GEN-12",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on the concrete failure surface (truncated unsigned subtraction, two ordering guards). Weakest: granularity/generality — it bundles two distinct guards plus a necessity claim into one item, and the unnamed 'split total' with used/limit/fee_floor/price terms reads as one protocol's naming; no function or module is named, so the auditor must locate the site themselves."
+        },
+        {
+          "id": "CHK-GEN-13",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 4
+          },
+          "overall": 3.2,
+          "critique": "Weakest on specificity and implementation_readiness: the DETAIL is a trace-predicate restatement of the invariant, naming no concrete field, constructor, or config source in code. It pins no failure mode (stale/shadowed config, caller-supplied override, default-initialized target), so an auditor must translate it into what a burn-emitting call site actually looks like."
+        },
+        {
+          "id": "CHK-GEN-14",
+          "scores": {
+            "specificity": 2,
+            "implementation_readiness": 2,
+            "generality": 4,
+            "actionability": 2,
+            "granularity": 4
+          },
+          "overall": 2.8,
+          "critique": "Weakest on specificity and implementation_readiness: it restates a formal monotonicity predicate (post.bal <= pre.bal) without naming any module, function, or write site, and pins no failure mode (overflow, signed/unsigned mix, refund/credit path). Actionability suffers likewise — the auditor must first enumerate 'balance-writing paths' themselves and judge whether increases are legitimate."
+        },
+        {
+          "id": "CHK-GEN-15",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 5,
+          "critique": "No weak axis. Names the exact code-level condition (dst balance re-read after debit write vs. stale snapshot), pins a classic aliasing failure mode with a conservation post-condition, and applies to any value-transfer implementation. Granularity: single concern; the src==dst short-circuit alternative is a legitimate variant, not bundling."
+        },
+        {
+          "id": "CHK-GEN-16",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; weakest on specificity/actionability — it names the journaling/destruct path and the concrete failure modes (revert or same-transaction re-creation resurrecting balance, double-debit of the supply sum), but not the actual code sites (journal entry types, dirty-map flush, snapshot revert handler), so the auditor must still locate them. Granularity mildly bundles atomicity, revert-safety, and re-creation."
+        },
+        {
+          "id": "CHK-GEN-17",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on the concrete failure surface (unsigned subtraction wraparound guarded by an ordering precondition). Weakest axes: generality and actionability — the bare symbols e/P/D and the phrase \"(escrow + credited) - deducted\" assume the reader already maps them to named fields/functions, so the auditor must resolve which balance accessors those are before searching. Granularity slightly diluted by bundling the guard-exists and path-not-taken conditions."
+        },
+        {
+          "id": "CHK-GEN-18",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest are specificity and actionability: the check pins the arithmetic condition (checked add, carry-out reject, stored>=each addend) but never names a protocol module, function, or field, so the auditor must first locate which balance/escrow accumulations qualify. It reads as a generic integer-overflow rule rather than one anchored to this protocol's code."
+        },
+        {
+          "id": "CHK-GEN-19",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest: specificity and actionability. The arithmetic condition is exact, but the item never names a function, module, or call site — and the bare symbols e, P, D are undefined here, so an auditor must resolve them from external context before grepping. Overflow of e+P itself is left unaddressed."
+        },
+        {
+          "id": "CHK-GEN-20",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest on specificity/actionability: it names the invariant (key-set equality across debit/credit) and the real failure surface (implicit map insert of absent recipient, prune of zeroed sender), but does not point to concrete code sites — which map API, where account creation/self-destruct pruning lives — so the auditor still locates it by inference."
+        },
+        {
+          "id": "CHK-GEN-21",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.4,
+          "critique": "Weakest is specificity: it names the balance-write path and the enumeration source but not the concrete structure (account map, dirty set, cached index) to inspect. Implementation_readiness is close behind — the omission risk is real, yet the mechanism (lazy account insert, zero-balance pruning, stale index) is left implicit rather than pinned."
+        },
+        {
+          "id": "CHK-GEN-22",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4.2,
+          "critique": "Weakest is granularity: bundles three distinct concerns — sender==recipient aliasing, duplicate live-list rows, and u256 checked arithmetic — across four different transfer paths, so a violation could be any of several unrelated defects. Specificity/actionability are slightly diluted because no concrete function or field name is given; the auditor must locate the balance-mutation sites themselves."
+        },
+        {
+          "id": "CHK-GEN-23",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: \"state-transition code\" names no concrete function, map, or emptiness predicate (nonce/code/balance), leaving the auditor to locate the pruning site. Granularity slightly bundles two obligations (preserve on zero delta; correct deletion predicate). Readiness pins the no-op-delta erasure mode well but not the width/representation surface."
+        },
+        {
+          "id": "CHK-GEN-24",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 3.8,
+          "critique": "Granularity is weakest: bundles the supply-conservation equation, accumulator width/wrap, and atomic-rollback semantics into one item — each is separately auditable. Specificity/actionability lose a point because no concrete module, accumulator field, or width bound is named; \"wide enough not to wrap\" leaves the auditor to derive the actual threshold."
+        },
+        {
+          "id": "CHK-GEN-25",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 4.8,
+          "critique": "Strongest on specificity and actionability: names the helper, the exact comparison (bal(sender) < value), and the ordering violation (state write before check). Weakest is implementation_readiness (4) — it pins ordering/atomicity as the failure surface but leaves the concrete mechanism implicit (e.g. journaling, revert-snapshot, or non-rolled-back nonce/gas writes)."
+        },
+        {
+          "id": "CHK-GEN-26",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Strongest on implementation readiness: pins truncating subtraction, write-ordering, and the d==s aliasing case as concrete failure modes. Granularity is weakest — it bundles three related but distinct checks (pre-write guard, saturating-sub, self-transfer aliasing) under one item, so a violation could be any of three, slightly diluting the single-concern focus."
+        },
+        {
+          "id": "CHK-GEN-27",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Weakest is granularity: it bundles the live-balance re-read (staleness/reentrancy) with the checked-subtraction requirement (underflow), two distinct failure modes an auditor verifies in different places, and enumerates four debit sites. Still one coherent debit-path concern; other axes are strong and code-anchored."
+        },
+        {
+          "id": "CHK-GEN-28",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; names the exact debit-path conditions and ordering (checks before write). Weakest axes: implementation_readiness and granularity — it pins guard presence but not the concrete failure mode (unsigned underflow wrapping, TOCTOU across intermediate writes, signed/width mismatch), and bundles two distinct guards (account existence, sufficient balance) into one item."
+        },
+        {
+          "id": "CHK-GEN-29",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; weakest on implementation_readiness and granularity. It names credit/debit pairing at write sites and cites refund/withdrawal/selfdestruct paths, but the failure mode stays accounting-abstract — no concrete break (unsigned underflow on debit, touched-account dedup, ordering of balance snapshot vs. write). 'Every balance-write call site in transaction and block processing' also widens one concern across several distinct subsystems."
+        },
+        {
+          "id": "CHK-GEN-30",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.8,
+          "critique": "Weakest is granularity: it bundles two related but distinct concerns — snapshot-before-erase ordering and checked full-width subtraction — either of which could fail independently. Other axes are strong: it names the exact ordering, the arithmetic width, the overflow mode, and the concrete failure signature (post-erase default-0 used as burn amount)."
+        },
+        {
+          "id": "CHK-GEN-31",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Granularity is weakest: it fuses two distinct concerns — comparison width/wrapping fidelity and the check-precedes-write ordering — which could fail independently and would be audited separately. Actionability is slightly soft because it names the debit function but not how the balance-write path is identified in a codebase with multiple mutation sites. Specificity and failure-mode pinning are strong."
+        },
+        {
+          "id": "CHK-GEN-32",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.2,
+          "critique": "Weakest on specificity and implementation_readiness: it names the condition (membership test before balance write) but not the concrete code surface — which map/set, which write path, or whether stale/lazy-loaded caches count as \"live\". Failure mode is implied (credit to untracked account) rather than pinned; no guidance on where such writes typically live."
+        },
+        {
+          "id": "CHK-GEN-33",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 4.8,
+          "critique": "Strongest on specificity and actionability: it names the exact code condition (guard dominating append) and the visible violation (duplicate entries). Implementation_readiness is the weakest axis — duplicate accumulation in a warm/access-list set is a real surface, but the concrete downstream failure (gas mispricing, unbounded set growth, state-root divergence) is left unstated."
+        },
+        {
+          "id": "CHK-GEN-34",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Weakest on granularity and generality: it bundles three distinct concerns — pre-subtraction guard ordering (U<=G, f<=p), product-width/overflow, and the exact conservation identity summing to G*p — into one item, and the symbol-level formulation (G, U, p, f) presumes one protocol's prepaid-charge naming, needing translation for other settlement implementations."
+        },
+        {
+          "id": "CHK-GEN-35",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 5
+          },
+          "overall": 4.6,
+          "critique": "Weakest axes are specificity and actionability: the exact predicate (reported_burn == min(requested, balance_before)) is pinned, but no module, function, or record type is named, so the auditor must first locate every balance-decrement write site and its accounting emission. Failure mode (raw rather than saturated amount) is otherwise concrete, general, and single-concern."
+        },
+        {
+          "id": "CHK-GEN-36",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strongest on failure mode: saturating unsigned subtraction clamping a debit and inflating supply is a concrete, cross-implementation arithmetic surface. Weakest on specificity/actionability — \"any balance-mutating transfer path\" names no function, module, or type, leaving the auditor to enumerate the paths. Granularity dips slightly: the self-transfer supply-invariance clause is a distinct check appended to the underflow concern."
+        },
+        {
+          "id": "CHK-GEN-37",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.4,
+          "critique": "Strong on failure mode (unsigned wrap on balance debit). Weakest: granularity and actionability — it bundles the checked_sub/underflow-reject requirement with a separate 'no credit path, post > pre invalid' clause, and never names a module, function, or state-write site, so the auditor must first classify which transitions count as balance-non-increasing."
+        },
+        {
+          "id": "CHK-GEN-38",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 4,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4,
+          "critique": "Weakest: specificity and implementation_readiness. The handler is described by role, not by a named function/module, and the allowlist's concrete representation is left open. The default-allow failure mode is asserted but not tied to a concrete mechanism (zero-value enum, Option/sentinel, missing-field decode), so the auditor must infer what 'unset' looks like in the actual type."
+        },
+        {
+          "id": "CHK-GEN-39",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4,
+          "critique": "Weakest is granularity: it bundles three checks — enumerating issuance sites, debit/credit pairing within one commit, and revert-ordering of refunds. Actionability and specificity are slightly soft because `state_transition.balance_writes` and `ISSUANCE_SITES` are idealized abstractions the auditor must first map onto real balance-mutation call sites in the codebase."
+        },
+        {
+          "id": "CHK-GEN-40",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 4,
+            "actionability": 5,
+            "granularity": 4
+          },
+          "overall": 4.6,
+          "critique": "Strongest on specificity/actionability: names the exact comparison, width, signedness, and cast/wrap failure modes. Weakest: granularity — bundles three distinct defects (truncating cast, signedness, wrapping subtraction) into one item; generality slightly narrowed by assuming a u256-balance, live-account state model rather than any balance-conservation implementation."
+        },
+        {
+          "id": "CHK-GEN-41",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Strongest on generality; the state-tracking/accounting invariant applies to any balance-mutation path. Weakest on specificity and actionability: it names the condition (membership under the same address key before zeroing) but not the concrete code surface — which functions, which map, or what key mismatch (checksummed vs raw, stale cache entry) looks like in source. Failure mode is stated as an equation rather than a code smell an auditor can grep for."
+        },
+        {
+          "id": "CHK-GEN-42",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 3
+          },
+          "overall": 4,
+          "critique": "Weakest is granularity: it bundles two checks — single-pass coverage of the live/non-deleted set, and disjointness of post-loop adjustments — either of which could stand alone. Specificity/readiness are good but stop short of naming the accumulator variable, width, or deletion predicate; the DETAIL's 'else total = true + bal(a)' clause is garbled and unusable."
+        },
+        {
+          "id": "CHK-GEN-43",
+          "scores": {
+            "specificity": 3,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 3,
+            "granularity": 3
+          },
+          "overall": 3.6,
+          "critique": "Weakest on actionability and granularity: no client actually stores a `post.supply` field or re-sums all live balances per block, so the auditor must first translate this into where value deltas are tracked. It also bundles two conjuncts (sum-equals-supply, and the burn/mint conservation equation) into one item."
+        },
+        {
+          "id": "CHK-GEN-44",
+          "scores": {
+            "specificity": 4,
+            "implementation_readiness": 4,
+            "generality": 5,
+            "actionability": 4,
+            "granularity": 4
+          },
+          "overall": 4.2,
+          "critique": "Weakest is specificity: it names the zero-default condition precisely but leaves the code site abstract ('the routine enumerating live keys')—no field, container type, or deletion path. Implementation readiness pins a plausible failure (zero entry leaking into enumeration) without tying it to a concrete surface like delete-on-zero-write or iteration ordering. Granularity slightly bundles omission plus insertion-invariance."
+        },
+        {
+          "id": "CHK-GEN-45",
+          "scores": {
+            "specificity": 5,
+            "implementation_readiness": 5,
+            "generality": 5,
+            "actionability": 5,
+            "granularity": 5
+          },
+          "overall": 5,
+          "critique": "Strongest axes throughout; weakest is arguably granularity, since it lumps truncating and saturating debits into one check and states both a code pattern and a supply-invariant consequence — but these are the same concern. Specificity names the exact operation pairing (sat_sub debit vs full credit) on the underinflow path, a real overflow/underflow surface."
+        }
+      ]
+    }
+  ],
+  "history_overall_mean": [
+    3.538,
+    3.933,
+    4.218,
+    4.311
+  ],
+  "converged": false,
+  "stop_reason": "max_rounds_reached_without_convergence",
+  "reference_source": "/home/gohan/workspace/speca-lean4-plugin/data/solodit_checklist.csv",
+  "ours_source": "outputs/20260814-ethtotal/self_improve/chk_01e.json"
+}

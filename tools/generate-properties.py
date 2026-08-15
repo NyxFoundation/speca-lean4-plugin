@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Refine causally selected Lean -> implementation obligations into 01e text.
+"""Synthesize closure-aware Lean -> security audit packets and 01e text.
 
 Candidate selection now defaults to ``data/projection_map.json``.  The reviewed
 map supplies the causal chain from theorem to owned input/boundary obligation;
-the LLM only rewrites that selected obligation into concise audit text.  The old
+the LLM receives the root theorem and transitive proof closure, then produces a
+root-centred packet plus concise audit text.  The old
 label-prevalence pairing remains behind ``--legacy-label-pairing`` for historical
 reproduction and must not be used for production checklist generation.
 
@@ -34,6 +35,7 @@ from speca_lean4.judge import (
 )
 from speca_lean4.projection import load_projection_map
 from speca_lean4.health import load_health
+from speca_lean4.frontier import proof_evidence
 
 _ROOT = Path(__file__).resolve().parents[1]
 
@@ -76,7 +78,9 @@ def load_theorems(theorem_map: dict) -> dict[str, dict]:
     return out
 
 
-def coverage_candidates(theorems: dict[str, dict], vulns: list[dict]) -> list[dict]:
+def coverage_candidates(
+    theorems: dict[str, dict], vulns: list[dict], *, include_existing: bool = False
+) -> list[dict]:
     """One candidate per CRITICAL/HIGH theorem with NO concrete CHK twin.
 
     Theorem-driven and UNCAPPED — guarantees every high-severity proved invariant
@@ -92,7 +96,7 @@ def coverage_candidates(theorems: dict[str, dict], vulns: list[dict]) -> list[di
         best_class.setdefault(label, rc)
     out: list[dict] = []
     for t, d in sorted(theorems.items()):
-        if d.get("has_chk"):
+        if d.get("has_chk") and not include_existing:
             continue
         sev = (d.get("severity") or "").upper()
         if sev not in ("CRITICAL", "HIGH"):
@@ -180,24 +184,9 @@ def evidence_for(c: dict, health: dict | None) -> dict | None:
     """
     if not health:
         return None
-    th = health.get(c["theorem"])
-    if th is None or not th.statement:
+    payload = proof_evidence(c["theorem"], health)
+    if payload is None:
         return None
-    obligations = [
-        {"name": h.get("name", ""), "type": h.get("type", ""),
-         "head": h.get("head", ""), "class": h.get("class", "")}
-        for h in th.must_establish
-    ]
-    payload = {
-        "theorem": c["theorem"],
-        "statement": th.statement,
-        "conclusion": th.conclusion,
-        "obligations": obligations,
-        "referenced_defs_expanded": th.referenced_defs_expanded,
-        "proof_source": th.proof_source,
-        "doc_string": th.doc_string,
-        "lean_status": th.lean_status,
-    }
     encoded = json.dumps(payload, sort_keys=True, ensure_ascii=False,
                           separators=(",", ":")).encode("utf-8")
     digest = hashlib.sha256(encoded).hexdigest()
@@ -219,11 +208,11 @@ def _evidence_prompt(evidence: dict | None) -> str:
         f"Full theorem: {p['theorem']}",
         f"Statement: {p['statement']}",
         f"Conclusion: {p['conclusion']}",
-        "Implementation obligations (choose exactly one numbered obligation):",
+        "Root implementation obligations (all are authoritative inputs):",
     ]
-    for i, h in enumerate(p["obligations"], 1):
+    for i, h in enumerate(p["must_establish"], 1):
         lines.append(f"[{i}] name={h['name']} head={h['head']} type={h['type']}")
-    if not p["obligations"]:
+    if not p["must_establish"]:
         lines.append("[none] This theorem has no must-establish obligation; use the conclusion only as context and do not invent one.")
     lines.append("Referenced definitions:")
     for d in p["referenced_defs_expanded"]:
@@ -232,6 +221,27 @@ def _evidence_prompt(evidence: dict | None) -> str:
         lines.extend(["Verbatim source (secondary context only):", p["proof_source"]])
     if p["doc_string"]:
         lines.extend(["Docstring (secondary context only):", p["doc_string"]])
+    lines.extend([
+        "Proof-DAG supporting facts (theorem/lemma records only; definitions and library constants are omitted):",
+    ])
+    if p["proof_closure"]:
+        for fact in p["proof_closure"]:
+            deps = ",".join(fact["depends_on"]) or "none"
+            lines.extend([
+                f"[{fact['fact_id']}] theorem={fact['theorem']} depends_on={deps}",
+                f"  conclusion: {fact['conclusion']}",
+                "  obligations: " + "; ".join(
+                    f"{h['name']}={h['type']}" for h in fact["obligations"]
+                    if h["class"] == "must-establish"
+                ) or "  obligations: none",
+            ])
+    else:
+        lines.append("[none] No project-local theorem/lemma records were reachable.")
+    if p["unresolved_or_non_theorem_constants"]:
+        lines.append(
+            "Non-theorem/definition constants not expanded: " +
+            ", ".join(p["unresolved_or_non_theorem_constants"])
+        )
     return "\n".join(lines) + "\n"
 
 
@@ -250,16 +260,11 @@ def build_generate_prompt(c: dict, evidence: dict | None = None) -> str:
             f"Reviewed seed assertion: {c['seed_assertion']}\n"
         )
     evidence_block = _evidence_prompt(evidence)
-    obligation_rule = (
-        "- Choose exactly one numbered Lean implementation obligation and return "
-        "its 1-based index as obligation_index.\n"
-        if evidence is not None and evidence["payload"]["obligations"]
-        else "- Do not invent a must-establish obligation; use only the supplied conclusion/context.\n"
-    )
     return (
-        "You are DEFINING one NEW DEFENSIVE security audit-checklist item for a "
-        "protocol implementation. It must let an auditor confirm a machine-proved "
-        "invariant cannot be broken by a specific class of implementation defect.\n\n"
+        "You are DEFINING one DEFENSIVE security audit property packet for a "
+        "protocol implementation. The auditor will not read Lean. The packet "
+        "must expose the strong supporting facts needed for the root theorem, "
+        "not only a weak final consequence.\n\n"
         f"Proved invariant (Lean theorem): {thm}\n"
         f"Protocol area (label): {c['label']}\n"
         f"Relevant code surface: {hints}\n"
@@ -268,31 +273,108 @@ def build_generate_prompt(c: dict, evidence: dict | None = None) -> str:
         f"{c['root_cause']} (bug-bounty severity: {c['severity']})\n\n"
         f"{evidence_block}\n"
         f"{EF_BOUNTY_SEVERITY}\n\n"
-        "Write ONE concrete, general, code-level checklist item: what an auditor "
-        "inspects in the implementation source so this invariant holds against "
-        "this defect class. Rules:\n"
-        "- ONE auditable concern; general — NEVER name a specific client.\n"
-        f"{obligation_rule}"
+        "Return one root-centered audit packet. A packet may contain several "
+        "small supporting checks when they jointly establish the same guarantee; "
+        "do not create one top-level item per lemma. Rules:\n"
+        "- Include ALL root must-establish obligations as preconditions or guards; "
+        "do not select only one.\n"
+        "- Include every security-relevant local lemma conclusion as a supporting "
+        "fact or explicitly list it in omitted_facts with a reason.\n"
+        "- Preserve stronger facts. If a lemma proves exact equality, bounds, "
+        "membership, conservation, or ordering, do not weaken it to only a "
+        "nonzero/boolean consequence.\n"
+        "- Each supporting fact must cite one or more fact_id values from the "
+        "Proof-DAG evidence. Use ROOT for the root theorem.\n"
+        "- Do not invent clients, files, function names, transaction ordering, "
+        "caches, journals, or protocol operations absent from the evidence.\n"
+        "- Do not perform SPECA 02c file/function mapping here.\n"
+        "- Keep the top-level text/assertion concise; put the complete audit "
+        "coverage in audit_packet.\n"
         "- The Lean obligation is the source of truth; the dataset defect class "
         "is secondary teaching context and must not introduce unsupported "
         "components or operations.\n"
         f"- TEXT: one imperative checklist sentence, <= {TEXT_MAX} chars.\n"
         f"- ASSERTION: a compact machine-readable condition, <= {ASSERTION_MAX} chars.\n"
-        "Return STRICT JSON only: {\"obligation_index\": n, \"text\": \"...\", \"assertion\": \"...\"}"
+        "Return STRICT JSON only with this shape:\n"
+        "{\"text\":\"...\",\"assertion\":\"...\","
+        "\"audit_packet\":{"
+        "\"guarantee\":\"...\","
+        "\"preconditions\":[\"...\"],"
+        "\"supporting_facts\":[{"
+        "\"fact_id\":\"FACT-1\",\"source_fact_ids\":[\"ROOT\"],"
+        "\"claim\":\"...\",\"check\":\"...\","
+        "\"expected\":\"...\",\"flag_if\":\"...\"}],"
+        "\"derived_obligations\":[{"
+        "\"obligation_id\":\"OBS-1\",\"check\":\"...\","
+        "\"expected\":\"...\",\"flag_if\":\"...\","
+        "\"supports\":[\"FACT-1\"]}],"
+        "\"derivation\":\"...\","
+        "\"omitted_facts\":[{\"source_fact_id\":\"L001\",\"reason\":\"...\"}]"
+        "}}}"
     )
 
 
-def validate_generated(obj: dict, obligation_count: int = 0) -> tuple[dict | None, str]:
+def validate_audit_packet(packet: object, evidence: dict | None = None) -> tuple[dict | None, str]:
+    if not isinstance(packet, dict):
+        return None, "missing audit_packet object"
+    required = ("guarantee", "preconditions", "supporting_facts",
+                "derived_obligations", "derivation", "omitted_facts")
+    if any(not isinstance(packet.get(k), (str if k in ("guarantee", "derivation") else list))
+           for k in required):
+        return None, "audit_packet has invalid required field types"
+    if not str(packet["guarantee"]).strip() or not str(packet["derivation"]).strip():
+        return None, "audit_packet guarantee/derivation is empty"
+    valid_ids = {"ROOT"}
+    if evidence is not None:
+        valid_ids.update(f["fact_id"] for f in evidence["payload"].get("proof_closure", []))
+    fact_ids: set[str] = set()
+    for fact in packet["supporting_facts"]:
+        if not isinstance(fact, dict):
+            return None, "supporting_facts item is not an object"
+        for key in ("fact_id", "claim", "check", "expected", "flag_if"):
+            if not isinstance(fact.get(key), str) or not fact[key].strip():
+                return None, f"supporting_fact missing {key}"
+        if fact["fact_id"] in fact_ids:
+            return None, f"duplicate supporting fact id {fact['fact_id']}"
+        fact_ids.add(fact["fact_id"])
+        refs = fact.get("source_fact_ids")
+        if not isinstance(refs, list) or not refs or any(x not in valid_ids for x in refs):
+            return None, f"invalid supporting_fact source_fact_ids for {fact['fact_id']}"
+    for obligation in packet["derived_obligations"]:
+        if not isinstance(obligation, dict):
+            return None, "derived_obligations item is not an object"
+        for key in ("obligation_id", "check", "expected", "flag_if"):
+            if not isinstance(obligation.get(key), str) or not obligation[key].strip():
+                return None, f"derived_obligation missing {key}"
+        supports = obligation.get("supports")
+        if not isinstance(supports, list) or not supports or any(x not in fact_ids for x in supports):
+            return None, f"invalid derived_obligation supports for {obligation['obligation_id']}"
+    for omitted in packet["omitted_facts"]:
+        if not isinstance(omitted, dict) or omitted.get("source_fact_id") not in valid_ids:
+            return None, "invalid omitted_facts source_fact_id"
+        if not isinstance(omitted.get("reason"), str) or not omitted["reason"].strip():
+            return None, "omitted_facts requires a reason"
+    if evidence is not None:
+        closure_ids = {
+            f["fact_id"] for f in evidence["payload"].get("proof_closure", [])
+        }
+        covered_ids = {
+            source_id
+            for fact in packet["supporting_facts"]
+            for source_id in fact.get("source_fact_ids", [])
+        }
+        covered_ids.update(x.get("source_fact_id") for x in packet["omitted_facts"])
+        missing = sorted(closure_ids - covered_ids)
+        if missing:
+            return None, "proof-DAG facts not covered by packet: " + ", ".join(missing)
+    return packet, "ok"
+
+
+def validate_generated(obj: dict, evidence: dict | None = None) -> tuple[dict | None, str]:
     text, assertion = obj.get("text", ""), obj.get("assertion", "")
     if not (isinstance(text, str) and text.strip() and isinstance(assertion, str) and assertion.strip()):
         return None, "empty text/assertion"
     text, assertion = text.strip(), assertion.strip()
-    obligation_index = obj.get("obligation_index")
-    if obligation_count:
-        if isinstance(obligation_index, bool) or not isinstance(obligation_index, int):
-            return None, "missing obligation_index"
-        if not 1 <= obligation_index <= obligation_count:
-            return None, f"obligation_index {obligation_index} outside 1..{obligation_count}"
     for v in (text, assertion):
         m = _CLIENT_RE.search(v)
         if m:
@@ -301,9 +383,10 @@ def validate_generated(obj: dict, obligation_count: int = 0) -> tuple[dict | Non
         return None, f"text {len(text)}>{TEXT_MAX}"
     if len(assertion) > ASSERTION_MAX:
         return None, f"assertion {len(assertion)}>{ASSERTION_MAX}"
-    out = {"text": text, "assertion": assertion}
-    if obligation_count:
-        out["obligation_index"] = obligation_index
+    packet, why = validate_audit_packet(obj.get("audit_packet"), evidence)
+    if packet is None:
+        return None, why
+    out = {"text": text, "assertion": assertion, "audit_packet": packet}
     return out, "ok"
 
 
@@ -315,7 +398,6 @@ def _generate_one(
     evidence = evidence_for(c, health)
     if health is not None and evidence is None:
         return seq, None, f"rejected [{thm}/{c['root_cause']}]: missing Lean evidence"
-    obligation_count = len(evidence["payload"]["obligations"]) if evidence else 0
     prompt = build_generate_prompt(c, evidence)
     prop, why = None, "gen fail"
     for attempt in range(4):
@@ -324,17 +406,18 @@ def _generate_one(
         except Exception as e:
             why = f"gen fail: {str(e)[:80]}"
             break
-        prop, why = validate_generated(obj, obligation_count)
+        prop, why = validate_generated(obj, evidence)
         if prop:
             break
-        if ">" in why and "chars" not in why and "name" not in why:
+        if attempt < 3:
             budget = max(140, TEXT_MAX - 40 * (attempt + 1))
             a_budget = max(90, ASSERTION_MAX - 20 * (attempt + 1))
             prompt = (build_generate_prompt(c, evidence) +
-                      f"\n\nSTRICT RETRY: your previous answer was REJECTED for being too long "
-                      f"({why}). Return TEXT <= {budget} chars and ASSERTION <= {a_budget} "
-                      "chars — hard limits, count them. Be terse: drop examples and "
-                      "parentheticals, keep the one core check as a single imperative clause.")
+                      f"\n\nSTRICT RETRY: previous JSON was rejected: {why}. "
+                      f"Return valid JSON with TEXT <= {budget} chars and "
+                      f"ASSERTION <= {a_budget} chars. Preserve all required "
+                      "audit_packet fields, source fact IDs, and stronger lemma facts; "
+                      "do not omit the packet to make the answer shorter.")
             continue
         break
     if not prop:
@@ -361,24 +444,17 @@ def _generate_one(
         "x_origin": "generated (stage-2 new-property step, tools/generate-properties.py)",
         "x_defect_class": c["root_cause"],
         "x_judged_overall": overall,
+        "audit_packet": prop["audit_packet"],
         "shard": "checklist-generated",
     }
     if evidence is not None:
-        if obligation_count:
-            selected = evidence["payload"]["obligations"][prop["obligation_index"] - 1]
-        else:
-            selected = {
-                "name": "__conclusion__",
-                "head": "",
-                "type": evidence["payload"]["conclusion"],
-            }
         kept.update({
             "x_evidence_id": evidence["id"],
             "x_evidence_sha256": evidence["sha256"],
             "x_evidence_kind": "live-export",
-            "x_lean_obligation": selected["type"],
-            "x_lean_obligation_head": selected["head"],
-            "x_lean_obligation_name": selected["name"],
+            "x_lean_obligations": evidence["payload"]["must_establish"],
+            "x_proof_closure": evidence["payload"]["proof_closure"],
+            "x_proof_dependency_stats": evidence["payload"]["proof_dependency_stats"],
         })
     if c.get("obligation_id"):
         kept.update({
@@ -422,7 +498,9 @@ def main() -> int:
                     help="skip the per-candidate quality judge; use only with a separate review")
     ap.add_argument("--cover-all", action="store_true",
                     help="concretize EVERY critical/high theorem with no concrete CHK twin "
-                         "(theorem-driven, uncapped) instead of the top-N-by-prevalence set")
+                     "(theorem-driven, uncapped) instead of the top-N-by-prevalence set")
+    ap.add_argument("--regenerate-existing", action="store_true",
+                    help="with --cover-all, regenerate theorem-backed CHK entries already in the map")
     ap.add_argument("--floor", type=float, default=3.5, help="min judged overall to keep")
     ap.add_argument("--out", default=str(_ROOT / "data" / "generated_properties.json"))
     args = ap.parse_args()
@@ -446,7 +524,9 @@ def main() -> int:
             f"target_layer={args.target_layer}"
         )
     elif args.cover_all:
-        cands = coverage_candidates(theorems, vulns)
+        cands = coverage_candidates(
+            theorems, vulns, include_existing=args.regenerate_existing
+        )
         print(f"{len(cands)} critical/high theorem(s) with no concrete CHK twin -> concretizing all (legacy)")
     else:
         cands = candidates(theorems, vulns, args.max_new)

@@ -15,6 +15,28 @@ below is now implemented and exercised on the 45 EthTotal candidates.
 The local measurements are reproducible; §6 lists the commands. Cross-client
 measurements additionally require the pinned audit-repo artifacts named in §5.
 
+The follow-up design for preserving stronger lemma consequences in the
+auditor-facing artifact is documented in
+[`docs/lean-to-security-property.md`](lean-to-security-property.md). The key
+change is a root-centred `audit_packet` backed by the transitive theorem/lemma
+closure, rather than a root conclusion plus one selected obligation.
+
+The current EthTotal artifact has 45 such packets over 390 emitted 01e
+properties. The packets cover 571 project-local theorem/lemma records in
+total; one root has no local theorem/lemma record and is intentionally
+represented as root-only. All 45 packets passed the structural and closure
+coverage gates. The dataset-indexed few-shot improvement round raised the
+logged pre-fidelity judge mean from 3.036 to 3.778; the final repaired packet
+scored 3.467 against the 2.169 reference mean.
+
+The full 01e now attaches packets to all 390 properties, including the 345
+legacy theorem-backed properties. For those legacy roots, the packet is a
+conservative Lean-export transcription (root conclusion plus every local
+closure conclusion); it is intentionally not an LLM interpretation. The
+parallel full-set wording loop is available in
+`tools/run-improve-ethtotal.sh`, while the recorded completed few-shot run
+covers the 45 CHK properties.
+
 ---
 
 ## 1. Where the chain breaks
@@ -31,11 +53,12 @@ health.json          statement · conclusion · hypotheses(must-establish)
 theorem_map*.json    labels (from the theorem's FILE) · severity · covers_hint
         │  tools/generate-properties.py  → build_generate_prompt()
         ▼
-CHK-*                LLM input = evidence id/hash + statement/conclusion
-                                 + selected must-establish obligation
+CHK-*                LLM input = evidence id/hash + root obligations/conclusion
+                                 + transitive theorem/lemma closure
                                  + bounded referenced defs/proof source
-        │  speca-lean4 improve ×4        → build_improve_prompt()
-        ▼                                  (text · assertion · critique · classes)
+        │  closure-aware fidelity → audit_packet
+        │  speca-lean4 improve ×N → build_improve_prompt()
+        ▼                         (text · assertion only; packet is fixed)
 CHK-* sharpened
         │  speca-lean4 emit-01e          → mapping.build_property()
         ▼
@@ -47,19 +70,24 @@ CHK-* sharpened
 
 `tools/generate-properties.py --health-json lean-ethtotal/health.json` now
 builds a canonical evidence payload from the live export, including the fully
-qualified theorem, conclusion, numbered `must-establish` obligations,
-referenced definitions, proof source, and a SHA-256 hash. The model must select
-one numbered obligation and the generated CHK item records that selection as
-`x_evidence_*` / `x_lean_obligation*`. The historical label/defect join remains
-candidate-selection context only; it is not treated as proof evidence.
+qualified theorem, all root `must-establish` obligations, the transitive local
+theorem/lemma closure, referenced definitions, proof source, and a SHA-256
+hash. The model generates one root-centred `audit_packet` with supporting facts
+and derived implementation obligations. The historical label/defect join
+remains candidate-selection context only; it is not treated as proof evidence.
 
-`tools/refine-property-fidelity.py` is a separate `claude -p` gate. It sees the
-same evidence payload, rejects unsupported client-specific additions, and
-rewrites only the text/assertion when needed. The 2026-08-14 EthTotal artifact
-contains 45/45 reviewed properties: 1 faithful and 44 repaired. The final 01e
-also retains the reviewer verdict, reason, and model command. Quality judging
-was intentionally run separately and is not conflated with this fidelity
-result.
+`tools/refine-property-fidelity.py` is a separate closure-aware `claude -p`
+gate. It sees the same root-plus-closure evidence, rejects unsupported
+client-specific additions and weak lemma projections, and can repair both the
+packet and its short text/assertion. The quality loop then mutates only the
+short text/assertion, so it cannot erase the proof frontier. The final 01e
+retains the packet, closure, reviewer verdict, reason, and model command.
+
+During that wording step, `ethereum_vuln*.csv` is used as dataset-indexed
+few-shot teaching material. It selects safe defensive style cards by
+`label`/`root_cause` (weak wording → concrete wording); raw incident titles,
+attack paths, clients, and functions are not passed to the model. The cards
+raise specificity without becoming semantic evidence.
 
 On the pre-fix path, Lean enrichment was *decoration on the output*, not
 *input to the derivation*. `mapping.py:309-335` attached it after the model

@@ -1,0 +1,284 @@
+{
+  "x_fidelity_review": {
+    "model_command": "claude -p",
+    "health_source": "lean-ethtotal/health.json",
+    "input_count": 1,
+    "output_count": 1,
+    "faithful_or_repaired": 1
+  },
+  "properties": [
+    {
+      "property_id": "CHK-GEN-08",
+      "theorem": "EthTotal.a_saturating_debit_keeps_the_shortfall",
+      "label": "state-trie",
+      "x_layer": "Extentions/BridgeCorrection.lean",
+      "lowering": "verbatim",
+      "text": "Verify the saturating-subtraction conservation identity holds unconditionally: for every stored value b and requested amount d, (b - d) + min(d, b) == b exactly — truncating subtraction yields 0 when d exceeds b, never a wrapped value.",
+      "type": "invariant",
+      "assertion": "for all b, d : Nat — sat_sub(b,d) + min(d,b) == b; d <= b => min(d,b)==d && sat_sub(b,d)==b-d; b <= d => min(d,b)==b && sat_sub(b,d)==0",
+      "severity": "HIGH",
+      "x_origin": "generated (stage-2 new-property step, tools/generate-properties.py)",
+      "x_defect_class": "improper_state_update",
+      "x_judged_overall": null,
+      "audit_packet": {
+        "guarantee": "For every stored value b and every requested amount d, the truncating (saturating) subtraction and the capped amount min(d, b) sum back exactly to b: (b - d) + min(d, b) = b. The identity is unconditional over all Nat pairs, holds as an exact equality in both the d <= b and b <= d cases, and the subtraction never wraps.",
+        "preconditions": [
+          "Modeling assumption (not an implementation obligation): b and d are the two universally quantified Nat variables of the root theorem, so the modeled subtraction is Nat truncating subtraction and min is the Nat minimum. Any implementation claimed to be covered by this evidence must be the truncating-on-unsigned form; a wrapping or signed subtraction is outside what the theorem models.",
+          "The root theorem carries no must-establish obligation beyond the two variables themselves: the equality holds for ALL b, d with no guard, so the implementation must not gate this identity behind any additional condition.",
+          "The lemma-level comparisons d <= b [L002,L003] and b <= d [L004,L005] are case guards internal to the proof, not caller obligations; they must be exhaustive and agree at the overlap d == b."
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-1",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Exact unconditional identity: (b - d) + min(d, b) = b for all b, d : Nat. The truncated remainder and the capped amount sum back to the original value with no loss and no gain.",
+            "check": "Over the saturating-subtraction surface, sum the resulting remainder and the capped amount actually applied, and compare against the pre-operation value for every (b, d) pair, including d > b.",
+            "expected": "remainder + capped == b as an exact equality for every (b, d), including d > b, with no additional guard required.",
+            "flag_if": "Any input pair where remainder + capped != b — e.g. the remainder saturates to 0 while the full requested d is propagated downstream, or the remainder is reduced by d while only min(d, b) is propagated."
+          },
+          {
+            "fact_id": "FACT-2",
+            "source_fact_ids": [
+              "L001"
+            ],
+            "claim": "Arithmetic-only commutation: L001 gives min(d, b) + (b - d) = b, which is the same exact equality with the addition operands commuted (the proof applies Nat.add_comm). It constrains the sum, not the order in which any state is written.",
+            "check": "Confirm the computed total is the same exact value regardless of which addend is evaluated first, and that no intermediate rounding or clamping is inserted between the two terms of the sum.",
+            "expected": "Both operand orders yield exactly b; the result is preserved as an equality, not weakened to an inequality or a 'did not go negative' boolean.",
+            "flag_if": "The computed sum differs between operand orders, or an intermediate clamp/round makes the sum equal b for only one of them."
+          },
+          {
+            "fact_id": "FACT-3",
+            "source_fact_ids": [
+              "L002",
+              "L003"
+            ],
+            "claim": "Case d <= b, exact: min(d, b) = d exactly [L002] and d + (b - d) = b exactly [L003]. The capped amount is the full requested d and the remainder is exactly b - d.",
+            "check": "For requested amounts within the stored value, verify the capped amount equals the full requested d (not a clamped, rounded, or otherwise adjusted variant) and the remainder equals exactly b - d.",
+            "expected": "capped == d and remainder == b - d, as exact equalities.",
+            "flag_if": "d <= b still yields capped < d, or remainder != b - d, or the code takes the saturated branch when d <= b (off-by-one at d == b is in scope)."
+          },
+          {
+            "fact_id": "FACT-4",
+            "source_fact_ids": [
+              "L004",
+              "L005"
+            ],
+            "claim": "Case b <= d, exact: min(d, b) = b exactly [L004] and the truncating subtraction b - d = 0 exactly [L005]. The capped amount is exactly the whole stored value and the remainder is exactly zero; the shortfall d - b is never materialized.",
+            "check": "For requested amounts exceeding the stored value, verify the capped amount equals exactly b, the remainder equals exactly 0, and the value propagated onward is min(d, b) = b rather than the requested d.",
+            "expected": "capped == b (the whole stored value, not 0 and not d) and remainder == 0, as exact equalities.",
+            "flag_if": "An over-request produces a wrapped or large remainder instead of 0, produces a negative or error-swallowed value, caps to 0 instead of b, or propagates the requested d while only b was removed."
+          }
+        ],
+        "derived_obligations": [
+          {
+            "obligation_id": "OBS-1",
+            "check": "Exercise the saturating-subtraction primitive directly at boundary inputs (b = 0, d = 1; b = 0, d = max; d = b; d = b + 1; d = b - 1) and inspect the raw result before any downstream use.",
+            "expected": "The subtraction truncates at 0 with no wraparound, no exception-swallowed default, and no signed reinterpretation; each result satisfies remainder + min(d, b) == b.",
+            "flag_if": "The primitive wraps to a large positive value, throws where the caller ignores the result, or is an unchecked native subtraction on an unsigned type.",
+            "supports": [
+              "FACT-1",
+              "FACT-4"
+            ]
+          },
+          {
+            "obligation_id": "OBS-2",
+            "check": "Confirm the branch conditions for d <= b and b <= d are exhaustive and agree at the overlap d == b, where both lemma cases apply.",
+            "expected": "At d == b both branches give capped == d == b and remainder == 0, satisfying the same conservation equality; no input pair falls through unhandled.",
+            "flag_if": "A strict/non-strict comparator mismatch leaves d == b unhandled, or the two branches produce different results at the boundary.",
+            "supports": [
+              "FACT-3",
+              "FACT-4"
+            ]
+          },
+          {
+            "obligation_id": "OBS-3",
+            "check": "Confirm the capped amount computed by the implementation is exactly min(d, b) and is the same value used both to form the remainder and to propagate onward, with no separate recomputation from d.",
+            "expected": "A single min(d, b) value is used on both sides, so remainder + capped == b holds by construction rather than coincidentally on the d <= b path.",
+            "flag_if": "The remainder is derived from a saturating subtraction while the propagated amount is derived independently from the raw requested d, so the two diverge exactly when d > b.",
+            "supports": [
+              "FACT-1",
+              "FACT-2",
+              "FACT-3",
+              "FACT-4"
+            ]
+          }
+        ],
+        "derivation": "The root theorem states (b - d) + min(d, b) = b over all b, d : Nat, with no referenced definitions and no must-establish obligation beyond the two variables. Its proof commutes the sum (Nat.add_comm) and applies min_add_sub [L001], the same exact equality in the form min(d, b) + (b - d) = b — hence FACT-1 and FACT-2 are one guarantee under either operand order, and L001 supports only arithmetic commutation, not any ordering of state updates. L001 splits on the total order of Nat: the d <= b branch uses min_eq_left [L002] for min(d, b) = d and add_sub_cancel_of_le [L003] for d + (b - d) = b, giving the exact full case FACT-3; the b <= d branch uses min_eq_right [L004] for min(d, b) = b and sub_eq_zero_of_le [L005] for b - d = 0, giving the exact saturated case FACT-4. The equalities are preserved as equalities (capped == d, capped == b, remainder == b - d, remainder == 0) rather than weakened to a 'did not underflow' boolean. Derived obligations bind these to what the evidence actually names: the truncating-subtraction primitive at its boundaries (OBS-1), branch exhaustiveness at d == b (OBS-2), and the single-source use of min(d, b) on both sides of the identity (OBS-3). No component, protocol operation, ordering, receipt, or multi-account state update is asserted, since the theorem references no definitions that would support one.",
+        "omitted_facts": []
+      },
+      "shard": "checklist-generated",
+      "x_evidence_id": "lean-health:EthTotal.a_saturating_debit_keeps_the_shortfall:03c4c9c309f3853e",
+      "x_evidence_sha256": "03c4c9c309f3853edb0e7d3de2ce018a929fe3dcaa2ee9f5e22375ead2d4f6d7",
+      "x_evidence_kind": "live-export",
+      "x_lean_obligations": [],
+      "x_proof_closure": [
+        {
+          "fact_id": "L001",
+          "theorem": "EthTotal.min_add_sub",
+          "statement": "∀ (v b : Nat), Eq (instHAdd.hAdd (instMinNat.min v b) (instHSub.hSub b v)) b",
+          "conclusion": "Eq (instHAdd.hAdd (instMinNat.min v b) (instHSub.hSub b v)) b",
+          "obligations": [
+            {
+              "name": "v",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "b",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            }
+          ],
+          "depends_on": [
+            "L002",
+            "L003",
+            "L004",
+            "L005"
+          ],
+          "proof_constants": [
+            "EthTotal.leTotalSplit.match_1",
+            "EthTotal.min_eq_left",
+            "EthTotal.add_sub_cancel_of_le",
+            "EthTotal.min_eq_right",
+            "EthTotal.sub_eq_zero_of_le"
+          ],
+          "lean_status": "proved"
+        },
+        {
+          "fact_id": "L002",
+          "theorem": "EthTotal.min_eq_left",
+          "statement": "∀ {a b : Nat}, instLENat.le a b → Eq (instMinNat.min a b) a",
+          "conclusion": "Eq (instMinNat.min a b) a",
+          "obligations": [
+            {
+              "name": "a",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "b",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "h",
+              "type": "instLENat.le a b",
+              "head": "LE.le",
+              "class": "must-establish"
+            }
+          ],
+          "depends_on": [],
+          "proof_constants": [],
+          "lean_status": "proved"
+        },
+        {
+          "fact_id": "L003",
+          "theorem": "EthTotal.add_sub_cancel_of_le",
+          "statement": "∀ {x y : Nat}, instLENat.le x y → Eq (instHAdd.hAdd x (instHSub.hSub y x)) y",
+          "conclusion": "Eq (instHAdd.hAdd x (instHSub.hSub y x)) y",
+          "obligations": [
+            {
+              "name": "x",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "y",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "a._@._internal._hyg.0",
+              "type": "instLENat.le x y",
+              "head": "LE.le",
+              "class": "must-establish"
+            }
+          ],
+          "depends_on": [],
+          "proof_constants": [
+            "EthTotal.add_sub_cancel_of_le._f"
+          ],
+          "lean_status": "proved"
+        },
+        {
+          "fact_id": "L004",
+          "theorem": "EthTotal.min_eq_right",
+          "statement": "∀ {a b : Nat}, instLENat.le b a → Eq (instMinNat.min a b) b",
+          "conclusion": "Eq (instMinNat.min a b) b",
+          "obligations": [
+            {
+              "name": "a",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "b",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "h",
+              "type": "instLENat.le b a",
+              "head": "LE.le",
+              "class": "must-establish"
+            }
+          ],
+          "depends_on": [],
+          "proof_constants": [
+            "EthTotal.min_eq_right.match_1_1"
+          ],
+          "lean_status": "proved"
+        },
+        {
+          "fact_id": "L005",
+          "theorem": "EthTotal.sub_eq_zero_of_le",
+          "statement": "∀ {x y : Nat}, instLENat.le x y → Eq (instHSub.hSub x y) 0",
+          "conclusion": "Eq (instHSub.hSub x y) 0",
+          "obligations": [
+            {
+              "name": "x",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "y",
+              "type": "Nat",
+              "head": "Nat",
+              "class": "depend-allowed"
+            },
+            {
+              "name": "a._@._internal._hyg.0",
+              "type": "instLENat.le x y",
+              "head": "LE.le",
+              "class": "must-establish"
+            }
+          ],
+          "depends_on": [],
+          "proof_constants": [
+            "EthTotal.sub_eq_zero_of_le._f"
+          ],
+          "lean_status": "proved"
+        }
+      ],
+      "x_proof_dependency_stats": {
+        "theorem_records": 5,
+        "reachable_constants": 9,
+        "unresolved_or_non_theorem_constants": 4
+      },
+      "x_fidelity_verdict": "repaired",
+      "x_fidelity_reason": "The packet imports components the theorem never mentions — state.move_ether, receipts/emitted transfer amounts, the state trie, a paired credit account, atomicity, and consensus-split framing — and reinterprets Nat.add_comm (L001) as order-independence of state updates. The Lean evidence is a pure Nat identity (b - d) + min(d, b) = b with no referenced definitions and no obligations beyond the two universally quantified variables. Rewritten to the single conservation concern over the saturating-",
+      "x_fidelity_model": "claude -p"
+    }
+  ]
+}
