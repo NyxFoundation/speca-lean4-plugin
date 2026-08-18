@@ -166,6 +166,41 @@ jobs:
           print(f'OK: {len(props)} EthTotal properties, all proved or descends-from-proved,')
           print(f'    all anchored to execution-specs with covers == anchor symbol')
           "
+      - name: ethvuln track — emit 01e from the versioned fixture health (no Lean needed)
+        # ethereum-vuln-dataset track (speca#146 c-1): its own map, its own
+        # exporter entry point (lean/MainEthVuln.lean, checked in the lean job)
+        # and its own fixture health, which is real `speca-export-ethvuln`
+        # output. Honesty: the emitted 01e must say exactly what the exporter
+        # said (all proved since the PR #24 review revision; unknown if a
+        # sorry ever regressed) -- this step asserts the status is COPIED
+        # from the health, never upgraded, rather than asserting any
+        # particular value.
+        run: |
+          speca-lean4 emit-01e \
+            --map theorem_map_ethvuln.json \
+            --scope tests/fixtures/bug_bounty_scope.ethvuln.sample.json \
+            --health-json tests/fixtures/theorem_health.ethvuln.sample.json \
+            --out 01e_ethvuln_fixture.json
+          python3 -c "
+          import json
+          props = json.load(open('01e_ethvuln_fixture.json', encoding='utf-8'))['properties']
+          entries = json.load(open('theorem_map_ethvuln.json', encoding='utf-8'))['properties']
+          health = {t['name']: t for t in json.load(open('tests/fixtures/theorem_health.ethvuln.sample.json', encoding='utf-8'))['theorems']}
+          assert props and len(props) >= len(entries)
+          ids = {p['property_id'] for p in props}
+          by_id = {e['property_id']: e for e in entries}
+          for e in entries:
+              b = e['property_id']
+              assert b in ids or any(i.startswith(b + '-me') for i in ids), b
+          n = {}
+          for p in props:
+              th = health[by_id[p['property_id'].split('-me')[0]]['theorem']]
+              assert th['resolved'], p['property_id']
+              assert p['lean_status'] == th['lean_status'], (p['property_id'], p['lean_status'], th['lean_status'])
+              assert p['lean_status'] != 'proved' or th['sorry_free'], p['property_id']
+              n[p['lean_status']] = n.get(p['lean_status'], 0) + 1
+          print(f'OK: {len(props)} ethvuln properties from {len(entries)} theorems; lean_status copied from the exporter: {n}')
+          "
 
   lean:
     name: lean exporter build
@@ -273,6 +308,98 @@ jobs:
         run: |
           speca-lean4 verify-recall --ours 01e_lean.json --strict \
             --out recall_report.json
+      - name: ethvuln track — export health for the mapped theorems (speca#146 c-1)
+        # Same workspace, different entry point: `speca-export-ethvuln`
+        # (lean/MainEthVuln.lean) loads the in-repo SpecaExport.EthVuln
+        # modules that the gasper `speca-export` deliberately does not. The
+        # gate is the same as the gasper smoke above -- every target must
+        # resolve -- plus the honesty pairing proved <=> sorry_free. Proof
+        # status itself is reported, not asserted: since the PR #24 review
+        # revision the 66 shallow implications are proved, and this step
+        # would stay green (and honest) if one regressed to `sorry`.
+        working-directory: lean
+        run: |
+          python3 - <<'PY' > targets_ethvuln.txt
+          import json
+          m = json.load(open("../theorem_map_ethvuln.json"))
+          print("\n".join(dict.fromkeys(e["theorem"] for e in m["properties"])))
+          PY
+          lake exe speca-export-ethvuln --targets targets_ethvuln.txt \
+            --output health_ethvuln.json --src-root .
+          python3 - <<'PY'
+          import json
+          h = json.load(open("health_ethvuln.json"))
+          assert h["project"] == "EthVulnFormalProps", h["project"]
+          bad = [t["name"] for t in h["theorems"] if not t["resolved"]]
+          assert not bad, f"unresolved target theorems: {bad}"
+          for t in h["theorems"]:
+              for key in ("statement", "conclusion", "hypotheses",
+                          "referenced_constants", "gasper_axioms",
+                          "proof_provenance", "proof_code", "proof_constants",
+                          "proof_source", "referenced_defs_expanded",
+                          "doc_string"):
+                  assert key in t, f"{t['name']} missing {key}"
+              assert t["statement"], f"{t['name']} has empty statement"
+              assert t["module"].startswith("SpecaExport.EthVuln.Props."), t["name"]
+              assert len(t["referenced_defs_expanded"]) <= 24, t["name"]
+              for d in t["referenced_defs_expanded"]:
+                  assert d["name"].startswith("EthVulnFormalProps."), (t["name"], d)
+                  assert d["kind"] and d["pp"], (t["name"], d["name"])
+              assert t["lean_status"] in ("proved", "unknown"), (t["name"], t["lean_status"])
+              assert t["sorry_free"] == (t["lean_status"] == "proved"), t["name"]
+          n_proved = sum(1 for t in h["theorems"] if t["lean_status"] == "proved")
+          n_me = sum(1 for t in h["theorems"] for hy in t["hypotheses"]
+                     if hy.get("class") == "must-establish")
+          n_src = sum(1 for t in h["theorems"] if t["proof_source"])
+          n_doc = sum(1 for t in h["theorems"] if t["doc_string"])
+          print(f"all {len(h['theorems'])} ethvuln targets resolved; {n_proved} proved, "
+                f"{len(h['theorems']) - n_proved} unknown (sorry-dependent); "
+                f"{n_me} must-establish hypotheses; {n_src} with verbatim proof source; "
+                f"{n_doc} with docstrings")
+          PY
+      - name: ethvuln track — map staleness gate (packets + anchors regenerate to a zero diff)
+        # theorem_map_ethvuln.json's audit_packet / x_spec_anchor fields are
+        # deterministic functions of the exporter health and the committed
+        # curation (data/ethvuln_spec_anchors.json). Regenerating them from
+        # the health just exported must be a no-op, exactly like the
+        # theorem_map_ethtotal.json gate above -- a diff here means the map
+        # was edited without rerunning the tool (or vice versa).
+        run: |
+          python3 tools/ethvuln-build-packets.py \
+            --map theorem_map_ethvuln.json \
+            --health lean/health_ethvuln.json \
+            --anchors data/ethvuln_spec_anchors.json
+          git diff --exit-code theorem_map_ethvuln.json
+      - name: ethvuln track — emit 01e from the real health
+        run: |
+          speca-lean4 emit-01e \
+            --map theorem_map_ethvuln.json \
+            --scope tests/fixtures/bug_bounty_scope.ethvuln.sample.json \
+            --health-json lean/health_ethvuln.json \
+            --out 01e_ethvuln.json \
+            --out-dir 01e_ethvuln_shards
+          python3 - <<'PY'
+          import json
+          props = json.load(open("01e_ethvuln.json"))["properties"]
+          entries = json.load(open("theorem_map_ethvuln.json"))["properties"]
+          health = {t["name"]: t for t in json.load(open("lean/health_ethvuln.json"))["theorems"]}
+          assert props and len(props) >= len(entries), (len(props), len(entries))
+          ids = {p["property_id"] for p in props}
+          by_id = {e["property_id"]: e for e in entries}
+          for e in entries:
+              b = e["property_id"]
+              assert b in ids or any(i.startswith(b + "-me") for i in ids), b
+          bad = [p["property_id"] for p in props
+                 if p.get("lean_type_consistency") == "mismatch"]
+          assert not bad, f"type-consistency mismatches: {bad}"
+          n = {}
+          for p in props:
+              th = health[by_id[p["property_id"].split("-me")[0]]["theorem"]]
+              assert p["lean_status"] == th["lean_status"], p["property_id"]
+              n[p["lean_status"]] = n.get(p["lean_status"], 0) + 1
+          print(f"{len(props)} ethvuln properties emitted from real Lean health "
+                f"(from {len(entries)} theorems); lean_status: {n}")
+          PY
       - name: upload real Lean health + 01e output
         uses: actions/upload-artifact@v4
         with:
@@ -282,6 +409,9 @@ jobs:
             01e_lean.json
             01e_lean_shards/
             recall_report.json
+            lean/health_ethvuln.json
+            01e_ethvuln.json
+            01e_ethvuln_shards/
           retention-days: 30
 
   run-lean-e2e:
@@ -329,4 +459,31 @@ jobs:
               n = sum(1 for p in props if p.get("lean_status") == "proved")
               assert n > 0, f"{fp}: no proved property from the real Lean run"
               print(f"{fp}: {len(props)} properties, {n} proved")
+          PY
+      - name: ethvuln track — emit-01e --run-lean (map-selected exe, warm lake)
+        # theorem_map_ethvuln.json names its own executable (`lean_exe`), so
+        # `--run-lean` must invoke `lake exe speca-export-ethvuln` -- the
+        # gasper exporter would leave every EthVulnFormalProps.* target
+        # unresolved. The 01e does not carry `resolved`, so the proxy is the
+        # module path: an unresolved record has no module and its
+        # lean_artifact degrades to `source@ref#name` with no `:path`.
+        run: |
+          speca-lean4 emit-01e \
+            --map theorem_map_ethvuln.json \
+            --scope tests/fixtures/bug_bounty_scope.ethvuln.sample.json \
+            --run-lean \
+            --out 01e_ethvuln_runlean.json
+          python3 - <<'PY'
+          import json
+          props = json.load(open("01e_ethvuln_runlean.json"))["properties"]
+          entries = json.load(open("theorem_map_ethvuln.json"))["properties"]
+          assert props and len(props) >= len(entries)
+          bad = [p["property_id"] for p in props
+                 if ":SpecaExport/EthVuln/Props/" not in p["lean_artifact"]
+                 or not p.get("lean_statement")]
+          assert not bad, f"targets not resolved by --run-lean: {bad[:5]}"
+          n = {}
+          for p in props:
+              n[p["lean_status"]] = n.get(p["lean_status"], 0) + 1
+          print(f"01e_ethvuln_runlean.json: {len(props)} properties, all resolved; lean_status: {n}")
           PY

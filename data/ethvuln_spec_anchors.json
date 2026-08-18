@@ -1,0 +1,377 @@
+{
+  "entries": {
+    "PROP-lean-ethvuln-RB-001": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "libp2p resource-management bug; per-peer memory bounds live in the libp2p library, not in consensus-specs or execution-specs."
+    },
+    "PROP-lean-ethvuln-RB-002": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Same libp2p resource-management defect surfaced via the CL p2p stack; libp2p's memory bounds are not part of consensus-specs."
+    },
+    "PROP-lean-ethvuln-RB-003": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "2016 pre-EIP-150 state-bloat DoS hotfix; general node resource/state-growth management, not a codified execution-specs invariant."
+    },
+    "PROP-lean-ethvuln-MS-001": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py",
+      "spec_symbol": "execute_code"
+    },
+    "PROP-lean-ethvuln-AR-001": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "undisclosed",
+      "reason": "Undisclosed Lighthouse v8.2.0 security release with no named spec area."
+    },
+    "PROP-lean-ethvuln-AS-001": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "gorilla/websocket is a third-party dependency; its frame-length arithmetic is not part of any Ethereum spec."
+    },
+    "PROP-lean-ethvuln-AS-002": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/instructions/bitwise.py",
+      "spec_symbol": "shl / shr / sar"
+    },
+    "PROP-lean-ethvuln-IV-001": {
+      "anchor": "consensus-specs:specs/bellatrix/beacon-chain.md",
+      "spec_symbol": "process_execution_payload"
+    },
+    "PROP-lean-ethvuln-AR-002": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "General production-stability claim (no crash reports since beta.6), not a disclosed vulnerability or named spec area."
+    },
+    "PROP-lean-ethvuln-SE-001": {
+      "anchor": "consensus-specs:specs/phase0/p2p-interface.md",
+      "spec_symbol": "Req/Resp domain"
+    },
+    "PROP-lean-ethvuln-AR-003": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "Erigon live-sync panic/bad-state bug is a client-internal sync engine defect, not modeled by execution-specs."
+    },
+    "PROP-lean-ethvuln-AR-004": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "Nimbus startup crash under --history:prune is client-internal startup/config handling."
+    },
+    "PROP-lean-ethvuln-RB-004": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "networking-devp2p",
+      "reason": "Geth devp2p per-message goroutine exhaustion; devp2p wire handling is not part of execution-specs."
+    },
+    "PROP-lean-ethvuln-SE-002": {
+      "anchor": "consensus-specs:specs/bellatrix/fork-choice.md",
+      "spec_symbol": "validate_merge_block"
+    },
+    "PROP-lean-ethvuln-RB-005": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Netty decoder DoS (CVE-2021-37136/37137) is a third-party dependency-library issue."
+    },
+    "PROP-lean-ethvuln-SE-003": {
+      "anchor": "consensus-specs:specs/phase0/beacon-chain.md",
+      "spec_symbol": "process_registry_updates"
+    },
+    "PROP-lean-ethvuln-AR-005": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "Erigon/Polygon startup panic with an external Milestones RPC daemon is client-internal startup/config handling."
+    },
+    "PROP-lean-ethvuln-MS-002": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "networking-devp2p",
+      "reason": "Geth LES protocol (devp2p light-client wire) signed-index OOB; devp2p is not covered by execution-specs."
+    },
+    "PROP-lean-ethvuln-SE-004": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "rpc-api",
+      "reason": "EIP-8025 execution proofs are a pending EIP not yet incorporated into consensus-specs or execution-specs; proof interop sits at the engine-API boundary."
+    },
+    "PROP-lean-ethvuln-RB-006": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "Geth txpool admission/eviction policy is client-internal mempool management, not modeled by execution-specs."
+    },
+    "PROP-lean-ethvuln-RB-007": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "networking-devp2p",
+      "reason": "Malicious devp2p message causing high CPU is a devp2p wire-handling issue, outside execution-specs."
+    },
+    "PROP-lean-ethvuln-AR-006": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "x/crypto/ssh AddHostKey crash on a crafted Signer is a third-party dependency-library bug."
+    },
+    "PROP-lean-ethvuln-CA-001": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "x/crypto ServerConfig.PublicKeyCallback misuse is a third-party dependency-library authorization bug."
+    },
+    "PROP-lean-ethvuln-RB-008": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "x/crypto/ssh slow/incomplete key-exchange buffering DoS is a third-party dependency-library issue."
+    },
+    "PROP-lean-ethvuln-RB-009": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Same libp2p resource-management defect as RB-001/RB-002; not specified in consensus-specs."
+    },
+    "PROP-lean-ethvuln-SE-005": {
+      "anchor": "consensus-specs:specs/phase0/fork-choice.md",
+      "spec_symbol": "get_head"
+    },
+    "PROP-lean-ethvuln-AR-007": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "undisclosed",
+      "reason": "Undisclosed Grandine 2.0.3 security release with no named spec area (label 'build-ci' is not a spec surface)."
+    },
+    "PROP-lean-ethvuln-AR-008": {
+      "anchor": "consensus-specs:specs/bellatrix/beacon-chain.md",
+      "spec_symbol": "process_execution_payload"
+    },
+    "PROP-lean-ethvuln-RB-010": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "undisclosed",
+      "reason": "Lighthouse v8.1.2 discloses no fix details of its own; the p2p resource-exhaustion issue named in the advisory belongs to sibling release v8.1.3 and is libp2p-level, not spec-defined."
+    },
+    "PROP-lean-ethvuln-MS-003": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/memory.py",
+      "spec_symbol": "extend_memory"
+    },
+    "PROP-lean-ethvuln-AR-009": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "networking-devp2p",
+      "reason": "Malicious devp2p message crash/shutdown (CWE-248) is a devp2p wire-handling issue, outside execution-specs."
+    },
+    "PROP-lean-ethvuln-SE-006": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "rpc-api",
+      "reason": "EIP-8025 MAX_PROOF_SIZE is a constant from a pending EIP not yet incorporated into consensus-specs or execution-specs."
+    },
+    "PROP-lean-ethvuln-AR-010": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "undisclosed",
+      "reason": "Undisclosed Erigon security fix (found by the go-ethereum team) with no named spec area."
+    },
+    "PROP-lean-ethvuln-SE-007": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "rpc-api",
+      "reason": "eth_getProof response formatting is defined by the JSON-RPC API (execution-apis), not execution-specs."
+    },
+    "PROP-lean-ethvuln-RB-011": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "rpc-api",
+      "reason": "Bounding RPC request cost is an API/rate-limiting concern (execution-apis / client policy), not execution-specs."
+    },
+    "PROP-lean-ethvuln-SF-001": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "rpc-api",
+      "reason": "Mixes Beacon-API JSON hash encoding (lives in the separate beacon-APIs repo, not consensus-specs) with an early ENR attnets interop fix; not confidently a single consensus-specs section."
+    },
+    "PROP-lean-ethvuln-AS-003": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "networking-devp2p",
+      "reason": "Integer overflow in a devp2p message length/size field; devp2p wire handling is outside execution-specs."
+    },
+    "PROP-lean-ethvuln-AS-004": {
+      "anchor": "consensus-specs:specs/phase0/beacon-chain.md",
+      "spec_symbol": "process_attester_slashing"
+    },
+    "PROP-lean-ethvuln-AS-005": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/gas.py",
+      "spec_symbol": "calculate_message_call_gas"
+    },
+    "PROP-lean-ethvuln-AS-006": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/instructions/bitwise.py",
+      "spec_symbol": "shl / shr / sar"
+    },
+    "PROP-lean-ethvuln-AR-011": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "x/crypto/ssh AEAD packet-parsing panic on malformed packets is a third-party dependency-library bug."
+    },
+    "PROP-lean-ethvuln-CA-002": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "x/crypto/ssh public-key signature-verification panic is a third-party dependency-library bug."
+    },
+    "PROP-lean-ethvuln-CA-003": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "x/crypto/ssh missing default HostKeyCallback verification is a third-party dependency-library authentication default."
+    },
+    "PROP-lean-ethvuln-RB-012": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "rpc-api",
+      "reason": "GraphQL query cost bounding is an API-layer concern (client GraphQL server), not execution-specs."
+    },
+    "PROP-lean-ethvuln-IV-002": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "rpc-api",
+      "reason": "debug_traceChain parameter validation is a custom RPC/debug-API concern, not execution-specs."
+    },
+    "PROP-lean-ethvuln-SI-001": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/fork.py",
+      "spec_symbol": "state_transition"
+    },
+    "PROP-lean-ethvuln-AR-012": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Go stdlib crypto/x509 parser panic (surfaced via Helm) is a third-party dependency-library bug unrelated to Ethereum client code."
+    },
+    "PROP-lean-ethvuln-SE-008": {
+      "anchor": "consensus-specs:specs/bellatrix/beacon-chain.md",
+      "spec_symbol": "process_execution_payload"
+    },
+    "PROP-lean-ethvuln-RB-013": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Lighthouse v8.1.3 p2p resource-exhaustion fix traces to underlying libp2p resource bounds, not to consensus-specs."
+    },
+    "PROP-lean-ethvuln-AR-013": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "x/crypto/ssh nil-pointer dereference on a crafted auth request is a third-party dependency-library bug."
+    },
+    "PROP-lean-ethvuln-IV-003": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Teku log4j upgrade (CVE-2021-44228) is a third-party logging-library vulnerability."
+    },
+    "PROP-lean-ethvuln-AS-007": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/gas.py",
+      "spec_symbol": "calculate_message_call_gas"
+    },
+    "PROP-lean-ethvuln-AS-008": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "Nethermind Juno is a Starknet (L2/Cairo) client; Sierra bytecode processing is not part of Ethereum consensus-specs or execution-specs."
+    },
+    "PROP-lean-ethvuln-RB-014": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "Validator-monitor metrics cardinality overwhelming Prometheus is a client-internal monitoring implementation detail."
+    },
+    "PROP-lean-ethvuln-MS-004": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "buger/jsonparser OOB read (CVE-2026-32285) is a third-party dependency-library bug used by Erigon."
+    },
+    "PROP-lean-ethvuln-CA-004": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Core cryptographic library vulnerability (crypto_misuse) in a Lighthouse dependency; the underlying BLS primitives are defined outside consensus-specs itself."
+    },
+    "PROP-lean-ethvuln-SI-002": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "client-internal",
+      "reason": "Lighthouse slasher database corruption is a client-internal local-storage implementation detail, not a consensus-specs invariant."
+    },
+    "PROP-lean-ethvuln-SE-009": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "rpc-api",
+      "reason": "EL/CL fork-capability compatibility checking is an engine-API concern (execution-apis), not execution-specs."
+    },
+    "PROP-lean-ethvuln-AR-014": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "networking-devp2p",
+      "reason": "Malicious devp2p message DoS (shutdown/crash) is a devp2p wire-handling issue, outside execution-specs."
+    },
+    "PROP-lean-ethvuln-SE-010": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/precompiled_contracts/identity.py",
+      "spec_symbol": "identity"
+    },
+    "PROP-lean-ethvuln-SE-011": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py",
+      "spec_symbol": "return_data_copy"
+    },
+    "PROP-lean-ethvuln-AS-009": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/vm/instructions/arithmetic.py",
+      "spec_symbol": "mulmod"
+    },
+    "PROP-lean-ethvuln-SE-012": {
+      "anchor": "execution-specs:src/ethereum/forks/prague/fork.py",
+      "spec_symbol": "state_transition"
+    },
+    "PROP-lean-ethvuln-AR-015": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Inherited Go stdlib math/big panic (CVE-2020-28362) is a third-party dependency-library/toolchain issue."
+    },
+    "PROP-lean-ethvuln-SE-013": {
+      "anchor": "consensus-specs:specs/electra/beacon-chain.md",
+      "spec_symbol": "process_effective_balance_updates"
+    },
+    "PROP-lean-ethvuln-IV-004": {
+      "anchor": "N/A",
+      "spec_symbol": null,
+      "category": "dependency-library",
+      "reason": "Teku log4j vulnerability (CVE-2021-44228) is a third-party logging-library issue."
+    }
+  },
+  "label_rows": {
+    "recommend": [
+      {
+        "table": "consensus",
+        "label": "beacon-chain:execution-payload",
+        "spec_doc": "specs/bellatrix/beacon-chain.md",
+        "spec_symbol": "process_execution_payload"
+      },
+      {
+        "table": "consensus",
+        "label": "beacon-chain:sync-committee",
+        "spec_doc": "specs/electra/beacon-chain.md",
+        "spec_symbol": "process_effective_balance_updates"
+      }
+    ]
+  },
+  "_note": "Per-entry spec-anchor curation for theorem_map_ethvuln.json (PR #24 review): protocol-semantics entries carry a consensus-specs/execution-specs section+symbol, out-of-spec surfaces an explicit N/A with category and reason. Consumed by tools/ethvuln-build-packets.py --anchors; label_rows records the label-level table additions taken from this curation (only beacon-chain:execution-payload was applied; the beacon-chain:sync-committee suggestion was rejected because that label's single entry is mislabeled upstream — its per-entry anchor points at process_effective_balance_updates instead)."
+}
