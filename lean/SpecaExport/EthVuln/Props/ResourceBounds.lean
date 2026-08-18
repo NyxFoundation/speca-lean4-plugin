@@ -10,7 +10,10 @@ import SpecaExport.EthVuln.Common
 ものであり、仮定は修正によって回復された保証（各割り当ての
 計上、上限での受け入れ制御、拒否時に増加しないこと）を表現し、
 結論はその脆弱性が破っていたリソース上限の不変条件である。
-証明はスコープ上 `sorry`（型検査のみ）とする。
+仮説は Common の named 述語（`UsageAccounted` /
+`AdmissionControlled` / `RejectFrees`）で述べ、結論
+`BoundedUsage` は Common の分解補題
+`boundedUsage_of_admission` で証明する（`sorry` なし）。
 
 定理の命名規則:
 `entry_<id sanitized: [^A-Za-z0-9] → _>_resource_bounds`。
@@ -41,13 +44,11 @@ theorem entry_02e19ccf58f8c45a_resource_bounds
     {Chunk NodeState : Type}
     (m : ResourceModel Chunk NodeState) (memBound : Nat)
     (allocSize : Chunk → Nat)
-    (hAccounted : ∀ s c s', m.step s c = .ok s' →
-      m.usage s' ≤ m.usage s + allocSize c)
-    (hAdmission : ∀ s c s', m.step s c = .ok s' →
-      m.usage s + allocSize c ≤ memBound)
-    (hRejectFree : ∀ s c s', m.step s c = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m memBound := sorry
+    (hAccounted : UsageAccounted m allocSize)
+    (hAdmission : AdmissionControlled m allocSize memBound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m memBound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `11641305ff48c094`** (High) — libp2p DoS vulnerability from
 lack of resource management (consensus-layer p2p surface).
@@ -64,13 +65,11 @@ theorem entry_11641305ff48c094_resource_bounds
     {PeerMsg BeaconNodeState : Type}
     (m : ResourceModel PeerMsg BeaconNodeState) (memBound : Nat)
     (allocSize : PeerMsg → Nat)
-    (hAccounted : ∀ s i s', m.step s i = .ok s' →
-      m.usage s' ≤ m.usage s + allocSize i)
-    (hAdmission : ∀ s i s', m.step s i = .ok s' →
-      m.usage s + allocSize i ≤ memBound)
-    (hRejectFree : ∀ s i s', m.step s i = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m memBound := sorry
+    (hAccounted : UsageAccounted m allocSize)
+    (hAdmission : AdmissionControlled m allocSize memBound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m memBound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `18c4c57dddc34f3e`** (High) — Geth v1.4.13 hotfix release
 during the 2016 network DoS attacks.
@@ -95,13 +94,12 @@ theorem entry_18c4c57dddc34f3e_resource_bounds
     {Op ChainState : Type}
     (m : ResourceModel Op ChainState) (stateBound : Nat)
     (gasCharged : Op → Nat) (rate : Nat)
-    (hPriced : ∀ s op s', m.step s op = .ok s' →
-      m.usage s' ≤ m.usage s + rate * gasCharged op)
-    (hAdmission : ∀ s op s', m.step s op = .ok s' →
-      m.usage s + rate * gasCharged op ≤ stateBound)
-    (hRejectFree : ∀ s op s', m.step s op = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m stateBound := sorry
+    (hPriced : UsageAccounted m (fun op => rate * gasCharged op))
+    (hAdmission : AdmissionControlled m
+      (fun op => rate * gasCharged op) stateBound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m stateBound :=
+  boundedUsage_of_admission hPriced hAdmission hRejectFree
 
 /-- **エントリ `4bb523e194701da7`** (High) — Go-Ethereum vulnerable to
 denial of service via malicious p2p message.
@@ -124,13 +122,11 @@ theorem entry_4bb523e194701da7_resource_bounds
     {P2pMsg NodeState : Type}
     (m : ResourceModel P2pMsg NodeState) (goroutineBound : Nat)
     (spawned : P2pMsg → Nat)
-    (hAccounted : ∀ s i s', m.step s i = .ok s' →
-      m.usage s' ≤ m.usage s + spawned i)
-    (hAdmission : ∀ s i s', m.step s i = .ok s' →
-      m.usage s + spawned i ≤ goroutineBound)
-    (hRejectFree : ∀ s i s', m.step s i = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m goroutineBound := sorry
+    (hAccounted : UsageAccounted m spawned)
+    (hAdmission : AdmissionControlled m spawned goroutineBound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m goroutineBound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `6746c31d67430ea7`** (High) — Teku: Netty upgrade fixing
 CVE-2021-37136 / CVE-2021-37137 (DoS).
@@ -152,13 +148,11 @@ theorem entry_6746c31d67430ea7_resource_bounds
     {Frame DecoderState : Type}
     (m : ResourceModel Frame DecoderState) (outputBound : Nat)
     (decodedSize : Frame → Nat)
-    (hAccounted : ∀ s f s', m.step s f = .ok s' →
-      m.usage s' ≤ m.usage s + decodedSize f)
-    (hAdmission : ∀ s f s', m.step s f = .ok s' →
-      m.usage s + decodedSize f ≤ outputBound)
-    (hRejectFree : ∀ s f s', m.step s f = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m outputBound := sorry
+    (hAccounted : UsageAccounted m decodedSize)
+    (hAdmission : AdmissionControlled m decodedSize outputBound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m outputBound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `762246407b6270cf`** (High) — Denial of Service in
 Go-Ethereum (txpool purge).
@@ -175,16 +169,19 @@ Go-Ethereum (txpool purge).
 **クラス**: `resource-bounds`。
 
 読み下し: `pending` はプール内のトランザクション数を数える。
-この修正により、1つのメッセージが引き起こせる追い出し量は
-送信者ごとの上限に制限される。 -/
+ガードは `OnAccept` 述語の内側に畳まれ、結論は「受理された
+1メッセージが引き起こす追い出しは送信者上限まで」を事後条件
+として述べる。 -/
 theorem entry_762246407b6270cf_resource_bounds
     {TxBatch PoolState : Type}
     (pool : Handler TxBatch PoolState)
     (pending : PoolState → Nat) (senderLimit : Nat)
-    (hDisplacement : ∀ s txs s', pool s txs = .ok s' →
-      pending s ≤ pending s' + senderLimit) :
-    ∀ s txs s', pool s txs = .ok s' →
-      pending s' ≥ pending s - senderLimit := sorry
+    (hDisplacement : OnAccept pool
+      (fun s _ s' => pending s ≤ pending s' + senderLimit)) :
+    OnAccept pool (fun s _ s' => pending s - senderLimit ≤ pending s') := by
+  intro s txs s' hok
+  have h := hDisplacement s txs s' hok
+  omega
 
 /-- **エントリ `7a01ac34bb8f8f97`** (High) — go-ethereum high CPU usage
 leading to DoS via malicious p2p message.
@@ -205,13 +202,11 @@ theorem entry_7a01ac34bb8f8f97_resource_bounds
     {P2pMsg NodeState : Type}
     (m : ResourceModel P2pMsg NodeState) (cpuBudget : Nat)
     (cpuCost : P2pMsg → Nat)
-    (hAccounted : ∀ s i s', m.step s i = .ok s' →
-      m.usage s' ≤ m.usage s + cpuCost i)
-    (hAdmission : ∀ s i s', m.step s i = .ok s' →
-      m.usage s + cpuCost i ≤ cpuBudget)
-    (hRejectFree : ∀ s i s', m.step s i = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m cpuBudget := sorry
+    (hAccounted : UsageAccounted m cpuCost)
+    (hAdmission : AdmissionControlled m cpuCost cpuBudget)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m cpuBudget :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `93a34a4a3b58f64f`** (High) — golang.org/x/crypto DoS via
 slow or incomplete key exchange.
@@ -229,13 +224,11 @@ theorem entry_93a34a4a3b58f64f_resource_bounds
     {KexChunk ConnState : Type}
     (m : ResourceModel KexChunk ConnState) (bufferBound : Nat)
     (chunkSize : KexChunk → Nat)
-    (hAccounted : ∀ s c s', m.step s c = .ok s' →
-      m.usage s' ≤ m.usage s + chunkSize c)
-    (hAdmission : ∀ s c s', m.step s c = .ok s' →
-      m.usage s + chunkSize c ≤ bufferBound)
-    (hRejectFree : ∀ s c s', m.step s c = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m bufferBound := sorry
+    (hAccounted : UsageAccounted m chunkSize)
+    (hAdmission : AdmissionControlled m chunkSize bufferBound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m bufferBound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `9497bc683371db42`** (High) — libp2p DoS vulnerability from
 lack of resource management.
@@ -251,13 +244,11 @@ theorem entry_9497bc683371db42_resource_bounds
     {Chunk NodeState : Type}
     (m : ResourceModel Chunk NodeState) (memBound : Nat)
     (allocSize : Chunk → Nat)
-    (hAccounted : ∀ s c s', m.step s c = .ok s' →
-      m.usage s' ≤ m.usage s + allocSize c)
-    (hAdmission : ∀ s c s', m.step s c = .ok s' →
-      m.usage s + allocSize c ≤ memBound)
-    (hRejectFree : ∀ s c s', m.step s c = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m memBound := sorry
+    (hAccounted : UsageAccounted m allocSize)
+    (hAdmission : AdmissionControlled m allocSize memBound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m memBound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `a0de2557672715e7`** (High) — Lighthouse v8.1.2
 high-priority security patch release.
@@ -276,18 +267,18 @@ high-priority security patch release.
 いない。クラスは同じパッチ系列の姉妹版 v8.1.3 アドバイザリの
 resource-exhaustion という root_cause から推測した。したがって
 このモデルは、ビーコンノードの p2p 入力に対する汎用的な
-クラス不変条件である。 -/
+クラス不変条件であり、計上・受け入れ制御・拒否時非増加という
+3条件への分解も標準的なリソース管理の形に基づくモデリング選択
+であって、dataset が個別に記載する事実ではない。 -/
 theorem entry_a0de2557672715e7_resource_bounds
     {PeerInput BeaconNodeState : Type}
     (m : ResourceModel PeerInput BeaconNodeState) (bound : Nat)
     (cost : PeerInput → Nat)
-    (hAccounted : ∀ s i s', m.step s i = .ok s' →
-      m.usage s' ≤ m.usage s + cost i)
-    (hAdmission : ∀ s i s', m.step s i = .ok s' →
-      m.usage s + cost i ≤ bound)
-    (hRejectFree : ∀ s i s', m.step s i = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m bound := sorry
+    (hAccounted : UsageAccounted m cost)
+    (hAdmission : AdmissionControlled m cost bound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m bound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `b7463c929025ca0a`** (High) — high-severity security issue
 fixup on the RPC surface.
@@ -308,13 +299,11 @@ theorem entry_b7463c929025ca0a_resource_bounds
     {RpcRequest ServerState : Type}
     (m : ResourceModel RpcRequest ServerState) (requestBudget : Nat)
     (cost : RpcRequest → Nat)
-    (hAccounted : ∀ s r s', m.step s r = .ok s' →
-      m.usage s' ≤ m.usage s + cost r)
-    (hAdmission : ∀ s r s', m.step s r = .ok s' →
-      m.usage s + cost r ≤ requestBudget)
-    (hRejectFree : ∀ s r s', m.step s r = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m requestBudget := sorry
+    (hAccounted : UsageAccounted m cost)
+    (hAdmission : AdmissionControlled m cost requestBudget)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m requestBudget :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `d5796321d9ebf1ae`** (High) — go-ethereum DoS via crafted
 GraphQL query.
@@ -332,13 +321,11 @@ theorem entry_d5796321d9ebf1ae_resource_bounds
     {GraphQLQuery ServerState : Type}
     (m : ResourceModel GraphQLQuery ServerState) (queryBudget : Nat)
     (evalCost : GraphQLQuery → Nat)
-    (hAccounted : ∀ s q s', m.step s q = .ok s' →
-      m.usage s' ≤ m.usage s + evalCost q)
-    (hAdmission : ∀ s q s', m.step s q = .ok s' →
-      m.usage s + evalCost q ≤ queryBudget)
-    (hRejectFree : ∀ s q s', m.step s q = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m queryBudget := sorry
+    (hAccounted : UsageAccounted m evalCost)
+    (hAdmission : AdmissionControlled m evalCost queryBudget)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m queryBudget :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `ded5a1dd6fea6e65`** (High) — Lighthouse v8.1.3
 high-priority security patch release.
@@ -354,13 +341,11 @@ theorem entry_ded5a1dd6fea6e65_resource_bounds
     {PeerInput BeaconNodeState : Type}
     (m : ResourceModel PeerInput BeaconNodeState) (bound : Nat)
     (cost : PeerInput → Nat)
-    (hAccounted : ∀ s i s', m.step s i = .ok s' →
-      m.usage s' ≤ m.usage s + cost i)
-    (hAdmission : ∀ s i s', m.step s i = .ok s' →
-      m.usage s + cost i ≤ bound)
-    (hRejectFree : ∀ s i s', m.step s i = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m bound := sorry
+    (hAccounted : UsageAccounted m cost)
+    (hAdmission : AdmissionControlled m cost bound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m bound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 /-- **エントリ `ece24a10f23119be`** (High) — Lighthouse validator monitor
 with high validator counts (#3728).
@@ -387,12 +372,10 @@ theorem entry_ece24a10f23119be_resource_bounds
     (m : ResourceModel MonitorEvent MonitorState)
     (cardinalityBound : Nat)
     (newSeries : MonitorEvent → Nat)
-    (hAccounted : ∀ s e s', m.step s e = .ok s' →
-      m.usage s' ≤ m.usage s + newSeries e)
-    (hAdmission : ∀ s e s', m.step s e = .ok s' →
-      m.usage s + newSeries e ≤ cardinalityBound)
-    (hRejectFree : ∀ s e s', m.step s e = .reject s' →
-      m.usage s' ≤ m.usage s) :
-    BoundedUsage m cardinalityBound := sorry
+    (hAccounted : UsageAccounted m newSeries)
+    (hAdmission : AdmissionControlled m newSeries cardinalityBound)
+    (hRejectFree : RejectFrees m) :
+    BoundedUsage m cardinalityBound :=
+  boundedUsage_of_admission hAccounted hAdmission hRejectFree
 
 end EthVulnFormalProps

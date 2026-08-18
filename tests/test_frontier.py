@@ -1,11 +1,27 @@
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 from speca_lean4.frontier import proof_closure, proof_evidence
 from speca_lean4.health import load_health
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# These three tests read the FULL EthTotal health export
+# (lean-ethtotal/health.json), which is a generated artifact that was never
+# committed (only the trimmed health.mapped.json is, and the trim drops the
+# Lemmata-layer records the proof-closure assertions need). They have failed
+# on main since 27dc1d8 wherever the artifact is absent -- including CI.
+# Skipping with a reason keeps the suite honest where the artifact does not
+# exist while still running the tests wherever it does (regenerate with
+# `lake exe speca-export` in lean-ethtotal/).
+_FULL_HEALTH = ROOT / "lean-ethtotal" / "health.json"
+pytestmark = pytest.mark.skipif(
+    not _FULL_HEALTH.exists(),
+    reason="requires the uncommitted full lean-ethtotal/health.json export",
+)
 
 
 def _load_generator():

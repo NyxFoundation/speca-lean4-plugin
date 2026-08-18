@@ -8,9 +8,14 @@ import SpecaExport.EthVuln.Common
 参照）。各定理は `EthVulnFormalProps.Common` の `Transition` /
 `PreservesInv` をインスタンス化する: 仮説は指定された単一の
 遷移による不変条件の保存（修正が回復した内容）であり、結論は
-それを任意の入力シーケンスに沿って拡張したもの — 妥当な開始
-状態からコンポーネントが生成または保存するすべてのものの妥当
-性である。証明はスコープ外であり `sorry` とする。
+それを任意の入力シーケンスに沿って拡張した `PreservesInvOnTrace`
+— 妥当な開始状態からコンポーネントが生成または保存するすべて
+のものの妥当性である。
+
+結論は Common の名前付き述語1適用に畳み、仮説からの含意は
+証明する（`sorry` なし）。状態と入力列の量化は述語の内側に
+畳み込み、リスト帰納法は Common の補題
+`preservesInvOnTrace_of_step` に委ねる。
 
 定理の命名規則:
 `entry_<id sanitized: [^A-Za-z0-9] → _>_state_integrity`。
@@ -30,14 +35,19 @@ invalid state.
 
 **root_cause**: `consensus_divergence`（データセット）。
 
-**クラス**: `state-integrity`、副次的に `spec-equivalence`。 -/
+**クラス**: `state-integrity`、副次的に `spec-equivalence`。
+
+読み下し: 仮説は単一の生成ステップによる妥当性の保存であり、
+結論は「任意の入力列に沿った保存」を named 述語
+`PreservesInvOnTrace` で述べる（リスト帰納法は Common の
+補題）。 -/
 theorem entry_d73c7daa388f8462_state_integrity
     {ChainState Block : Type}
     (produce : Transition ChainState Block)
     (ValidState : ChainState → Prop)
     (hPreserves : PreservesInv produce ValidState) :
-    ∀ (s : ChainState) (blocks : List Block),
-      ValidState s → ValidState (blocks.foldl produce s) := sorry
+    PreservesInvOnTrace produce ValidState :=
+  preservesInvOnTrace_of_step hPreserves
 
 /-- **エントリ `f81c1c6c4cd53ffb`** (High) — Lighthouse v1.0.6: the slasher
 database became invalid (and `--beacon-node` was ignored).
@@ -55,13 +65,18 @@ database became invalid (and `--beacon-node` was ignored).
 **抽象化**: クラスレベル — このリリース自体、これらは悪用され
 たセキュリティ上の欠陥ではなく運用上のバグであったと記して
 いる。slasher DBの修正が回復する永続状態の妥当性の不変条件に
-マッピングした。 -/
+マッピングした。
+
+読み下し: 仮説は単一の書き込みによる一貫性の保存であり、結論
+は「任意の入力列に沿った保存」を named 述語
+`PreservesInvOnTrace` で述べる（リスト帰納法は Common の
+補題）。 -/
 theorem entry_f81c1c6c4cd53ffb_state_integrity
     {SlasherDb Record : Type}
     (write : Transition SlasherDb Record)
     (Consistent : SlasherDb → Prop)
     (hPreserves : PreservesInv write Consistent) :
-    ∀ (db : SlasherDb) (recs : List Record),
-      Consistent db → Consistent (recs.foldl write db) := sorry
+    PreservesInvOnTrace write Consistent :=
+  preservesInvOnTrace_of_step hPreserves
 
 end EthVulnFormalProps

@@ -8,7 +8,7 @@
   "x_src_roots": [
     "."
   ],
-  "note": "Theorem -> 01e property mapping for the ethereum-vuln-dataset track (M2 Track C / c-1, speca#146), the third target of this plugin alongside gasper-lean4's theorem_map.json and EthTotal's theorem_map_ethtotal.json. The 66 entries formalize, one entry = one theorem, every severity Critical/High entry of NyxFoundation/ethereum-vuln-dataset at ethvuln_ref: the invariant each bug broke, stated as a Lean 4 proposition. The Lean sources live IN THIS REPO under lean/SpecaExport/EthVuln/ (so `source`/`ref` name this plugin, and each x_layer / lean_artifact path is relative to lean/); the fully-qualified theorem is EthVulnFormalProps.entry_<sanitized id>_<class> (namespace kept from the generating eth-vuln-formal-props package so names match its scripts/generate_theorem_map.py output). PROOF STATUS: the statements type-check but every proof is currently a `sorry` stub; this file carries NO proof-status field on purpose -- lean_status comes only from the exporter (`lake exe speca-export-ethvuln`, health JSON), which reports a sorry-dependent theorem as lean_status=unknown / sorry_free=false. Nothing here may be read as `proved`. Labels are ethereum-vuln-dataset labels; the ones that have a consensus-specs or execution-specs anchor in data/anchor_map*.json resolve to a spec_reference, the others (p2p, rpc, crypto, sync, txpool, engine-api, validator, build-ci, other, beacon-chain:execution-payload, beacon-chain:sync-committee) have no pyspec/execution-specs anchor and spec_reference is honestly absent rather than pointed at a document that does not describe them. text is Japanese (dataset-derived values and identifiers stay English); x_entry_id is the dataset entry id and x_dataset_evidence the CSV title. Fields prefixed x_ are documentation and are not emitted. `shard` (= primary invariant class) groups properties for `emit-01e --out-dir`. Generated upstream by scripts/generate_theorem_map.py of the (private) eth-vuln-formal-props repository; placed here as SpecaExport.EthVuln.*.",
+  "note": "Theorem -> 01e property mapping for the ethereum-vuln-dataset track (M2 Track C / c-1, speca#146), the third target of this plugin alongside gasper-lean4's theorem_map.json and EthTotal's theorem_map_ethtotal.json. The 66 entries formalize, one entry = one theorem, every severity Critical/High entry of NyxFoundation/ethereum-vuln-dataset at ethvuln_ref: the invariant each bug broke, stated as a Lean 4 proposition. The Lean sources live IN THIS REPO under lean/SpecaExport/EthVuln/ (so `source`/`ref` name this plugin, and each x_layer / lean_artifact path is relative to lean/); the fully-qualified theorem is EthVulnFormalProps.entry_<sanitized id>_<class> (namespace kept from the generating eth-vuln-formal-props package so names match its scripts/generate_theorem_map.py output). PROOF STATUS: this file carries NO proof-status field on purpose -- lean_status comes only from the exporter (`lake exe speca-export-ethvuln`, health JSON): a sorry-dependent theorem reads lean_status=unknown / sorry_free=false, a certified one reads proved / sorry_free=true. Nothing here may be read as a status claim. (As of the PR #24 review revision the placed statements are stated as named-predicate conclusions and their shallow implications are proved, but that fact is only ever reported by the exporter, never by this map.) Labels are ethereum-vuln-dataset labels; the ones that have a consensus-specs or execution-specs anchor in data/anchor_map*.json resolve to a spec_reference, the others (p2p, rpc, crypto, sync, txpool, engine-api, validator, build-ci, other, beacon-chain:sync-committee) have no pyspec/execution-specs anchor and spec_reference is honestly absent rather than pointed at a document that does not describe them. text is Japanese (dataset-derived values and identifiers stay English); x_entry_id is the dataset entry id and x_dataset_evidence the CSV title. Fields prefixed x_ are documentation and are not emitted. `shard` (= primary invariant class) groups properties for `emit-01e --out-dir`. Generated upstream by scripts/generate_theorem_map.py of the (private) eth-vuln-formal-props repository; placed here as SpecaExport.EthVuln.*. In addition to the label-level table anchoring, every entry carries an explicit per-entry x_spec_anchor (PR #24 review): either a consensus-specs/execution-specs section or symbol for protocol-semantics entries, or an explicit 'N/A -- <category>: <reason>' for out-of-spec surfaces (dependency libraries, devp2p networking, RPC/engine APIs, client internals, undisclosed advisories), which are tracked as implementation safety, never silently unanchored. Every entry also carries a deterministic audit_packet (tools/ethvuln-build-packets.py) with the three-way separation the PR #24 review asked for: guarantee (the exact Lean root conclusion), obligations (what the implementation must establish -- the named must-establish hypotheses, exact Lean types), preconditions (the full class-tagged hypothesis list, EthTotal-compatible rendering), and exact supporting-fact assertions (FACT-ROOT plus one FACT-OB* per obligation); packets carry no proof status -- that stays exporter-only.",
   "properties": [
     {
       "property_id": "PROP-lean-ethvuln-RB-001",
@@ -36,7 +36,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m memBound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m allocSize"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m allocSize memBound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m allocSize (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m allocSize memBound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m memBound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m memBound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m allocSize",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m allocSize",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m allocSize memBound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m allocSize memBound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: libp2p resource-management bug; per-peer memory bounds live in the libp2p library, not in consensus-specs or execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-002",
@@ -64,7 +129,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m memBound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m allocSize"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m allocSize memBound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m allocSize (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m allocSize memBound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m memBound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m memBound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m allocSize",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m allocSize",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m allocSize memBound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m allocSize memBound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Same libp2p resource-management defect surfaced via the CL p2p stack; libp2p's memory bounds are not part of consensus-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-003",
@@ -92,7 +222,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m stateBound",
+        "obligations": [
+          {
+            "name": "hPriced",
+            "type": "EthVulnFormalProps.UsageAccounted m fun op => instHMul.hMul rate (gasCharged op)"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m (fun op => instHMul.hMul rate (gasCharged op)) stateBound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hPriced: EthVulnFormalProps.UsageAccounted m fun op => instHMul.hMul rate (gasCharged op) (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m (fun op => instHMul.hMul rate (gasCharged op)) stateBound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m stateBound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m stateBound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hPriced"
+            ],
+            "claim": "Implementation obligation hPriced: EthVulnFormalProps.UsageAccounted m fun op => instHMul.hMul rate (gasCharged op)",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m fun op => instHMul.hMul rate (gasCharged op)",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m (fun op => instHMul.hMul rate (gasCharged op)) stateBound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m (fun op => instHMul.hMul rate (gasCharged op)) stateBound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: 2016 pre-EIP-150 state-bloat DoS hotfix; general node resource/state-growth management, not a codified execution-specs invariant."
     },
     {
       "property_id": "PROP-lean-ethvuln-MS-001",
@@ -120,7 +315,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "memory-safety"
+      "shard": "memory-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AccessesInBounds size fun c => List.map (fun x => instHAdd.hAdd (base c) x) (List.range (len c))",
+        "obligations": [
+          {
+            "name": "hWindowChecked",
+            "type": "∀ (c : Bytecode), instLENat.le (instHAdd.hAdd (base c) (len c)) size"
+          }
+        ],
+        "preconditions": [
+          "hWindowChecked: ∀ (c : Bytecode), instLENat.le (instHAdd.hAdd (base c) (len c)) size (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AccessesInBounds size fun c => List.map (fun x => instHAdd.hAdd (base c) x) (List.range (len c))",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AccessesInBounds size fun c => List.map (fun x => instHAdd.hAdd (base c) x) (List.range (len c))",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hWindowChecked"
+            ],
+            "claim": "Implementation obligation hWindowChecked: ∀ (c : Bytecode), instLENat.le (instHAdd.hAdd (base c) (len c)) size",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (c : Bytecode), instLENat.le (instHAdd.hAdd (base c) (len c)) size",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/interpreter.py",
+      "x_spec_symbol": "execute_code"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-001",
@@ -148,7 +379,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — undisclosed: Undisclosed Lighthouse v8.2.0 security release with no named spec area."
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-001",
@@ -160,7 +441,7 @@
       "x_dataset_evidence": "271695669fe1a228 — Integer overflow in github.com/gorilla/websocket",
       "text": "gorilla/websocketはフレーム長の整数オーバーフローにより、細工されたフレームが長さの計算を破ってDoSを引き起こす。長さの算術がラップアラウンドし、そこから導かれるリソース上限が機能しなくなる。",
       "type": "invariant",
-      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "assertion": "checked add: impl(x,y)=some z -> z = x+y exactly; x+y >= 2^64 -> impl(x,y)=none (overflow detected, never wrapped)",
       "severity": "HIGH",
       "covers_hint": [
         "arithmetic-safety",
@@ -176,7 +457,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptedExact 64 implLen fun x1 x2 => instHAdd.hAdd x1 x2",
+        "obligations": [
+          {
+            "name": "hChecked",
+            "type": "EthVulnFormalProps.CheckedArith 64 implLen fun x1 x2 => instHAdd.hAdd x1 x2"
+          }
+        ],
+        "preconditions": [
+          "hChecked: EthVulnFormalProps.CheckedArith 64 implLen fun x1 x2 => instHAdd.hAdd x1 x2 (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptedExact 64 implLen fun x1 x2 => instHAdd.hAdd x1 x2",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptedExact 64 implLen fun x1 x2 => instHAdd.hAdd x1 x2",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hChecked"
+            ],
+            "claim": "Implementation obligation hChecked: EthVulnFormalProps.CheckedArith 64 implLen fun x1 x2 => instHAdd.hAdd x1 x2",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.CheckedArith 64 implLen fun x1 x2 => instHAdd.hAdd x1 x2",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: gorilla/websocket is a third-party dependency; its frame-length arithmetic is not part of any Ethereum spec."
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-002",
@@ -188,7 +504,7 @@
       "x_dataset_evidence": "2b3def4a540f08df — CVE-2021-41272",
       "text": "BesuのSHL/SHR/SAR再実装は、上位ビットが立った値に対して符号型変換の誤りを持ち込んだため、シフト結果がEVM仕様から乖離する(CVE-2021-41272)。",
       "type": "invariant",
-      "assertion": "shift >= 256 (incl. any shift >= 2^31) -> evmShl(shift,v) = 0 and evmShr(shift,v) = 0",
+      "assertion": "forall value shift: shift >= 256 (incl. bit-31 values) -> SHL(shift,value) = 0 and SHR(shift,value) = 0",
       "severity": "HIGH",
       "covers_hint": [
         "arithmetic-safety",
@@ -204,7 +520,26 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.ShiftSaturates EthVulnFormalProps.evmShl EthVulnFormalProps.evmShr",
+        "obligations": [],
+        "preconditions": [],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.ShiftSaturates EthVulnFormalProps.evmShl EthVulnFormalProps.evmShr",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.ShiftSaturates EthVulnFormalProps.evmShl EthVulnFormalProps.evmShr",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/instructions/bitwise.py",
+      "x_spec_symbol": "shl / shr / sar"
     },
     {
       "property_id": "PROP-lean-ethvuln-IV-001",
@@ -232,7 +567,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "input-validation"
+      "shard": "input-validation",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptsOnlyValid engine specValid",
+        "obligations": [
+          {
+            "name": "hValidated",
+            "type": "EthVulnFormalProps.ValidatedBy engine specValid"
+          }
+        ],
+        "preconditions": [
+          "hValidated: EthVulnFormalProps.ValidatedBy engine specValid (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptsOnlyValid engine specValid",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptsOnlyValid engine specValid",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hValidated"
+            ],
+            "claim": "Implementation obligation hValidated: EthVulnFormalProps.ValidatedBy engine specValid",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.ValidatedBy engine specValid",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/bellatrix/beacon-chain.md",
+      "x_spec_symbol": "process_execution_payload"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-002",
@@ -260,7 +631,57 @@
       ],
       "exploitability": "local-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: General production-stability claim (no crash reports since beta.6), not a disclosed vulnerability or named spec area."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-001",
@@ -288,7 +709,58 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.Agree implA implB",
+        "obligations": [
+          {
+            "name": "hA",
+            "type": "EthVulnFormalProps.SpecEquiv specT implA"
+          },
+          {
+            "name": "hB",
+            "type": "EthVulnFormalProps.SpecEquiv specT implB"
+          }
+        ],
+        "preconditions": [
+          "hA: EthVulnFormalProps.SpecEquiv specT implA (must-establish)",
+          "hB: EthVulnFormalProps.SpecEquiv specT implB (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.Agree implA implB",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.Agree implA implB",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hA"
+            ],
+            "claim": "Implementation obligation hA: EthVulnFormalProps.SpecEquiv specT implA",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquiv specT implA",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hB"
+            ],
+            "claim": "Implementation obligation hB: EthVulnFormalProps.SpecEquiv specT implB",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquiv specT implB",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/phase0/p2p-interface.md",
+      "x_spec_symbol": "Req/Resp domain"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-003",
@@ -316,7 +788,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: Erigon live-sync panic/bad-state bug is a client-internal sync engine defect, not modeled by execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-004",
@@ -344,7 +866,57 @@
       ],
       "exploitability": "local-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes startup",
+        "obligations": [
+          {
+            "name": "hUnsupportedRejected",
+            "type": "EthVulnFormalProps.RejectsMalformed startup supported"
+          },
+          {
+            "name": "hSupportedTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed startup supported"
+          }
+        ],
+        "preconditions": [
+          "hUnsupportedRejected: EthVulnFormalProps.RejectsMalformed startup supported (must-establish)",
+          "hSupportedTotal: EthVulnFormalProps.TotalOnWellFormed startup supported (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes startup",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes startup",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hUnsupportedRejected"
+            ],
+            "claim": "Implementation obligation hUnsupportedRejected: EthVulnFormalProps.RejectsMalformed startup supported",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed startup supported",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hSupportedTotal"
+            ],
+            "claim": "Implementation obligation hSupportedTotal: EthVulnFormalProps.TotalOnWellFormed startup supported",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed startup supported",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: Nimbus startup crash under --history:prune is client-internal startup/config handling."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-004",
@@ -372,7 +944,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m goroutineBound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m spawned"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m spawned goroutineBound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m spawned (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m spawned goroutineBound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m goroutineBound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m goroutineBound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m spawned",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m spawned",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m spawned goroutineBound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m spawned goroutineBound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — networking-devp2p: Geth devp2p per-message goroutine exhaustion; devp2p wire handling is not part of execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-002",
@@ -400,7 +1037,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptanceCarriesOver validFor specT implT accepts",
+        "obligations": [
+          {
+            "name": "hConform",
+            "type": "EthVulnFormalProps.SpecEquivOn validFor specT implT"
+          }
+        ],
+        "preconditions": [
+          "hConform: EthVulnFormalProps.SpecEquivOn validFor specT implT (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptanceCarriesOver validFor specT implT accepts",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptanceCarriesOver validFor specT implT accepts",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConform"
+            ],
+            "claim": "Implementation obligation hConform: EthVulnFormalProps.SpecEquivOn validFor specT implT",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquivOn validFor specT implT",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/bellatrix/fork-choice.md",
+      "x_spec_symbol": "validate_merge_block"
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-005",
@@ -428,7 +1101,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m outputBound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m decodedSize"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m decodedSize outputBound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m decodedSize (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m decodedSize outputBound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m outputBound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m outputBound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m decodedSize",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m decodedSize",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m decodedSize outputBound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m decodedSize outputBound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Netty decoder DoS (CVE-2021-37136/37137) is a third-party dependency-library issue."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-003",
@@ -456,7 +1194,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AgreeOnObservation validFor registryView specEpoch implEpoch",
+        "obligations": [
+          {
+            "name": "hConform",
+            "type": "EthVulnFormalProps.SpecEquivOn validFor specEpoch implEpoch"
+          }
+        ],
+        "preconditions": [
+          "hConform: EthVulnFormalProps.SpecEquivOn validFor specEpoch implEpoch (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AgreeOnObservation validFor registryView specEpoch implEpoch",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AgreeOnObservation validFor registryView specEpoch implEpoch",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConform"
+            ],
+            "claim": "Implementation obligation hConform: EthVulnFormalProps.SpecEquivOn validFor specEpoch implEpoch",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquivOn validFor specEpoch implEpoch",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/phase0/beacon-chain.md",
+      "x_spec_symbol": "process_registry_updates"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-005",
@@ -484,7 +1258,57 @@
       ],
       "exploitability": "local-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes startup",
+        "obligations": [
+          {
+            "name": "hUnsupportedRejected",
+            "type": "EthVulnFormalProps.RejectsMalformed startup supported"
+          },
+          {
+            "name": "hSupportedTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed startup supported"
+          }
+        ],
+        "preconditions": [
+          "hUnsupportedRejected: EthVulnFormalProps.RejectsMalformed startup supported (must-establish)",
+          "hSupportedTotal: EthVulnFormalProps.TotalOnWellFormed startup supported (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes startup",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes startup",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hUnsupportedRejected"
+            ],
+            "claim": "Implementation obligation hUnsupportedRejected: EthVulnFormalProps.RejectsMalformed startup supported",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed startup supported",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hSupportedTotal"
+            ],
+            "claim": "Implementation obligation hSupportedTotal: EthVulnFormalProps.TotalOnWellFormed startup supported",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed startup supported",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: Erigon/Polygon startup panic with an external Milestones RPC daemon is client-internal startup/config handling."
     },
     {
       "property_id": "PROP-lean-ethvuln-MS-002",
@@ -496,7 +1320,7 @@
       "x_dataset_evidence": "74709c65793547a0 — Go Ethereum LES protocol implementation vulnerable to Denial of Service",
       "text": "GethのLES GetBlockHeadersMsgハンドラは攻撃者が影響を及ぼせる符号付き配列インデックスを使用しており、アクセス違反を引き起こしていた。信頼できない入力に対する範囲・符号の検証が欠けていた。",
       "type": "invariant",
-      "assertion": "idx in accesses(input) -> idx < size(object)",
+      "assertion": "forall query q: 0 <= idx(q) and idx(q) < size (sign and upper bound checked before any array access)",
       "severity": "HIGH",
       "covers_hint": [
         "memory-safety",
@@ -512,7 +1336,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "memory-safety"
+      "shard": "memory-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.InBounds size (idx q).toNat",
+        "obligations": [
+          {
+            "name": "hNonNeg",
+            "type": "∀ (q : HeadersQuery), Int.instLEInt.le 0 (idx q)"
+          },
+          {
+            "name": "hUpper",
+            "type": "∀ (q : HeadersQuery), Int.instLTInt.lt (idx q) size.cast"
+          }
+        ],
+        "preconditions": [
+          "hNonNeg: ∀ (q : HeadersQuery), Int.instLEInt.le 0 (idx q) (must-establish)",
+          "hUpper: ∀ (q : HeadersQuery), Int.instLTInt.lt (idx q) size.cast (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.InBounds size (idx q).toNat",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.InBounds size (idx q).toNat",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hNonNeg"
+            ],
+            "claim": "Implementation obligation hNonNeg: ∀ (q : HeadersQuery), Int.instLEInt.le 0 (idx q)",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (q : HeadersQuery), Int.instLEInt.le 0 (idx q)",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hUpper"
+            ],
+            "claim": "Implementation obligation hUpper: ∀ (q : HeadersQuery), Int.instLTInt.lt (idx q) size.cast",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (q : HeadersQuery), Int.instLTInt.lt (idx q) size.cast",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — networking-devp2p: Geth LES protocol (devp2p light-client wire) signed-index OOB; devp2p is not covered by execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-004",
@@ -540,7 +1414,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.Agree implA implB",
+        "obligations": [
+          {
+            "name": "hA",
+            "type": "EthVulnFormalProps.SpecEquiv specT implA"
+          },
+          {
+            "name": "hB",
+            "type": "EthVulnFormalProps.SpecEquiv specT implB"
+          }
+        ],
+        "preconditions": [
+          "hA: EthVulnFormalProps.SpecEquiv specT implA (must-establish)",
+          "hB: EthVulnFormalProps.SpecEquiv specT implB (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.Agree implA implB",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.Agree implA implB",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hA"
+            ],
+            "claim": "Implementation obligation hA: EthVulnFormalProps.SpecEquiv specT implA",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquiv specT implA",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hB"
+            ],
+            "claim": "Implementation obligation hB: EthVulnFormalProps.SpecEquiv specT implB",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquiv specT implB",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — rpc-api: EIP-8025 execution proofs are a pending EIP not yet incorporated into consensus-specs or execution-specs; proof interop sits at the engine-API boundary."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-006",
@@ -568,7 +1492,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.OnAccept pool fun s x s' => instLENat.le (instHSub.hSub (pending s) senderLimit) (pending s')",
+        "obligations": [
+          {
+            "name": "hDisplacement",
+            "type": "EthVulnFormalProps.OnAccept pool fun s x s' => instLENat.le (pending s) (instHAdd.hAdd (pending s') senderLimit)"
+          }
+        ],
+        "preconditions": [
+          "hDisplacement: EthVulnFormalProps.OnAccept pool fun s x s' => instLENat.le (pending s) (instHAdd.hAdd (pending s') senderLimit) (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.OnAccept pool fun s x s' => instLENat.le (instHSub.hSub (pending s) senderLimit) (pending s')",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.OnAccept pool fun s x s' => instLENat.le (instHSub.hSub (pending s) senderLimit) (pending s')",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hDisplacement"
+            ],
+            "claim": "Implementation obligation hDisplacement: EthVulnFormalProps.OnAccept pool fun s x s' => instLENat.le (pending s) (instHAdd.hAdd (pending s') senderLimit)",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.OnAccept pool fun s x s' => instLENat.le (pending s) (instHAdd.hAdd (pending s') senderLimit)",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: Geth txpool admission/eviction policy is client-internal mempool management, not modeled by execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-007",
@@ -596,7 +1555,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m cpuBudget",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m cpuCost"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m cpuCost cpuBudget"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m cpuCost (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m cpuCost cpuBudget (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m cpuBudget",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m cpuBudget",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m cpuCost",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m cpuCost",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m cpuCost cpuBudget",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m cpuCost cpuBudget",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — networking-devp2p: Malicious devp2p message causing high CPU is a devp2p wire-handling issue, outside execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-006",
@@ -624,7 +1648,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes addHostKey",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed addHostKey wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed addHostKey wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed addHostKey wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed addHostKey wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes addHostKey",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes addHostKey",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed addHostKey wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed addHostKey wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed addHostKey wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed addHostKey wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: x/crypto/ssh AddHostKey crash on a crafted Signer is a third-party dependency-library bug."
     },
     {
       "property_id": "PROP-lean-ethvuln-CA-001",
@@ -652,7 +1726,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "crypto-auth-integrity"
+      "shard": "crypto-auth-integrity",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.GrantedOnlyVerified v ctx granted",
+        "obligations": [
+          {
+            "name": "hBoundToKey",
+            "type": "∀ (s : SessionState) (k : Key), granted s k → accepted s k"
+          },
+          {
+            "name": "hVerified",
+            "type": "EthVulnFormalProps.GrantedOnlyVerified v ctx accepted"
+          }
+        ],
+        "preconditions": [
+          "hBoundToKey: ∀ (s : SessionState) (k : Key), granted s k → accepted s k (must-establish)",
+          "hVerified: EthVulnFormalProps.GrantedOnlyVerified v ctx accepted (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.GrantedOnlyVerified v ctx granted",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.GrantedOnlyVerified v ctx granted",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hBoundToKey"
+            ],
+            "claim": "Implementation obligation hBoundToKey: ∀ (s : SessionState) (k : Key), granted s k → accepted s k",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (s : SessionState) (k : Key), granted s k → accepted s k",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hVerified"
+            ],
+            "claim": "Implementation obligation hVerified: EthVulnFormalProps.GrantedOnlyVerified v ctx accepted",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.GrantedOnlyVerified v ctx accepted",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: x/crypto ServerConfig.PublicKeyCallback misuse is a third-party dependency-library authorization bug."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-008",
@@ -680,7 +1804,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m bufferBound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m chunkSize"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m chunkSize bufferBound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m chunkSize (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m chunkSize bufferBound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m bufferBound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m bufferBound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m chunkSize",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m chunkSize",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m chunkSize bufferBound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m chunkSize bufferBound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: x/crypto/ssh slow/incomplete key-exchange buffering DoS is a third-party dependency-library issue."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-009",
@@ -708,7 +1897,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m memBound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m allocSize"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m allocSize memBound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m allocSize (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m allocSize memBound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m memBound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m memBound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m allocSize",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m allocSize",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m allocSize memBound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m allocSize memBound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Same libp2p resource-management defect as RB-001/RB-002; not specified in consensus-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-005",
@@ -736,7 +1990,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AgreeOnObservation validFor headOf specFC implFC",
+        "obligations": [
+          {
+            "name": "hConform",
+            "type": "EthVulnFormalProps.SpecEquivOn validFor specFC implFC"
+          }
+        ],
+        "preconditions": [
+          "hConform: EthVulnFormalProps.SpecEquivOn validFor specFC implFC (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AgreeOnObservation validFor headOf specFC implFC",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AgreeOnObservation validFor headOf specFC implFC",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConform"
+            ],
+            "claim": "Implementation obligation hConform: EthVulnFormalProps.SpecEquivOn validFor specFC implFC",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquivOn validFor specFC implFC",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/phase0/fork-choice.md",
+      "x_spec_symbol": "get_head"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-007",
@@ -764,7 +2054,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — undisclosed: Undisclosed Grandine 2.0.3 security release with no named spec area (label 'build-ci' is not a spec surface)."
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-008",
@@ -792,7 +2132,58 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/bellatrix/beacon-chain.md",
+      "x_spec_symbol": "process_execution_payload"
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-010",
@@ -820,7 +2211,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m bound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m cost"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m cost bound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m cost (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m cost bound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m bound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m bound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m cost",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m cost",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m cost bound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m cost bound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — undisclosed: Lighthouse v8.1.2 discloses no fix details of its own; the p2p resource-exhaustion issue named in the advisory belongs to sibling release v8.1.3 and is libp2p-level, not spec-defined."
     },
     {
       "property_id": "PROP-lean-ethvuln-MS-003",
@@ -848,7 +2304,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "memory-safety"
+      "shard": "memory-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AccessesInBounds r.size fun x => List.range claimedLen",
+        "obligations": [
+          {
+            "name": "hConsistent",
+            "type": "instLENat.le claimedLen r.size"
+          }
+        ],
+        "preconditions": [
+          "hConsistent: instLENat.le claimedLen r.size (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AccessesInBounds r.size fun x => List.range claimedLen",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AccessesInBounds r.size fun x => List.range claimedLen",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConsistent"
+            ],
+            "claim": "Implementation obligation hConsistent: instLENat.le claimedLen r.size",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "instLENat.le claimedLen r.size",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/memory.py",
+      "x_spec_symbol": "extend_memory"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-009",
@@ -876,7 +2368,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — networking-devp2p: Malicious devp2p message crash/shutdown (CWE-248) is a devp2p wire-handling issue, outside execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-006",
@@ -904,7 +2446,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: instLENat.le (instHMul.hMul 400 1024) implMaxProofSize",
+        "obligations": [
+          {
+            "name": "hConst",
+            "type": "Eq implMaxProofSize (instHMul.hMul 400 1024)"
+          }
+        ],
+        "preconditions": [
+          "hConst: Eq implMaxProofSize (instHMul.hMul 400 1024) (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: instLENat.le (instHMul.hMul 400 1024) implMaxProofSize",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "instLENat.le (instHMul.hMul 400 1024) implMaxProofSize",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConst"
+            ],
+            "claim": "Implementation obligation hConst: Eq implMaxProofSize (instHMul.hMul 400 1024)",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "Eq implMaxProofSize (instHMul.hMul 400 1024)",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — rpc-api: EIP-8025 MAX_PROOF_SIZE is a constant from a pending EIP not yet incorporated into consensus-specs or execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-010",
@@ -932,7 +2509,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — undisclosed: Undisclosed Erigon security fix (found by the go-ethereum team) with no named spec area."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-007",
@@ -960,7 +2587,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.Agree implA implB",
+        "obligations": [
+          {
+            "name": "hA",
+            "type": "EthVulnFormalProps.Agree implA specResp"
+          },
+          {
+            "name": "hB",
+            "type": "EthVulnFormalProps.Agree implB specResp"
+          }
+        ],
+        "preconditions": [
+          "hA: EthVulnFormalProps.Agree implA specResp (must-establish)",
+          "hB: EthVulnFormalProps.Agree implB specResp (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.Agree implA implB",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.Agree implA implB",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hA"
+            ],
+            "claim": "Implementation obligation hA: EthVulnFormalProps.Agree implA specResp",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.Agree implA specResp",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hB"
+            ],
+            "claim": "Implementation obligation hB: EthVulnFormalProps.Agree implB specResp",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.Agree implB specResp",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — rpc-api: eth_getProof response formatting is defined by the JSON-RPC API (execution-apis), not execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-011",
@@ -988,7 +2665,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m requestBudget",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m cost"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m cost requestBudget"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m cost (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m cost requestBudget (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m requestBudget",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m requestBudget",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m cost",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m cost",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m cost requestBudget",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m cost requestBudget",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — rpc-api: Bounding RPC request cost is an API/rate-limiting concern (execution-apis / client policy), not execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-SF-001",
@@ -1016,7 +2758,57 @@
       ],
       "exploitability": "local-attack",
       "liveness_only": false,
-      "shard": "serialization-fidelity"
+      "shard": "serialization-fidelity",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.RoundTrips c",
+        "obligations": [
+          {
+            "name": "hEncConforms",
+            "type": "∀ (a : Val), Eq (c.enc a) (specEnc a)"
+          },
+          {
+            "name": "hDecInverts",
+            "type": "∀ (a : Val), Eq (c.dec (specEnc a)) (Option.some a)"
+          }
+        ],
+        "preconditions": [
+          "hEncConforms: ∀ (a : Val), Eq (c.enc a) (specEnc a) (must-establish)",
+          "hDecInverts: ∀ (a : Val), Eq (c.dec (specEnc a)) (Option.some a) (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.RoundTrips c",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.RoundTrips c",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hEncConforms"
+            ],
+            "claim": "Implementation obligation hEncConforms: ∀ (a : Val), Eq (c.enc a) (specEnc a)",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (a : Val), Eq (c.enc a) (specEnc a)",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hDecInverts"
+            ],
+            "claim": "Implementation obligation hDecInverts: ∀ (a : Val), Eq (c.dec (specEnc a)) (Option.some a)",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (a : Val), Eq (c.dec (specEnc a)) (Option.some a)",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — rpc-api: Mixes Beacon-API JSON hash encoding (lives in the separate beacon-APIs repo, not consensus-specs) with an early ENR attnets interop fix; not confidently a single consensus-specs section."
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-003",
@@ -1028,7 +2820,7 @@
       "x_dataset_evidence": "ba1acd77a48c7f43 — go-ethereum vulnerable to DoS via malicious p2p message",
       "text": "細工されたp2pメッセージがgo-ethereumの整数オーバーフローを悪用し、ノードに非常に大量のメモリを消費させる。オーバーフローする長さ・サイズの算術が確保量の上限を無効化する。",
       "type": "invariant",
-      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "assertion": "checked size sum: impl(x,y)=some z -> z = x+y exactly; x+y >= 2^64 -> none (overflow detected before allocation checks)",
       "severity": "HIGH",
       "covers_hint": [
         "arithmetic-safety",
@@ -1044,7 +2836,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptedExact 64 implSize fun x1 x2 => instHAdd.hAdd x1 x2",
+        "obligations": [
+          {
+            "name": "hChecked",
+            "type": "EthVulnFormalProps.CheckedArith 64 implSize fun x1 x2 => instHAdd.hAdd x1 x2"
+          }
+        ],
+        "preconditions": [
+          "hChecked: EthVulnFormalProps.CheckedArith 64 implSize fun x1 x2 => instHAdd.hAdd x1 x2 (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptedExact 64 implSize fun x1 x2 => instHAdd.hAdd x1 x2",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptedExact 64 implSize fun x1 x2 => instHAdd.hAdd x1 x2",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hChecked"
+            ],
+            "claim": "Implementation obligation hChecked: EthVulnFormalProps.CheckedArith 64 implSize fun x1 x2 => instHAdd.hAdd x1 x2",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.CheckedArith 64 implSize fun x1 x2 => instHAdd.hAdd x1 x2",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — networking-devp2p: Integer overflow in a devp2p message length/size field; devp2p wire handling is outside execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-004",
@@ -1056,7 +2883,7 @@
       "x_dataset_evidence": "bc36f78358adeec5 — AttesterSlashing number overflow",
       "text": "Lodestarはuint64をJSのnumber型で表現していたため、細工されたAttesterSlashing/ProposerSlashingの値がオーバーフローし、コンセンサス分岐を招きうる。仕様が定める64ビット演算が正確には実装されていなかった。",
       "type": "invariant",
-      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "assertion": "forall x y: impl_add(x,y) = (x+y) mod 2^64 exactly on the full uint64 domain (no IEEE-754 rounding above 2^53)",
       "severity": "HIGH",
       "covers_hint": [
         "arithmetic-safety",
@@ -1072,7 +2899,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AgreesModWidth 64 implAdd fun x1 x2 => instHAdd.hAdd x1 x2",
+        "obligations": [
+          {
+            "name": "hFullPrecision",
+            "type": "∀ (x y : EthVulnFormalProps.Word 64),\n  Eq (implAdd x y) (BitVec.ofNat 64 (instHAdd.hAdd (BitVec.toNat x) (BitVec.toNat y)))"
+          }
+        ],
+        "preconditions": [
+          "hFullPrecision: ∀ (x y : EthVulnFormalProps.Word 64),\n  Eq (implAdd x y) (BitVec.ofNat 64 (instHAdd.hAdd (BitVec.toNat x) (BitVec.toNat y))) (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AgreesModWidth 64 implAdd fun x1 x2 => instHAdd.hAdd x1 x2",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AgreesModWidth 64 implAdd fun x1 x2 => instHAdd.hAdd x1 x2",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hFullPrecision"
+            ],
+            "claim": "Implementation obligation hFullPrecision: ∀ (x y : EthVulnFormalProps.Word 64),\n  Eq (implAdd x y) (BitVec.ofNat 64 (instHAdd.hAdd (BitVec.toNat x) (BitVec.toNat y)))",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (x y : EthVulnFormalProps.Word 64),\n  Eq (implAdd x y) (BitVec.ofNat 64 (instHAdd.hAdd (BitVec.toNat x) (BitVec.toNat y)))",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/phase0/beacon-chain.md",
+      "x_spec_symbol": "process_attester_slashing"
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-005",
@@ -1084,7 +2947,7 @@
       "x_dataset_evidence": "besu:ghsa-advisory:GHSA-4456-w38r-m53x — Gas allocation error in CALL operations in Besu EVM [GHSA-4456-w38r-m53x CVE-2022-36025]",
       "text": "BesuのCALLオペレーションにおける利用可能ガス量の計算には32ビットの符号あり・なしの誤りがあり、呼び出し先コントラクトに誤ったガス量を渡してしまう。これにより実行がEVM仕様から乖離する(CVE-2022-36025)。",
       "type": "invariant",
-      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "assertion": "forall g r: impl_call_gas(g,r) = min(g - g/64, r) mod 2^64 exactly (EIP-150, fixed spec fn; no 32-bit narrowing)",
       "severity": "CRITICAL",
       "covers_hint": [
         "arithmetic-safety",
@@ -1100,7 +2963,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AgreesModWidth 64 implCallGas EthVulnFormalProps.evmCallGas",
+        "obligations": [
+          {
+            "name": "hFullWidth",
+            "type": "∀ (g r : EthVulnFormalProps.Word 64),\n  Eq (implCallGas g r) (BitVec.ofNat 64 (EthVulnFormalProps.evmCallGas (BitVec.toNat g) (BitVec.toNat r)))"
+          }
+        ],
+        "preconditions": [
+          "hFullWidth: ∀ (g r : EthVulnFormalProps.Word 64),\n  Eq (implCallGas g r) (BitVec.ofNat 64 (EthVulnFormalProps.evmCallGas (BitVec.toNat g) (BitVec.toNat r))) (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AgreesModWidth 64 implCallGas EthVulnFormalProps.evmCallGas",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AgreesModWidth 64 implCallGas EthVulnFormalProps.evmCallGas",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hFullWidth"
+            ],
+            "claim": "Implementation obligation hFullWidth: ∀ (g r : EthVulnFormalProps.Word 64),\n  Eq (implCallGas g r) (BitVec.ofNat 64 (EthVulnFormalProps.evmCallGas (BitVec.toNat g) (BitVec.toNat r)))",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (g r : EthVulnFormalProps.Word 64),\n  Eq (implCallGas g r) (BitVec.ofNat 64 (EthVulnFormalProps.evmCallGas (BitVec.toNat g) (BitVec.toNat r)))",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/gas.py",
+      "x_spec_symbol": "calculate_message_call_gas"
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-006",
@@ -1112,7 +3011,7 @@
       "x_dataset_evidence": "besu:hyperledger-besu:GHSA-7pg2-p5vj-xp5h — SHL, SHR, and SAR operations trigger native exception at key values",
       "text": "BesuのSHL/SHR/SARは、負数を表す32ビット値に対する符号型変換の誤りにより、ネイティブ例外を発生させ、EVM仕様とは異なるシフトセマンティクスをもたらす。",
       "type": "invariant",
-      "assertion": "shift >= 256 (incl. any shift >= 2^31) -> shl/shr = 0 and sar = sign-fill(v)",
+      "assertion": "forall value shift: shift >= 256 -> SHL = 0, SHR = 0, SAR = sign-fill(value); no exception at any shift amount",
       "severity": "HIGH",
       "covers_hint": [
         "arithmetic-safety",
@@ -1128,7 +3027,26 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: And (EthVulnFormalProps.ShiftSaturates EthVulnFormalProps.evmShl EthVulnFormalProps.evmShr)\n  (EthVulnFormalProps.SarSaturates EthVulnFormalProps.evmSar)",
+        "obligations": [],
+        "preconditions": [],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: And (EthVulnFormalProps.ShiftSaturates EthVulnFormalProps.evmShl EthVulnFormalProps.evmShr)\n  (EthVulnFormalProps.SarSaturates EthVulnFormalProps.evmSar)",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "And (EthVulnFormalProps.ShiftSaturates EthVulnFormalProps.evmShl EthVulnFormalProps.evmShr)\n  (EthVulnFormalProps.SarSaturates EthVulnFormalProps.evmSar)",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/instructions/bitwise.py",
+      "x_spec_symbol": "shl / shr / sar"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-011",
@@ -1156,7 +3074,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformedRejected",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hWellFormedTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformedRejected: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hWellFormedTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformedRejected"
+            ],
+            "claim": "Implementation obligation hMalformedRejected: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hWellFormedTotal"
+            ],
+            "claim": "Implementation obligation hWellFormedTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: x/crypto/ssh AEAD packet-parsing panic on malformed packets is a third-party dependency-library bug."
     },
     {
       "property_id": "PROP-lean-ethvuln-CA-002",
@@ -1184,7 +3152,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "crypto-auth-integrity"
+      "shard": "crypto-auth-integrity",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes verifyStep",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed verifyStep wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed verifyStep wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed verifyStep wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed verifyStep wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes verifyStep",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes verifyStep",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed verifyStep wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed verifyStep wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed verifyStep wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed verifyStep wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: x/crypto/ssh public-key signature-verification panic is a third-party dependency-library bug."
     },
     {
       "property_id": "PROP-lean-ethvuln-CA-003",
@@ -1212,7 +3230,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "crypto-auth-integrity"
+      "shard": "crypto-auth-integrity",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.EstablishedAreValid Valid established",
+        "obligations": [
+          {
+            "name": "hSound",
+            "type": "EthVulnFormalProps.VerifierSound v Valid"
+          },
+          {
+            "name": "hAlways",
+            "type": "EthVulnFormalProps.AlwaysVerifies v established"
+          }
+        ],
+        "preconditions": [
+          "hSound: EthVulnFormalProps.VerifierSound v Valid (must-establish)",
+          "hAlways: EthVulnFormalProps.AlwaysVerifies v established (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.EstablishedAreValid Valid established",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.EstablishedAreValid Valid established",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hSound"
+            ],
+            "claim": "Implementation obligation hSound: EthVulnFormalProps.VerifierSound v Valid",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.VerifierSound v Valid",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAlways"
+            ],
+            "claim": "Implementation obligation hAlways: EthVulnFormalProps.AlwaysVerifies v established",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AlwaysVerifies v established",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: x/crypto/ssh missing default HostKeyCallback verification is a third-party dependency-library authentication default."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-012",
@@ -1240,7 +3308,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m queryBudget",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m evalCost"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m evalCost queryBudget"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m evalCost (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m evalCost queryBudget (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m queryBudget",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m queryBudget",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m evalCost",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m evalCost",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m evalCost queryBudget",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m evalCost queryBudget",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — rpc-api: GraphQL query cost bounding is an API-layer concern (client GraphQL server), not execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-IV-002",
@@ -1268,7 +3401,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "input-validation"
+      "shard": "input-validation",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptsOnlyValid traceChain fun r => instLTNat.lt r.fst r.snd",
+        "obligations": [
+          {
+            "name": "hValidated",
+            "type": "EthVulnFormalProps.ValidatedBy traceChain fun r => instLTNat.lt r.fst r.snd"
+          }
+        ],
+        "preconditions": [
+          "hValidated: EthVulnFormalProps.ValidatedBy traceChain fun r => instLTNat.lt r.fst r.snd (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptsOnlyValid traceChain fun r => instLTNat.lt r.fst r.snd",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptsOnlyValid traceChain fun r => instLTNat.lt r.fst r.snd",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hValidated"
+            ],
+            "claim": "Implementation obligation hValidated: EthVulnFormalProps.ValidatedBy traceChain fun r => instLTNat.lt r.fst r.snd",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.ValidatedBy traceChain fun r => instLTNat.lt r.fst r.snd",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — rpc-api: debug_traceChain parameter validation is a custom RPC/debug-API concern, not execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-SI-001",
@@ -1296,7 +3464,43 @@
       ],
       "exploitability": "local-attack",
       "liveness_only": false,
-      "shard": "state-integrity"
+      "shard": "state-integrity",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.PreservesInvOnTrace produce ValidState",
+        "obligations": [
+          {
+            "name": "hPreserves",
+            "type": "EthVulnFormalProps.PreservesInv produce ValidState"
+          }
+        ],
+        "preconditions": [
+          "hPreserves: EthVulnFormalProps.PreservesInv produce ValidState (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.PreservesInvOnTrace produce ValidState",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.PreservesInvOnTrace produce ValidState",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hPreserves"
+            ],
+            "claim": "Implementation obligation hPreserves: EthVulnFormalProps.PreservesInv produce ValidState",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.PreservesInv produce ValidState",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/fork.py",
+      "x_spec_symbol": "state_transition"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-012",
@@ -1324,7 +3528,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes parse",
+        "obligations": [
+          {
+            "name": "hMalformedRejected",
+            "type": "EthVulnFormalProps.RejectsMalformed parse wellFormed"
+          },
+          {
+            "name": "hWellFormedTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed parse wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformedRejected: EthVulnFormalProps.RejectsMalformed parse wellFormed (must-establish)",
+          "hWellFormedTotal: EthVulnFormalProps.TotalOnWellFormed parse wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes parse",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes parse",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformedRejected"
+            ],
+            "claim": "Implementation obligation hMalformedRejected: EthVulnFormalProps.RejectsMalformed parse wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed parse wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hWellFormedTotal"
+            ],
+            "claim": "Implementation obligation hWellFormedTotal: EthVulnFormalProps.TotalOnWellFormed parse wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed parse wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Go stdlib crypto/x509 parser panic (surfaced via Helm) is a third-party dependency-library bug unrelated to Ethereum client code."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-008",
@@ -1352,7 +3606,58 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.Agree implA implB",
+        "obligations": [
+          {
+            "name": "hA",
+            "type": "EthVulnFormalProps.SpecEquiv specT implA"
+          },
+          {
+            "name": "hB",
+            "type": "EthVulnFormalProps.SpecEquiv specT implB"
+          }
+        ],
+        "preconditions": [
+          "hA: EthVulnFormalProps.SpecEquiv specT implA (must-establish)",
+          "hB: EthVulnFormalProps.SpecEquiv specT implB (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.Agree implA implB",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.Agree implA implB",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hA"
+            ],
+            "claim": "Implementation obligation hA: EthVulnFormalProps.SpecEquiv specT implA",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquiv specT implA",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hB"
+            ],
+            "claim": "Implementation obligation hB: EthVulnFormalProps.SpecEquiv specT implB",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquiv specT implB",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/bellatrix/beacon-chain.md",
+      "x_spec_symbol": "process_execution_payload"
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-013",
@@ -1380,7 +3685,72 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m bound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m cost"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m cost bound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m cost (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m cost bound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m bound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m bound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m cost",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m cost",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m cost bound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m cost bound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Lighthouse v8.1.3 p2p resource-exhaustion fix traces to underlying libp2p resource bounds, not to consensus-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-013",
@@ -1408,7 +3778,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: x/crypto/ssh nil-pointer dereference on a crafted auth request is a third-party dependency-library bug."
     },
     {
       "property_id": "PROP-lean-ethvuln-IV-003",
@@ -1436,7 +3856,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "input-validation"
+      "shard": "input-validation",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptsOnlyValid logStep fun m => Not (isDirective m)",
+        "obligations": [
+          {
+            "name": "hNeutralized",
+            "type": "∀ (s : LoggerState) (m : LogMsg), isDirective m → Eq (logStep s m) (EthVulnFormalProps.Outcome.reject s)"
+          }
+        ],
+        "preconditions": [
+          "hNeutralized: ∀ (s : LoggerState) (m : LogMsg), isDirective m → Eq (logStep s m) (EthVulnFormalProps.Outcome.reject s) (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptsOnlyValid logStep fun m => Not (isDirective m)",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptsOnlyValid logStep fun m => Not (isDirective m)",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hNeutralized"
+            ],
+            "claim": "Implementation obligation hNeutralized: ∀ (s : LoggerState) (m : LogMsg), isDirective m → Eq (logStep s m) (EthVulnFormalProps.Outcome.reject s)",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (s : LoggerState) (m : LogMsg), isDirective m → Eq (logStep s m) (EthVulnFormalProps.Outcome.reject s)",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Teku log4j upgrade (CVE-2021-44228) is a third-party logging-library vulnerability."
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-007",
@@ -1448,7 +3903,7 @@
       "x_dataset_evidence": "e9e9bc9f0e5c5042 — CVE-2022-36025",
       "text": "CVE-2022-36025は、BesuのCALLにおける利用可能ガス量の32ビット変換誤りの記録である。誤った数値変換により、EVM仕様に対してコントラクトへ渡されるガス量が変わってしまう。",
       "type": "invariant",
-      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "assertion": "forall g r: forwarded_gas(g,r) = min(g - g/64, r) mod 2^64 exactly (EIP-150, fixed spec fn; no narrowing conversion)",
       "severity": "HIGH",
       "covers_hint": [
         "arithmetic-safety",
@@ -1464,7 +3919,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AgreesModWidth 64 implForwardedGas EthVulnFormalProps.evmCallGas",
+        "obligations": [
+          {
+            "name": "hNoNarrowing",
+            "type": "∀ (g r : EthVulnFormalProps.Word 64),\n  Eq (implForwardedGas g r) (BitVec.ofNat 64 (EthVulnFormalProps.evmCallGas (BitVec.toNat g) (BitVec.toNat r)))"
+          }
+        ],
+        "preconditions": [
+          "hNoNarrowing: ∀ (g r : EthVulnFormalProps.Word 64),\n  Eq (implForwardedGas g r) (BitVec.ofNat 64 (EthVulnFormalProps.evmCallGas (BitVec.toNat g) (BitVec.toNat r))) (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AgreesModWidth 64 implForwardedGas EthVulnFormalProps.evmCallGas",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AgreesModWidth 64 implForwardedGas EthVulnFormalProps.evmCallGas",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hNoNarrowing"
+            ],
+            "claim": "Implementation obligation hNoNarrowing: ∀ (g r : EthVulnFormalProps.Word 64),\n  Eq (implForwardedGas g r) (BitVec.ofNat 64 (EthVulnFormalProps.evmCallGas (BitVec.toNat g) (BitVec.toNat r)))",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (g r : EthVulnFormalProps.Word 64),\n  Eq (implForwardedGas g r) (BitVec.ofNat 64 (EthVulnFormalProps.evmCallGas (BitVec.toNat g) (BitVec.toNat r)))",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/gas.py",
+      "x_spec_symbol": "calculate_message_call_gas"
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-008",
@@ -1476,7 +3967,7 @@
       "x_dataset_evidence": "ea812e5ad2a3da8e — CVE-2025-29072",
       "text": "Nethermind Junoでは、Sierraバイトコードの伸長処理における整数オーバーフローにより、悪意ある入力が無限ループと高いCPU使用率を引き起こしうる。オーバーフローした算術がループ終了条件とコスト上限を無効化する。",
       "type": "invariant",
-      "assertion": "spec(x,y) representable in n bits -> impl(x,y) = spec(x,y)",
+      "assertion": "checked cursor advance: impl(x,y)=some z -> z = x+y exactly; x+y >= 2^32 -> none (loop progress sees true sums)",
       "severity": "HIGH",
       "covers_hint": [
         "arithmetic-safety",
@@ -1492,7 +3983,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptedExact 32 implAdvance fun x1 x2 => instHAdd.hAdd x1 x2",
+        "obligations": [
+          {
+            "name": "hChecked",
+            "type": "EthVulnFormalProps.CheckedArith 32 implAdvance fun x1 x2 => instHAdd.hAdd x1 x2"
+          }
+        ],
+        "preconditions": [
+          "hChecked: EthVulnFormalProps.CheckedArith 32 implAdvance fun x1 x2 => instHAdd.hAdd x1 x2 (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptedExact 32 implAdvance fun x1 x2 => instHAdd.hAdd x1 x2",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptedExact 32 implAdvance fun x1 x2 => instHAdd.hAdd x1 x2",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hChecked"
+            ],
+            "claim": "Implementation obligation hChecked: EthVulnFormalProps.CheckedArith 32 implAdvance fun x1 x2 => instHAdd.hAdd x1 x2",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.CheckedArith 32 implAdvance fun x1 x2 => instHAdd.hAdd x1 x2",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: Nethermind Juno is a Starknet (L2/Cairo) client; Sierra bytecode processing is not part of Ethereum consensus-specs or execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-RB-014",
@@ -1520,7 +4046,72 @@
       ],
       "exploitability": "local-attack",
       "liveness_only": true,
-      "shard": "resource-bounds"
+      "shard": "resource-bounds",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.BoundedUsage m cardinalityBound",
+        "obligations": [
+          {
+            "name": "hAccounted",
+            "type": "EthVulnFormalProps.UsageAccounted m newSeries"
+          },
+          {
+            "name": "hAdmission",
+            "type": "EthVulnFormalProps.AdmissionControlled m newSeries cardinalityBound"
+          },
+          {
+            "name": "hRejectFree",
+            "type": "EthVulnFormalProps.RejectFrees m"
+          }
+        ],
+        "preconditions": [
+          "hAccounted: EthVulnFormalProps.UsageAccounted m newSeries (must-establish)",
+          "hAdmission: EthVulnFormalProps.AdmissionControlled m newSeries cardinalityBound (must-establish)",
+          "hRejectFree: EthVulnFormalProps.RejectFrees m (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.BoundedUsage m cardinalityBound",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.BoundedUsage m cardinalityBound",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hAccounted"
+            ],
+            "claim": "Implementation obligation hAccounted: EthVulnFormalProps.UsageAccounted m newSeries",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.UsageAccounted m newSeries",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hAdmission"
+            ],
+            "claim": "Implementation obligation hAdmission: EthVulnFormalProps.AdmissionControlled m newSeries cardinalityBound",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.AdmissionControlled m newSeries cardinalityBound",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB3",
+            "source_fact_ids": [
+              "hRejectFree"
+            ],
+            "claim": "Implementation obligation hRejectFree: EthVulnFormalProps.RejectFrees m",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectFrees m",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: Validator-monitor metrics cardinality overwhelming Prometheus is a client-internal monitoring implementation detail."
     },
     {
       "property_id": "PROP-lean-ethvuln-MS-004",
@@ -1548,7 +4139,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "memory-safety"
+      "shard": "memory-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AccessesInBounds buf.size cursor",
+        "obligations": [
+          {
+            "name": "hChecked",
+            "type": "∀ (inp : JsonInput) (p : Nat), List.instMembership.mem (cursor inp) p → instLTNat.lt p buf.size"
+          }
+        ],
+        "preconditions": [
+          "hChecked: ∀ (inp : JsonInput) (p : Nat), List.instMembership.mem (cursor inp) p → instLTNat.lt p buf.size (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AccessesInBounds buf.size cursor",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AccessesInBounds buf.size cursor",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hChecked"
+            ],
+            "claim": "Implementation obligation hChecked: ∀ (inp : JsonInput) (p : Nat), List.instMembership.mem (cursor inp) p → instLTNat.lt p buf.size",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (inp : JsonInput) (p : Nat), List.instMembership.mem (cursor inp) p → instLTNat.lt p buf.size",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: buger/jsonparser OOB read (CVE-2026-32285) is a third-party dependency-library bug used by Erigon."
     },
     {
       "property_id": "PROP-lean-ethvuln-CA-004",
@@ -1576,7 +4202,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "crypto-auth-integrity"
+      "shard": "crypto-auth-integrity",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.RejectsInvalid v Valid",
+        "obligations": [
+          {
+            "name": "hSound",
+            "type": "EthVulnFormalProps.VerifierSound v Valid"
+          }
+        ],
+        "preconditions": [
+          "hSound: EthVulnFormalProps.VerifierSound v Valid (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.RejectsInvalid v Valid",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.RejectsInvalid v Valid",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hSound"
+            ],
+            "claim": "Implementation obligation hSound: EthVulnFormalProps.VerifierSound v Valid",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.VerifierSound v Valid",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Core cryptographic library vulnerability (crypto_misuse) in a Lighthouse dependency; the underlying BLS primitives are defined outside consensus-specs itself."
     },
     {
       "property_id": "PROP-lean-ethvuln-SI-002",
@@ -1604,7 +4265,42 @@
       ],
       "exploitability": "local-attack",
       "liveness_only": false,
-      "shard": "state-integrity"
+      "shard": "state-integrity",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.PreservesInvOnTrace write Consistent",
+        "obligations": [
+          {
+            "name": "hPreserves",
+            "type": "EthVulnFormalProps.PreservesInv write Consistent"
+          }
+        ],
+        "preconditions": [
+          "hPreserves: EthVulnFormalProps.PreservesInv write Consistent (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.PreservesInvOnTrace write Consistent",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.PreservesInvOnTrace write Consistent",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hPreserves"
+            ],
+            "claim": "Implementation obligation hPreserves: EthVulnFormalProps.PreservesInv write Consistent",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.PreservesInv write Consistent",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — client-internal: Lighthouse slasher database corruption is a client-internal local-storage implementation detail, not a consensus-specs invariant."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-009",
@@ -1632,7 +4328,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.ProducesSpecValid compatible implProduce specValidBlock",
+        "obligations": [
+          {
+            "name": "hConform",
+            "type": "EthVulnFormalProps.SpecEquivOn compatible specProduce implProduce"
+          },
+          {
+            "name": "hSpecValid",
+            "type": "EthVulnFormalProps.ProducesSpecValid compatible specProduce specValidBlock"
+          }
+        ],
+        "preconditions": [
+          "hConform: EthVulnFormalProps.SpecEquivOn compatible specProduce implProduce (must-establish)",
+          "hSpecValid: EthVulnFormalProps.ProducesSpecValid compatible specProduce specValidBlock (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.ProducesSpecValid compatible implProduce specValidBlock",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.ProducesSpecValid compatible implProduce specValidBlock",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConform"
+            ],
+            "claim": "Implementation obligation hConform: EthVulnFormalProps.SpecEquivOn compatible specProduce implProduce",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquivOn compatible specProduce implProduce",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hSpecValid"
+            ],
+            "claim": "Implementation obligation hSpecValid: EthVulnFormalProps.ProducesSpecValid compatible specProduce specValidBlock",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.ProducesSpecValid compatible specProduce specValidBlock",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — rpc-api: EL/CL fork-capability compatibility checking is an engine-API concern (execution-apis), not execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-014",
@@ -1660,7 +4406,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes h",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed h wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed h wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes h",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes h",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed h wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — networking-devp2p: Malicious devp2p message DoS (shutdown/crash) is a devp2p wire-handling issue, outside execution-specs."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-010",
@@ -1688,7 +4484,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptanceCarriesOver validFor specCopy implCopy accepts",
+        "obligations": [
+          {
+            "name": "hValueSemantics",
+            "type": "EthVulnFormalProps.SpecEquivOn validFor specCopy implCopy"
+          }
+        ],
+        "preconditions": [
+          "hValueSemantics: EthVulnFormalProps.SpecEquivOn validFor specCopy implCopy (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptanceCarriesOver validFor specCopy implCopy accepts",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptanceCarriesOver validFor specCopy implCopy accepts",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hValueSemantics"
+            ],
+            "claim": "Implementation obligation hValueSemantics: EthVulnFormalProps.SpecEquivOn validFor specCopy implCopy",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquivOn validFor specCopy implCopy",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/precompiled_contracts/identity.py",
+      "x_spec_symbol": "identity"
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-011",
@@ -1716,7 +4548,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AgreeOnObservation validFor root specT implT",
+        "obligations": [
+          {
+            "name": "hConform",
+            "type": "EthVulnFormalProps.SpecEquivOn validFor specT implT"
+          }
+        ],
+        "preconditions": [
+          "hConform: EthVulnFormalProps.SpecEquivOn validFor specT implT (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AgreeOnObservation validFor root specT implT",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AgreeOnObservation validFor root specT implT",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConform"
+            ],
+            "claim": "Implementation obligation hConform: EthVulnFormalProps.SpecEquivOn validFor specT implT",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquivOn validFor specT implT",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/instructions/system.py",
+      "x_spec_symbol": "return_data_copy"
     },
     {
       "property_id": "PROP-lean-ethvuln-AS-009",
@@ -1728,7 +4596,7 @@
       "x_dataset_evidence": "geth:ethereum-go-ethereum:GHSA-jm5c-rv3w-w83m — Denial of service via `MulMod`",
       "text": "mulmod(a,b,0)はブロック処理中にGethをパニックさせる。仕様は法が0のMULMODの結果を0と定義しているが、実装の部分演算はクラッシュしてしまう。",
       "type": "invariant",
-      "assertion": "evmMulMod(a, b, 0) = 0 (MULMOD is total; modulus 0 yields 0, never a crash)",
+      "assertion": "forall a b: MULMOD(a,b,0) = 0 (spec totalizes the partial modulo op; implementation must not trap)",
       "severity": "HIGH",
       "covers_hint": [
         "arithmetic-safety",
@@ -1744,7 +4612,26 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "arithmetic-safety"
+      "shard": "arithmetic-safety",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.MulModZeroTotal",
+        "obligations": [],
+        "preconditions": [],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.MulModZeroTotal",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.MulModZeroTotal",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/vm/instructions/arithmetic.py",
+      "x_spec_symbol": "mulmod"
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-012",
@@ -1772,7 +4659,43 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptanceCarriesOver validFor specT implT accepts",
+        "obligations": [
+          {
+            "name": "hConform",
+            "type": "EthVulnFormalProps.SpecEquivOn validFor specT implT"
+          }
+        ],
+        "preconditions": [
+          "hConform: EthVulnFormalProps.SpecEquivOn validFor specT implT (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptanceCarriesOver validFor specT implT accepts",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptanceCarriesOver validFor specT implT accepts",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConform"
+            ],
+            "claim": "Implementation obligation hConform: EthVulnFormalProps.SpecEquivOn validFor specT implT",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquivOn validFor specT implT",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "execution-specs:src/ethereum/forks/prague/fork.py",
+      "x_spec_symbol": "state_transition"
     },
     {
       "property_id": "PROP-lean-ethvuln-AR-015",
@@ -1800,7 +4723,57 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": true,
-      "shard": "availability-robustness"
+      "shard": "availability-robustness",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.NeverCrashes compute",
+        "obligations": [
+          {
+            "name": "hMalformed",
+            "type": "EthVulnFormalProps.RejectsMalformed compute wellFormed"
+          },
+          {
+            "name": "hTotal",
+            "type": "EthVulnFormalProps.TotalOnWellFormed compute wellFormed"
+          }
+        ],
+        "preconditions": [
+          "hMalformed: EthVulnFormalProps.RejectsMalformed compute wellFormed (must-establish)",
+          "hTotal: EthVulnFormalProps.TotalOnWellFormed compute wellFormed (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.NeverCrashes compute",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.NeverCrashes compute",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hMalformed"
+            ],
+            "claim": "Implementation obligation hMalformed: EthVulnFormalProps.RejectsMalformed compute wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.RejectsMalformed compute wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hTotal"
+            ],
+            "claim": "Implementation obligation hTotal: EthVulnFormalProps.TotalOnWellFormed compute wellFormed",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.TotalOnWellFormed compute wellFormed",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Inherited Go stdlib math/big panic (CVE-2020-28362) is a third-party dependency-library/toolchain issue."
     },
     {
       "property_id": "PROP-lean-ethvuln-SE-013",
@@ -1828,7 +4801,58 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "spec-equivalence"
+      "shard": "spec-equivalence",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.PreservesInvOn validFor implEpoch balancesValid",
+        "obligations": [
+          {
+            "name": "hConform",
+            "type": "EthVulnFormalProps.SpecEquivOn validFor specEpoch implEpoch"
+          },
+          {
+            "name": "hSpecPreserves",
+            "type": "EthVulnFormalProps.PreservesInvOn validFor specEpoch balancesValid"
+          }
+        ],
+        "preconditions": [
+          "hConform: EthVulnFormalProps.SpecEquivOn validFor specEpoch implEpoch (must-establish)",
+          "hSpecPreserves: EthVulnFormalProps.PreservesInvOn validFor specEpoch balancesValid (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.PreservesInvOn validFor implEpoch balancesValid",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.PreservesInvOn validFor implEpoch balancesValid",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hConform"
+            ],
+            "claim": "Implementation obligation hConform: EthVulnFormalProps.SpecEquivOn validFor specEpoch implEpoch",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.SpecEquivOn validFor specEpoch implEpoch",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          },
+          {
+            "fact_id": "FACT-OB2",
+            "source_fact_ids": [
+              "hSpecPreserves"
+            ],
+            "claim": "Implementation obligation hSpecPreserves: EthVulnFormalProps.PreservesInvOn validFor specEpoch balancesValid",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "EthVulnFormalProps.PreservesInvOn validFor specEpoch balancesValid",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "consensus-specs:specs/electra/beacon-chain.md",
+      "x_spec_symbol": "process_effective_balance_updates"
     },
     {
       "property_id": "PROP-lean-ethvuln-IV-004",
@@ -1856,7 +4880,42 @@
       ],
       "exploitability": "external-attack",
       "liveness_only": false,
-      "shard": "input-validation"
+      "shard": "input-validation",
+      "audit_packet": {
+        "guarantee": "The implementation must realize the exact Lean root conclusion: EthVulnFormalProps.AcceptsOnlyValid logStep fun m => Not (isLookupDirective m)",
+        "obligations": [
+          {
+            "name": "hNeutralized",
+            "type": "∀ (s : LoggerState) (m : LogMsg), isLookupDirective m → Eq (logStep s m) (EthVulnFormalProps.Outcome.reject s)"
+          }
+        ],
+        "preconditions": [
+          "hNeutralized: ∀ (s : LoggerState) (m : LogMsg), isLookupDirective m → Eq (logStep s m) (EthVulnFormalProps.Outcome.reject s) (must-establish)"
+        ],
+        "supporting_facts": [
+          {
+            "fact_id": "FACT-ROOT",
+            "source_fact_ids": [
+              "ROOT"
+            ],
+            "claim": "Root conclusion: EthVulnFormalProps.AcceptsOnlyValid logStep fun m => Not (isLookupDirective m)",
+            "check": "Check the exact root relation on every implementation path covered by the property.",
+            "expected": "EthVulnFormalProps.AcceptsOnlyValid logStep fun m => Not (isLookupDirective m)",
+            "flag_if": "The implementation produces any result that violates the exact root relation or its stated preconditions."
+          },
+          {
+            "fact_id": "FACT-OB1",
+            "source_fact_ids": [
+              "hNeutralized"
+            ],
+            "claim": "Implementation obligation hNeutralized: ∀ (s : LoggerState) (m : LogMsg), isLookupDirective m → Eq (logStep s m) (EthVulnFormalProps.Outcome.reject s)",
+            "check": "Establish this obligation in the implementation; it is the must-establish precondition under which the root guarantee transfers.",
+            "expected": "∀ (s : LoggerState) (m : LogMsg), isLookupDirective m → Eq (logStep s m) (EthVulnFormalProps.Outcome.reject s)",
+            "flag_if": "The implementation cannot be shown to establish this obligation on the audited path."
+          }
+        ]
+      },
+      "x_spec_anchor": "N/A — dependency-library: Teku log4j vulnerability (CVE-2021-44228) is a third-party logging-library issue."
     }
   ]
 }

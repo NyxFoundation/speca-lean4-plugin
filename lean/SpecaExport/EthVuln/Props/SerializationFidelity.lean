@@ -6,8 +6,11 @@ import SpecaExport.EthVuln.Common
 主クラスが `serialization-fidelity` であるインベントリの各
 エントリにつき定理を1つずつ用意する（`data/classification.json`
 を参照）。これらの定理は `EthVulnFormalProps.Common` の
-`Codec` / `RoundTrips` をインスタンス化する。証明はスコープ上
-`sorry` とする。
+`Codec` / `RoundTrips` をインスタンス化する。
+
+結論は Common の名前付き述語1適用に畳み、仮説からの含意は
+証明する（`sorry` なし）。値の量化は `RoundTrips` の内側に
+畳み込む。
 
 定理の命名規則:
 `entry_<id sanitized: [^A-Za-z0-9] → _>_serialization_fidelity`。
@@ -34,12 +37,15 @@ attestation ビットフィールドが bootstrap ENR から欠落していた
 である。修正により実装のエンコーダはそれを生成するようになり
 （`hEncConforms`）、デコーダはそれを逆変換するようになった
 （`hDecInverts`）。この2つが合わさって、実装コーデックの
-ラウンドトリップ忠実性が得られる。 -/
+ラウンドトリップ忠実性 `RoundTrips c` が得られる。 -/
 theorem entry_b89b66ccf953baca_serialization_fidelity
     {Val Wire : Type}
     (c : Codec Val Wire) (specEnc : Val → Wire)
     (hEncConforms : ∀ a, c.enc a = specEnc a)
     (hDecInverts : ∀ a, c.dec (specEnc a) = some a) :
-    RoundTrips c := sorry
+    RoundTrips c := by
+  intro a
+  rw [hEncConforms a]
+  exact hDecInverts a
 
 end EthVulnFormalProps

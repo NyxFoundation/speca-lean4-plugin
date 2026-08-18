@@ -7,18 +7,24 @@ import SpecaExport.EthVuln.Common
 対して定理を1つずつ用意する（`data/classification.json` を参照）。
 これらの定理は `EthVulnFormalProps.Common` の `Transition` /
 `SpecEquivOn` / `SpecEquiv`（さらに、そのエントリが状態妥当性
-も壊していた場合は `PreservesInv`）をインスタンス化する。繰り返
-し現れる形は2種類ある。
+も壊していた場合は `PreservesInvOn`）をインスタンス化する。繰り
+返し現れる形は2種類ある。
 
 - *クライアント間の合意*: 正規仕様に準拠する2つのクライアント
   が同一の観測可能な結果を生成する — interop / spec-alignment
-  系のエントリが回復する性質。
+  系のエントリが回復する性質。結論は `Agree` の1適用で読む。
 - *正規の受理*: spec-valid なドメイン上で仕様に準拠するクライ
   アントは、仕様が受理するものをまさに受理する —
   consensus-divergence 系のエントリが壊した性質（脆弱なノード
-  が正規チェーンを拒否した）。
+  が正規チェーンを拒否した）。結論は `AcceptanceCarriesOver` /
+  `AgreeOnObservation` / `SpecEquivOn` の1適用で読む。
 
-証明はスコープ外のため `sorry` とする。
+いずれの形でも、状態・入力の量化と spec-valid ガードは Common
+側の述語の内側に畳み込む（結論に直接書くと exporter の
+テレスコープ平坦化で must-establish に混入する）。
+
+結論は Common の名前付き述語1適用に畳み、仮説からの含意は
+証明する（`sorry` なし）。
 
 定理の命名規則:
 `entry_<id sanitized: [^A-Za-z0-9] → _>_spec_equivalence`。
@@ -39,12 +45,19 @@ specification consolidation.
 
 **抽象化**: クラスレベル — 単一の脆弱性ではなく仕様策定PRで
 あるため、プロトコル準拠（クライアントは正規仕様に一致しな
-ければならない）にマッピングする。 -/
+ければならない）にマッピングする。
+
+読み下し: `specT` は正規のワイヤプロトコル、`hA` / `hB` は
+各クライアントの準拠義務（must-establish）である。結論は
+クライアント間の合意 `Agree implA implB` の1適用であり、
+状態とメッセージの量化は述語の内側に畳み込まれている。 -/
 theorem entry_475682d10d661b75_spec_equivalence
     {NetState WireMsg : Type}
     (specT implA implB : Transition NetState WireMsg)
     (hA : SpecEquiv specT implA) (hB : SpecEquiv specT implB) :
-    ∀ s m, implA s m = implB s m := sorry
+    Agree implA implB := by
+  intro s m
+  rw [hA s m, hB s m]
 
 /-- **エントリ `4f09bedbf1707694`** (High) — implement Kintsugi specs (the
 Merge November sprint PR).
@@ -59,15 +72,19 @@ Merge November sprint PR).
 **クラス**: `spec-equivalence`。
 
 **抽象化**: クラスレベル — 単一の脆弱性ではなく仕様実装PRで
-あるため、正規のマージ仕様への準拠にマッピングする。 -/
+あるため、正規のマージ仕様への準拠にマッピングする。
+
+読み下し: 仮説は spec-valid な定義域上での準拠義務であり、
+結論は正規の受理の伝播 `AcceptanceCarriesOver` の1適用 —
+`validFor` ガードと受理条件は述語の内側にある。 -/
 theorem entry_4f09bedbf1707694_spec_equivalence
     {ChainState Block : Type}
     (validFor : ChainState → Block → Prop)
     (specT implT : Transition ChainState Block)
     (accepts : ChainState → Prop)
     (hConform : SpecEquivOn validFor specT implT) :
-    ∀ s b, validFor s b →
-      accepts (specT s b) → accepts (implT s b) := sorry
+    AcceptanceCarriesOver validFor specT implT accepts :=
+  acceptanceCarriesOver_of_specEquivOn hConform
 
 /-- **エントリ `6c13a1c54cea1ce2`** (High) — Grandine 2.0.5 security
 release (epoch processing, `process_registry_updates` reuse).
@@ -81,13 +98,22 @@ release (epoch processing, `process_registry_updates` reuse).
 
 **抽象化**: クラスレベル — アドバイザリには脆弱性の詳細が
 記載されていないため、このリリースのエポック処理の変更点を
-手がかりに、仕様準拠のエポック遷移にマッピングする。 -/
+手がかりに、仕様準拠のエポック遷移にマッピングする。
+
+読み下し: `registryView` はエポック遷移後の状態から見える
+バリデータレジストリ（activation / exit のキュー処理の結果 —
+このリリースが名指しする `process_registry_updates` の出力面）
+を抽象化した観測である。must-establish は仕様準拠 `hConform`
+であり、結論はそこから従う「spec-valid な定義域上でのレジストリ
+観測の一致」— consensus divergence が現れる面そのものである。 -/
 theorem entry_6c13a1c54cea1ce2_spec_equivalence
-    {BeaconState EpochCtx : Type}
+    {BeaconState EpochCtx RegistryView : Type}
     (validFor : BeaconState → EpochCtx → Prop)
     (specEpoch implEpoch : Transition BeaconState EpochCtx)
+    (registryView : BeaconState → RegistryView)
     (hConform : SpecEquivOn validFor specEpoch implEpoch) :
-    ∀ s e, validFor s e → implEpoch s e = specEpoch s e := sorry
+    AgreeOnObservation validFor registryView specEpoch implEpoch :=
+  agreeOnObservation_of_specEquivOn hConform
 
 /-- **エントリ `7482623489bc990c`** (High) — EIP-8025 optional execution
 proofs in Lodestar (3-client interop).
@@ -103,12 +129,17 @@ proofs in Lodestar (3-client interop).
 
 **抽象化**: クラスレベル — 単一の脆弱性ではなく機能実装PRで
 あるため、新しい証明セマンティクスのクライアント間準拠に
-マッピングする。 -/
+マッピングする。
+
+読み下し: 仮説は各クライアントの EIP 準拠義務であり、結論は
+クライアント間の合意 `Agree implA implB` の1適用である。 -/
 theorem entry_7482623489bc990c_spec_equivalence
     {NodeState ExecutionProof : Type}
     (specT implA implB : Transition NodeState ExecutionProof)
     (hA : SpecEquiv specT implA) (hB : SpecEquiv specT implB) :
-    ∀ s p, implA s p = implB s p := sorry
+    Agree implA implB := by
+  intro s p
+  rw [hA s p, hB s p]
 
 /-- **エントリ `94e5ca105ce4f0b9`** (High) — Grandine 2.0.4 security
 release (fork-choice area, consensus divergence).
@@ -124,13 +155,21 @@ release (fork-choice area, consensus divergence).
 **抽象化**: クラスレベル — アドバイザリは欠陥の内容を明示して
 いないため、データセットの `consensus_divergence` という
 root_cause とフォークチョイスというラベルを手がかりにマッピン
-グする。 -/
+グする。
+
+読み下し: `headOf` はフォークチョイスストアから計算されるヘッド
+選択（`get_head` の結果）の観測である。must-establish は仕様準拠
+`hConform` であり、結論はそこから従う「spec-valid な attestation
+処理後のヘッド選択の一致」— consensus divergence が観測される面
+そのものである。 -/
 theorem entry_94e5ca105ce4f0b9_spec_equivalence
-    {ForkChoiceStore Attestation : Type}
+    {ForkChoiceStore Attestation Head : Type}
     (validFor : ForkChoiceStore → Attestation → Prop)
     (specFC implFC : Transition ForkChoiceStore Attestation)
+    (headOf : ForkChoiceStore → Head)
     (hConform : SpecEquivOn validFor specFC implFC) :
-    ∀ s a, validFor s a → implFC s a = specFC s a := sorry
+    AgreeOnObservation validFor headOf specFC implFC :=
+  agreeOnObservation_of_specEquivOn hConform
 
 /-- **エントリ `a528f483050329a6`** (High) — bump EIP-8025
 `MAX_PROOF_SIZE` to 400 KiB.
@@ -143,12 +182,15 @@ theorem entry_94e5ca105ce4f0b9_spec_equivalence
 
 **root_cause**: `consensus_divergence`。
 
-**クラス**: `spec-equivalence`。 -/
+**クラス**: `spec-equivalence`。
+
+読み下し: 仕様が要求する最小サイズ 400 KiB を実装定数が
+下回らないこと(旧 300 KiB 定数はこの不等式の反例)。 -/
 theorem entry_a528f483050329a6_spec_equivalence
     (implMaxProofSize : Nat)
     (hConst : implMaxProofSize = 400 * 1024) :
-    ∀ proofSize : Nat, proofSize ≤ 400 * 1024 →
-      proofSize ≤ implMaxProofSize := sorry
+    400 * 1024 ≤ implMaxProofSize :=
+  Nat.le_of_eq hConst.symm
 
 /-- **エントリ `b1a6e88b2f095f12`** (High) — geth-compatible zero hashes
 for non-existent accounts in `eth_getProof`.
@@ -162,15 +204,19 @@ for non-existent accounts in `eth_getProof`.
 
 **クラス**: `spec-equivalence`。
 
-読み下し: `specResp` は正規の応答関数であり、それぞれこれに
-準拠する2つのクライアントは、あらゆる状態とアドレスの組に
-対して同一の応答を返す。 -/
+読み下し: `specResp` は正規の応答関数であり、`hA` / `hB` は
+それぞれのクライアントがその応答に一致する義務（`Agree` の
+1適用）である。結論は2実装のあいだの合意
+`Agree implA implB` であり、状態とアドレスの量化は述語の
+内側に畳み込まれている。 -/
 theorem entry_b1a6e88b2f095f12_spec_equivalence
     {StateDb Address ProofResp : Type}
     (specResp implA implB : StateDb → Address → ProofResp)
-    (hA : ∀ db a, implA db a = specResp db a)
-    (hB : ∀ db a, implB db a = specResp db a) :
-    ∀ db a, implA db a = implB db a := sorry
+    (hA : Agree implA specResp)
+    (hB : Agree implB specResp) :
+    Agree implA implB := by
+  intro db a
+  rw [hA db a, hB db a]
 
 /-- **エントリ `dc7e3fa111ce0e2a`** (High) — rename `random` to
 `prevRandao` per the Kiln v2 specs.
@@ -186,12 +232,18 @@ engine-API の相互運用性が壊れる — 準拠する2つのクライアン
 
 **抽象化**: クラスレベル — 悪用された脆弱性ではなく仕様整合PR
 であるため、エンジンのペイロードフィールドにおける正規仕様
-への準拠にマッピングする。 -/
+への準拠にマッピングする。
+
+読み下し: 仮説は各クライアントのフィールド解釈の準拠義務で
+あり、結論はクライアント間の合意 `Agree implA implB` の
+1適用である。 -/
 theorem entry_dc7e3fa111ce0e2a_spec_equivalence
     {EngineState PayloadField : Type}
     (specT implA implB : Transition EngineState PayloadField)
     (hA : SpecEquiv specT implA) (hB : SpecEquiv specT implB) :
-    ∀ s f, implA s f = implB s f := sorry
+    Agree implA implB := by
+  intro s f
+  rw [hA s f, hB s f]
 
 /-- **エントリ `f960a5728e79e59b`** (High) — check CL/Reth capability
 compatibility.
@@ -208,17 +260,20 @@ compatibility.
 **クラス**: `spec-equivalence`。
 
 読み下し: `compatible s` は、この修正が強制するケーパビリ
-ティチェックである。そのドメイン上での準拠は、spec-valid な
-生成をもたらす。 -/
+ティチェックである。そのドメイン上での準拠（`hConform`）と
+仕様側の生成物妥当性（`hSpecValid`）から、実装側の生成物
+妥当性 `ProducesSpecValid` の1適用が従う。 -/
 theorem entry_f960a5728e79e59b_spec_equivalence
     {ChainState Slot : Type}
     (compatible : ChainState → Slot → Prop)
     (specProduce implProduce : Transition ChainState Slot)
     (specValidBlock : ChainState → Prop)
     (hConform : SpecEquivOn compatible specProduce implProduce)
-    (hSpecValid : ∀ s t, compatible s t →
-      specValidBlock (specProduce s t)) :
-    ∀ s t, compatible s t → specValidBlock (implProduce s t) := sorry
+    (hSpecValid : ProducesSpecValid compatible specProduce specValidBlock) :
+    ProducesSpecValid compatible implProduce specValidBlock := by
+  intro s t hc
+  rw [hConform s t hc]
+  exact hSpecValid s t hc
 
 /-- **エントリ `geth:ethereum-go-ethereum:GHSA-69v6-xc2j-r2jf`** (High) —
 shallow copy in the 0x4 precompile could lead to EVM memory
@@ -235,15 +290,19 @@ corruption.
 
 **クラス**: `spec-equivalence`、副次的に `memory-safety`
 （エイリアシングそのものがメモリ安全性違反であり、コンセン
-サスへの影響がここで述べる乖離である）。 -/
+サスへの影響がここで述べる乖離である）。
+
+読み下し: `hValueSemantics` は値セマンティックなコピーへの
+準拠義務であり、結論は正規の受理の伝播
+`AcceptanceCarriesOver` の1適用である。 -/
 theorem entry_geth_ethereum_go_ethereum_GHSA_69v6_xc2j_r2jf_spec_equivalence
     {EvmState CallInput : Type}
     (validFor : EvmState → CallInput → Prop)
     (specCopy implCopy : Transition EvmState CallInput)
     (accepts : EvmState → Prop)
     (hValueSemantics : SpecEquivOn validFor specCopy implCopy) :
-    ∀ s i, validFor s i →
-      accepts (specCopy s i) → accepts (implCopy s i) := sorry
+    AcceptanceCarriesOver validFor specCopy implCopy accepts :=
+  acceptanceCarriesOver_of_specEquivOn hValueSemantics
 
 /-- **エントリ `geth:ethereum-go-ethereum:GHSA-9856-9gg9-qcmq`** (High) —
 RETURNDATA corruption via datacopy.
@@ -259,15 +318,17 @@ RETURNDATA corruption via datacopy.
 **クラス**: `spec-equivalence`、副次的に `memory-safety`。
 
 読み下し: `root` はポスト状態のコミットメントを抽象化したも
-のであり、遷移の準拠性はそのコミットメントの一致を強制する。 -/
+のであり、遷移の準拠性はそのコミットメントの一致を強制する。
+結論は観測の一致 `AgreeOnObservation` の1適用であり、
+spec-valid ガードは述語の内側に畳み込まれている。 -/
 theorem entry_geth_ethereum_go_ethereum_GHSA_9856_9gg9_qcmq_spec_equivalence
     {EvmState Tx Root : Type}
     (validFor : EvmState → Tx → Prop)
     (specT implT : Transition EvmState Tx)
     (root : EvmState → Root)
     (hConform : SpecEquivOn validFor specT implT) :
-    ∀ s tx, validFor s tx →
-      root (implT s tx) = root (specT s tx) := sorry
+    AgreeOnObservation validFor root specT implT :=
+  agreeOnObservation_of_specEquivOn hConform
 
 /-- **エントリ `geth:ethereum-go-ethereum:GHSA-xw37-57qp-9mm4`** (High) —
 consensus flaw during block processing.
@@ -279,15 +340,18 @@ consensus flaw during block processing.
 
 **root_cause**: `consensus_divergence`。
 
-**クラス**: `spec-equivalence`。 -/
+**クラス**: `spec-equivalence`。
+
+読み下し: 仮説はブロック処理の仕様準拠義務であり、結論は
+正規の受理の伝播 `AcceptanceCarriesOver` の1適用である。 -/
 theorem entry_geth_ethereum_go_ethereum_GHSA_xw37_57qp_9mm4_spec_equivalence
     {ChainState Block : Type}
     (validFor : ChainState → Block → Prop)
     (specT implT : Transition ChainState Block)
     (accepts : ChainState → Prop)
     (hConform : SpecEquivOn validFor specT implT) :
-    ∀ s b, validFor s b →
-      accepts (specT s b) → accepts (implT s b) := sorry
+    AcceptanceCarriesOver validFor specT implT accepts :=
+  acceptanceCarriesOver_of_specEquivOn hConform
 
 /-- **エントリ `lighthouse:sigp-lighthouse:GHSA-wm9c-xvqq-5c28`** (High)
 — incorrect processing of effective balances in Electra epoch
@@ -301,16 +365,22 @@ Electra ネットワーク上で実効残高（effective balance）の扱いを
 
 **root_cause**: `missing_input_validation`（データセット由来）。
 
-**クラス**: `spec-equivalence`、副次的に `state-integrity`。 -/
+**クラス**: `spec-equivalence`、副次的に `state-integrity`。
+
+読み下し: `hConform` はエポック処理の仕様準拠義務、
+`hSpecPreserves` は仕様側の残高妥当性の保存である。結論は
+実装側の保存 `PreservesInvOn` の1適用であり、spec-valid
+ガードと事前条件は述語の内側に畳み込まれている。 -/
 theorem entry_lighthouse_sigp_lighthouse_GHSA_wm9c_xvqq_5c28_spec_equivalence
     {BeaconState EpochCtx : Type}
     (validFor : BeaconState → EpochCtx → Prop)
     (specEpoch implEpoch : Transition BeaconState EpochCtx)
     (balancesValid : BeaconState → Prop)
     (hConform : SpecEquivOn validFor specEpoch implEpoch)
-    (hSpecPreserves : ∀ s e, validFor s e →
-      balancesValid s → balancesValid (specEpoch s e)) :
-    ∀ s e, validFor s e →
-      balancesValid s → balancesValid (implEpoch s e) := sorry
+    (hSpecPreserves : PreservesInvOn validFor specEpoch balancesValid) :
+    PreservesInvOn validFor implEpoch balancesValid := by
+  intro s e hv hb
+  rw [hConform s e hv]
+  exact hSpecPreserves s e hv hb
 
 end EthVulnFormalProps

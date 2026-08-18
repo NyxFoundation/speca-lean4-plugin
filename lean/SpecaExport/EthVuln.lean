@@ -2,9 +2,10 @@
 ethereum-vuln-dataset トラック(M2 Track C / c-1)のルートモジュール。
 
 `NyxFoundation/ethereum-vuln-dataset` の `data/ethereum_vulns.csv` に記録
-された Critical/High の脆弱性が破る不変条件を、Lean 4 の命題と
-して形式化する。証明は現段階ではスコープ外(`sorry` を許容する)であり、
-すべての命題は型検査を通らなければならない。
+された Critical/High の脆弱性が破る不変条件を、Lean 4 の定理として
+形式化する。各定理は「名前付きの実装義務(must-establish 仮説)⇒
+名前付き述語の結論(保証される不変条件)」の形で、その含意は証明
+済みである(`sorry` なし。PR #24 レビュー対応)。
 
 各宣言の完全修飾名は `EthVulnFormalProps.*`(名前空間は移植元の
 eth-vuln-formal-props パッケージのまま)。`theorem_map_ethvuln.json` の

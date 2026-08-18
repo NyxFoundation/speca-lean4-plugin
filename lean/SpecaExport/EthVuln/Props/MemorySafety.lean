@@ -9,7 +9,9 @@ import SpecaExport.EthVuln.Common
 `MemRegion` / `AccessesInBounds` をインスタンス化する: 仮説は
 修正が導入した検証（範囲チェック、符号チェック、長さメタデータ
 の整合性）を表し、結論は脆弱性が破っていた境界内アクセスの
-不変条件を表す。証明はスコープ外であり `sorry` とする。
+不変条件を、`AccessesInBounds` の1適用（入力・アクセス位置の
+ガードは述語の内側）として表す。含意は Common の補題で証明する
+（`sorry` なし）。
 
 定理の命名規則: `entry_<id sanitized: [^A-Za-z0-9] → _>_memory_safety`。
 -/
@@ -33,14 +35,19 @@ namespace EthVulnFormalProps
 **クラス**: `memory-safety`、副次的に `availability-robustness`。
 
 読み下し: バイトコード `c` ごとに、インタプリタはウィンドウ
-`[base c, base c + len c)` にアクセスする。修正はどの参照外し
-の前にもウィンドウ全体を `size` に対して検証するため、アクセス
-されるすべてのインデックスは境界内に収まる。 -/
+`[base c, base c + len c)` にアクセスする — アクセス集合は
+`List.range (len c)` を `base c` だけ平行移動した列挙である。
+修正はどの参照外しの前にもウィンドウ全体を `size` に対して検証
+する（`hWindowChecked`、これが唯一の実装義務）。アクセス位置の
+ガード（`k < len c`）は `AccessesInBounds` の内側に畳まれて
+おり、監査上の前提条件として実装義務と混ざることはない。 -/
 theorem entry_228c807be670b220_memory_safety
     {Bytecode : Type}
     (size : Nat) (base len : Bytecode → Nat)
     (hWindowChecked : ∀ c, base c + len c ≤ size) :
-    ∀ c k, k < len c → InBounds size (base c + k) := sorry
+    AccessesInBounds size
+      (fun c => (List.range (len c)).map (base c + ·)) :=
+  accessesInBounds_of_window hWindowChecked
 
 /-- **エントリ `74709c65793547a0`** (High) — Go Ethereum LES protocol
 implementation vulnerable to denial of service.
@@ -65,7 +72,12 @@ theorem entry_74709c65793547a0_memory_safety
     (size : Nat) (idx : HeadersQuery → Int)
     (hNonNeg : ∀ q, 0 ≤ idx q)
     (hUpper : ∀ q, idx q < (size : Int)) :
-    ∀ q, InBounds size (idx q).toNat := sorry
+    ∀ q, InBounds size (idx q).toNat := by
+  intro q
+  have h1 := hNonNeg q
+  have h2 := hUpper q
+  simp only [InBounds]
+  omega
 
 /-- **エントリ `a35bfa6a16c0e362`** (High) — CVE-2018-20421 (Geth 1.8.19
 dynamic-array length rewrite).
@@ -83,12 +95,15 @@ dynamic-array length rewrite).
 
 読み下し: `r` は割り当て済みの領域、`claimedLen` はメタデータ
 が申告する長さである。修正はメタデータを割り当てと整合させる
-（`hConsistent`）ため、申告された長さより小さいすべての
-インデックスは実際の割り当ての境界内に収まる。 -/
+（`hConsistent`、これが唯一の実装義務）。申告された長さの範囲
+`List.range claimedLen` のすべてのインデックスが割り当ての境界
+内に収まる — インデックスのガード（`i < claimedLen`）は
+`AccessesInBounds` の内側に畳まれている。 -/
 theorem entry_a35bfa6a16c0e362_memory_safety
     (r : MemRegion) (claimedLen : Nat)
     (hConsistent : claimedLen ≤ r.size) :
-    ∀ i, i < claimedLen → InBounds r.size i := sorry
+    AccessesInBounds r.size (fun _ : Unit => List.range claimedLen) :=
+  accessesInBounds_of_claimedLen hConsistent
 
 /-- **エントリ `eff1234250453226`** (High) — jsonparser bump 1.1.1 → 1.1.2
 addressing CVE-2026-32285 (out-of-bounds read), in Erigon.
@@ -105,11 +120,15 @@ addressing CVE-2026-32285 (out-of-bounds read), in Erigon.
 
 読み下し: `cursor inp` は、修正済みのパーサが入力 `inp` に
 対して読み取るバイト位置を列挙する。各位置は読み取りの前に
-バッファに対して検証される。 -/
+バッファに対して検証される（`hChecked`）。このエントリでは修正
+（読み取り前の境界チェック）と破られた不変条件（全読み取り位置の
+境界内性）が一致するため、含意は定義の展開そのものである —
+監査内容は must-establish 側の `hChecked` にある。 -/
 theorem entry_eff1234250453226_memory_safety
     {JsonInput : Type}
     (buf : MemRegion) (cursor : JsonInput → List Nat)
     (hChecked : ∀ inp p, p ∈ cursor inp → p < buf.size) :
-    AccessesInBounds buf.size cursor := sorry
+    AccessesInBounds buf.size cursor :=
+  fun inp p hmem => hChecked inp p hmem
 
 end EthVulnFormalProps

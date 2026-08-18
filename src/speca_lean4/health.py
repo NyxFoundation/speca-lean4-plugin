@@ -69,6 +69,14 @@ class TheoremHealth(dict):
         return [h for h in self.hypotheses if h.get("class") == "depend-allowed"]
 
     @property
+    def context_preconditions(self) -> list[dict]:
+        """Anonymous arrow-guards flattened out of the stated conclusion:
+        input/context premises that condition WHEN the guarantee applies.
+        Never implementation obligations, so B1 never lowers them to
+        standalone properties; audit packets list them as preconditions."""
+        return [h for h in self.hypotheses if h.get("class") == "context-precondition"]
+
+    @property
     def referenced_constants(self) -> list[str]:
         return self.get("referenced_constants", [])
 

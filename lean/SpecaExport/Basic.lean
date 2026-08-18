@@ -33,8 +33,9 @@ Enrichment fields (workstream A):
 - `conclusion`          -- pretty-printed body of the forall-telescope (the Q
                            that the theorem guarantees once the hypotheses hold)
 - `hypotheses`          -- telescope decomposition with depend-allowed /
-                           must-establish classification and the head constant
-                           of each hypothesis type (A2, feeds B1/B5)
+                           must-establish / context-precondition classification
+                           and the head constant of each hypothesis type
+                           (A2, feeds B1/B5)
 - `referenced_constants`-- gasper-local constants used in the type (A3)
 - `gasper_axioms`       -- non-builtin axioms the proof depends on (A4)
 - `proof_provenance`    -- "automated" | "hand-written" | "unknown" (A5)
@@ -75,7 +76,21 @@ maintainers) is:
    assumptions (`two_thirds_good`, `good_votes`) and block-existence /
    height-bound modeling assumptions (`blocks_exist_high_over*`,
    `target_height_bound`). These describe the environment, not the client.
-4. every other `Prop` hypothesis is **must-establish**: it asserts a computed
+4. under configs that opt in (`contextualizeAnonymousGuards`, currently the
+   ethvuln track), anonymous `Prop` binders (hygienic names, i.e. unnamed
+   `→` guards — these can only arise from the *stated conclusion's* leading
+   quantifiers/guards being flattened into the telescope, or from an unnamed
+   arrow hypothesis) are **context-precondition**: they condition *when* the
+   guarantee applies (an input/context/initial-state premise), they are not
+   an obligation the implementation establishes. They never lower to
+   standalone `01e` properties (B1 skips them); emitters surface them as
+   preconditions of the guarantee instead. Statement style should still fold
+   such guards into a named predicate so the conclusion is a single
+   application — this rule is the honest fallback, not an excuse (PR #24
+   review). The gasper and EthTotal configs keep the flag off so their
+   historical exports are byte-stable; opting them in is their maintainers'
+   call.
+5. every other `Prop` hypothesis is **must-establish**: it asserts a computed
    or structural fact about the state (`k_finalized ...`, `justified ...`,
    `quorum_2 ...`, `not_ancestor ...`, `¬ q_intersection_slashed ...`,
    inequalities between computed heights, ...) that the implementation must
@@ -109,6 +124,14 @@ structure ProjectConfig where
   projectName             : String
   modelAssumptionHeads    : List String := []
   modelAssumptionPrefixes : List String := []
+  /-- Rule 4 of the A2 heuristic (PR #24 review): classify anonymous
+  (hygienic-named) `Prop` binders — unnamed `→` guards, i.e. the stated
+  conclusion's own quantifiers/guards flattened into the telescope — as
+  `context-precondition` instead of `must-establish`. Off by default so the
+  gasper and EthTotal exports keep their historical classification; each
+  track opts in deliberately (project knowledge, like the model-assumption
+  lists). -/
+  contextualizeAnonymousGuards : Bool := false
   deriving Inhabited
 
 /-- gasper-lean4 (`GasperBeaconChain.*`). The model assumptions are the
@@ -135,24 +158,30 @@ def ethTotalConfig : ProjectConfig where
 
 /-- ethereum-vuln-dataset track (`EthVulnFormalProps.*`, speca#146 c-1): the
 Critical/High vulnerability invariants placed in this repo under
-`lean/SpecaExport/EthVuln/`. Statements type-check; proofs are deferred `sorry`
-stubs, which `classify` reports honestly as `lean_status = "unknown"` /
-`sorry_free = false` -- never `proved`.
+`lean/SpecaExport/EthVuln/`, stated as named implementation obligations
+implying a named-predicate conclusion; the shallow implications are proved
+(PR #24 review revision), which `classify` reports as
+`lean_status = "proved"` / `sorry_free = true` — and would report a `sorry`
+regression as `unknown` / `false`, from `collectAxioms` alone.
 
 No model-assumption list: each proposition is stated over its own small
 abstract model (`ResourceModel`, `Handler`, `ValidatedBy`, ...) and every
-`Prop` hypothesis is an obligation the client implementation must actually
-establish, so all of them are must-establish under rule 3's honest default. -/
+*named* `Prop` hypothesis is an obligation the client implementation must
+actually establish, so all of them are must-establish. Anonymous arrow-guards
+would be conclusion context, so this track opts into rule 4
+(`contextualizeAnonymousGuards`); statement style folds every such guard into
+a named predicate, and tests pin that the class never actually occurs. -/
 def ethVulnConfig : ProjectConfig where
   nsPrefix := `EthVulnFormalProps
   projectName := "EthVulnFormalProps"
+  contextualizeAnonymousGuards := true
 
 /-- Per-hypothesis classification record. -/
 structure HypothesisInfo where
   name    : String
   type    : String
   head    : String  -- fully-qualified head constant of the type ("" if none)
-  «class» : String  -- "depend-allowed" | "must-establish"
+  «class» : String  -- "depend-allowed" | "must-establish" | "context-precondition"
   deriving Inhabited
 
 private def HypothesisInfo.toJson (h : HypothesisInfo) : Json :=
@@ -401,11 +430,16 @@ private def isModelAssumptionHead (cfg : ProjectConfig) (n : Name) : Bool :=
   cfg.modelAssumptionHeads.contains last ||
     cfg.modelAssumptionPrefixes.any (fun p => last.startsWith p)
 
-/-- A2 classification. See the module docstring for the documented heuristic. -/
+/-- A2 classification. See the module docstring for the documented heuristic.
+`isAnonymous` is rule 4: an anonymous (hygienic-named) `Prop` binder is an
+unnamed `→` guard — an input/context premise flattened out of the stated
+conclusion — so it is a context-precondition, never an implementation
+obligation (PR #24 review). -/
 private def classifyHyp (cfg : ProjectConfig) (bi : BinderInfo) (isPropHyp : Bool)
-    (head? : Option Name) : String :=
+    (isAnonymous : Bool) (head? : Option Name) : String :=
   if bi.isInstImplicit then "depend-allowed"
   else if !isPropHyp then "depend-allowed"
+  else if cfg.contextualizeAnonymousGuards && isAnonymous then "context-precondition"
   else match head? with
     | some h => if isModelAssumptionHead cfg h then "depend-allowed" else "must-establish"
     | none   => "must-establish"
@@ -479,7 +513,8 @@ def classify (cfg : ProjectConfig) (env : Environment) (target : Name) : CoreM T
         let hypType := toString hypTypeFmt
         let head? := headConst? ldecl.type
         let isPropHyp ← Meta.isProp ldecl.type
-        let cls := classifyHyp cfg ldecl.binderInfo isPropHyp head?
+        let isAnon := ldecl.userName.hasMacroScopes
+        let cls := classifyHyp cfg ldecl.binderInfo isPropHyp isAnon head?
         let headStr := match head? with
           | some h => toString h
           | none   => ""

@@ -170,10 +170,11 @@ jobs:
         # ethereum-vuln-dataset track (speca#146 c-1): its own map, its own
         # exporter entry point (lean/MainEthVuln.lean, checked in the lean job)
         # and its own fixture health, which is real `speca-export-ethvuln`
-        # output. Honesty: the proofs are `sorry` stubs today, so the exporter
-        # says lean_status=unknown and the emitted 01e must say the same --
-        # this step asserts the status is COPIED from the health, never
-        # upgraded, rather than asserting any particular value.
+        # output. Honesty: the emitted 01e must say exactly what the exporter
+        # said (all proved since the PR #24 review revision; unknown if a
+        # sorry ever regressed) -- this step asserts the status is COPIED
+        # from the health, never upgraded, rather than asserting any
+        # particular value.
         run: |
           speca-lean4 emit-01e \
             --map theorem_map_ethvuln.json \
@@ -313,9 +314,9 @@ jobs:
         # modules that the gasper `speca-export` deliberately does not. The
         # gate is the same as the gasper smoke above -- every target must
         # resolve -- plus the honesty pairing proved <=> sorry_free. Proof
-        # status itself is reported, not asserted: today the proofs are
-        # deferred `sorry` stubs (lean_status=unknown), and this step must
-        # stay green the day one of them is proved.
+        # status itself is reported, not asserted: since the PR #24 review
+        # revision the 66 shallow implications are proved, and this step
+        # would stay green (and honest) if one regressed to `sorry`.
         working-directory: lean
         run: |
           python3 - <<'PY' > targets_ethvuln.txt
@@ -352,10 +353,23 @@ jobs:
           n_src = sum(1 for t in h["theorems"] if t["proof_source"])
           n_doc = sum(1 for t in h["theorems"] if t["doc_string"])
           print(f"all {len(h['theorems'])} ethvuln targets resolved; {n_proved} proved, "
-                f"{len(h['theorems']) - n_proved} unknown (sorry stubs, proofs deferred); "
+                f"{len(h['theorems']) - n_proved} unknown (sorry-dependent); "
                 f"{n_me} must-establish hypotheses; {n_src} with verbatim proof source; "
                 f"{n_doc} with docstrings")
           PY
+      - name: ethvuln track — map staleness gate (packets + anchors regenerate to a zero diff)
+        # theorem_map_ethvuln.json's audit_packet / x_spec_anchor fields are
+        # deterministic functions of the exporter health and the committed
+        # curation (data/ethvuln_spec_anchors.json). Regenerating them from
+        # the health just exported must be a no-op, exactly like the
+        # theorem_map_ethtotal.json gate above -- a diff here means the map
+        # was edited without rerunning the tool (or vice versa).
+        run: |
+          python3 tools/ethvuln-build-packets.py \
+            --map theorem_map_ethvuln.json \
+            --health lean/health_ethvuln.json \
+            --anchors data/ethvuln_spec_anchors.json
+          git diff --exit-code theorem_map_ethvuln.json
       - name: ethvuln track — emit 01e from the real health
         run: |
           speca-lean4 emit-01e \

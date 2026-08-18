@@ -19,12 +19,23 @@ What is pinned:
 3. the map is internally consistent (unique ids/theorems, non-empty required
    fields, benchmark-band assertion/text lengths);
 4. proof status is never claimed by the map: the fixture health is real
-   exporter output, `lean_status` is copied from it verbatim, and while the
-   proofs are `sorry` stubs it reads `unknown` / `sorry_free=false` -- the
+   exporter output and `lean_status` is copied from it verbatim -- the
    emitted 01e must never say `proved` for a theorem the exporter did not
-   certify;
+   certify. (Since the PR #24 review revision the 66 statements are stated
+   as named-predicate conclusions and their shallow implications are proved,
+   so the exporter reports `proved` / `sorry_free=true`; the pairing test is
+   unchanged and would catch a regression to `sorry` just as it caught the
+   original stubs.)
 5. the emitted 01e is schema-valid, represents every entry, and its spec
-   anchoring is table-derived or honestly absent (never a prose guess).
+   anchoring is table-derived or honestly absent (never a prose guess);
+6. the PR #24 review contract: implementation obligations (must-establish)
+   are always NAMED hypotheses -- no anonymous conclusion-guard ever leaks
+   into them (input/context premises are folded into the named Common
+   predicates, and the exporter would classify any residue as
+   context-precondition, never must-establish); every map entry carries an
+   explicit per-entry spec anchor (consensus-/execution-specs section or an
+   explicit N/A) and a deterministic audit packet separating the guarantee
+   from its preconditions.
 """
 from __future__ import annotations
 
@@ -260,3 +271,79 @@ def test_spec_anchoring_is_table_derived_or_honestly_absent(theorem_map, health,
             assert p["spec_reference"].startswith(("consensus-specs:", "execution-specs:"))
             assert p["covers"] == spec_symbol(p["label"]), p["property_id"]
         assert " " not in p["covers"], p["property_id"]
+
+
+# ---------------------------------------------------------------------------
+# 6. PR #24 review contract: obligations vs preconditions, anchors, packets
+# ---------------------------------------------------------------------------
+
+_ANCHOR_PREFIXES = ("consensus-specs:specs/", "execution-specs:src/ethereum/")
+
+
+def test_obligations_are_named_and_guards_are_folded(theorem_map, health):
+    """must-establish = named implementation obligations only. A hygienic
+    (anonymous) name in must-establish would mean a conclusion guard leaked
+    through the telescope flattening again; a non-empty context-precondition
+    list would mean a statement stopped folding its guards into the named
+    Common predicates. Both are regressions against the PR #24 review."""
+    for e in theorem_map["properties"]:
+        th = health[e["theorem"]]
+        for h in th.must_establish:
+            name = h.get("name", "")
+            assert "_hyg" not in name and "✝" not in name, (e["theorem"], name)
+        assert th.context_preconditions == [], (
+            e["theorem"],
+            [h.get("type") for h in th.context_preconditions],
+        )
+
+
+def test_every_entry_has_an_explicit_spec_anchor(theorem_map):
+    """Protocol-semantics entries carry a consensus-/execution-specs anchor;
+    out-of-spec surfaces carry an explicit N/A with a category and reason --
+    never a silent absence, never a fabricated pointer."""
+    for e in theorem_map["properties"]:
+        anchor = e.get("x_spec_anchor", "")
+        assert anchor, (e["property_id"], "missing x_spec_anchor")
+        if anchor.startswith("N/A"):
+            assert "—" in anchor and ":" in anchor, (e["property_id"], anchor)
+        else:
+            assert anchor.startswith(_ANCHOR_PREFIXES), (e["property_id"], anchor)
+            assert str(e.get("x_spec_symbol", "")).strip(), (
+                e["property_id"], "anchored entry without x_spec_symbol")
+
+
+def test_every_entry_has_a_deterministic_audit_packet(theorem_map, health):
+    """The audit packet separates the guarantee (the exact Lean root
+    conclusion) from its preconditions (the exact hypothesis types with
+    their A2 classes). Packets are regenerated from the exporter health by
+    tools/ethvuln-build-packets.py, so they must stay in exact sync with the
+    fixture health -- and they never carry a proof status."""
+    for e in theorem_map["properties"]:
+        th = health[e["theorem"]]
+        packet = e.get("audit_packet")
+        assert isinstance(packet, dict), e["property_id"]
+        assert th.conclusion and th.conclusion in packet["guarantee"], e["property_id"]
+        mes = th.must_establish
+        # explicit obligations key: the must-establish hypotheses, verbatim
+        obs = packet["obligations"]
+        assert [o["name"] for o in obs] == [h["name"] for h in mes], e["property_id"]
+        assert [o["type"] for o in obs] == [h["type"] for h in mes], e["property_id"]
+        pres = packet["preconditions"]
+        me_pres = [p for p in pres if p.endswith("(must-establish)")]
+        assert len(me_pres) == len(mes), (e["property_id"], len(me_pres), len(mes))
+        for h, p in zip(mes, me_pres):
+            assert p.startswith(f"{h['name']}: "), (e["property_id"], p)
+            assert h["type"] in p, (e["property_id"], p)
+        facts = packet["supporting_facts"]
+        assert facts and facts[0]["fact_id"] == "FACT-ROOT", e["property_id"]
+        assert facts[0]["expected"] == th.conclusion, e["property_id"]
+        # one exact per-obligation assertion (FACT-OB<i>) per must-establish
+        assert len(facts) == 1 + len(mes), (e["property_id"], len(facts), len(mes))
+        for i, h in enumerate(mes, 1):
+            fact = facts[i]
+            assert fact["fact_id"] == f"FACT-OB{i}", (e["property_id"], fact["fact_id"])
+            assert fact["source_fact_ids"] == [h["name"]], e["property_id"]
+            assert fact["expected"] == h["type"], (e["property_id"], i)
+        for key in packet:
+            assert "status" not in key.lower() and "proved" not in key.lower(), (
+                e["property_id"], key)

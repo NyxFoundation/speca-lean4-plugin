@@ -21,9 +21,10 @@ assumptions) and the in-repo root module. Pass `--src-root .` (run from
 given roots and `.lake/packages/*`, and these `.lean` files are this package's
 own, not a dependency's.
 
-Proof status is reported honestly: every theorem is currently a `sorry` stub,
-so the health JSON says `lean_status = "unknown"`, `sorry_free = false`. The
-day a proof lands, the same command reports it `proved` with no change here.
+Proof status is reported honestly, from `collectAxioms` alone: since the
+PR #24 review revision the 66 shallow implications are proved, so the health
+JSON says `lean_status = "proved"`, `sorry_free = true`; a regression to
+`sorry` would be reported as `unknown` / `false` with no change here.
 -/
 
 open SpecaExport
