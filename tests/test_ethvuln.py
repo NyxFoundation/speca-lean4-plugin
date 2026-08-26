@@ -46,7 +46,6 @@ from pathlib import Path
 import pytest
 
 from speca_lean4 import build_properties
-from speca_lean4.anchors import spec_reference, spec_symbol
 from speca_lean4.health import index_health, load_health
 from speca_lean4.schema import validate_property
 
@@ -258,18 +257,25 @@ def test_emitted_properties_are_schema_valid_and_complete(theorem_map, health, s
 
 
 def test_spec_anchoring_is_table_derived_or_honestly_absent(theorem_map, health, scope):
-    """Labels with a consensus/execution anchor row resolve through the tables;
-    the rest emit no spec_reference at all -- never a fabricated one -- and
-    the map's note names them."""
+    """Each emitted property follows its explicit per-entry curation row.
+
+    This deliberately does not resolve through the label-level tables: two
+    findings can share a label while naming different spec surfaces, and an
+    explicit N/A must remain absent in the emitted 01e.
+    """
     props = build_properties(theorem_map, health, scope)
-    unanchored = {e["label"] for e in theorem_map["properties"] if spec_symbol(e["label"]) is None}
-    for lab in unanchored:
-        assert lab in theorem_map["note"], f"unanchored label {lab} not declared in the map note"
+    curation = _load(_ROOT / "data" / "ethvuln_spec_anchors.json")["entries"]
     for p in props:
-        assert p.get("spec_reference") == spec_reference(p["label"]), p["property_id"]
-        if p.get("spec_reference"):
+        base = p["property_id"].split("-me")[0]
+        row = curation[base]
+        if row["anchor"] == "N/A":
+            assert p.get("spec_reference") is None, p["property_id"]
+            assert p.get("spec_reference_basis") is None, p["property_id"]
+        else:
+            expected = f"{row['anchor']}#{row['spec_symbol']}"
+            assert p.get("spec_reference") == expected, p["property_id"]
+            assert p.get("spec_reference_basis") == "per-entry-curated", p["property_id"]
             assert p["spec_reference"].startswith(("consensus-specs:", "execution-specs:"))
-            assert p["covers"] == spec_symbol(p["label"]), p["property_id"]
         assert " " not in p["covers"], p["property_id"]
 
 
@@ -334,6 +340,14 @@ def test_every_entry_has_a_deterministic_audit_packet(theorem_map, health):
         for h, p in zip(mes, me_pres):
             assert p.startswith(f"{h['name']}: "), (e["property_id"], p)
             assert h["type"] in p, (e["property_id"], p)
+        expected_pres = [
+            f"{h.get('name', '?')}: {h.get('type', '')} ({h.get('class')})"
+            for h in th.hypotheses
+            if h.get("class") in {
+                "must-establish", "context-precondition", "depend-allowed"
+            }
+        ]
+        assert pres == expected_pres, (e["property_id"], pres, expected_pres)
         facts = packet["supporting_facts"]
         assert facts and facts[0]["fact_id"] == "FACT-ROOT", e["property_id"]
         assert facts[0]["expected"] == th.conclusion, e["property_id"]

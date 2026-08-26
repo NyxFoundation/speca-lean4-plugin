@@ -171,10 +171,8 @@ jobs:
         # exporter entry point (lean/MainEthVuln.lean, checked in the lean job)
         # and its own fixture health, which is real `speca-export-ethvuln`
         # output. Honesty: the emitted 01e must say exactly what the exporter
-        # said (all proved since the PR #24 review revision; unknown if a
-        # sorry ever regressed) -- this step asserts the status is COPIED
-        # from the health, never upgraded, rather than asserting any
-        # particular value.
+        # said, and the current acceptance bar requires every target to be
+        # proved and sorry-free.
         run: |
           speca-lean4 emit-01e \
             --map theorem_map_ethvuln.json \
@@ -199,6 +197,7 @@ jobs:
               assert p['lean_status'] == th['lean_status'], (p['property_id'], p['lean_status'], th['lean_status'])
               assert p['lean_status'] != 'proved' or th['sorry_free'], p['property_id']
               n[p['lean_status']] = n.get(p['lean_status'], 0) + 1
+          assert n == {'proved': len(props)}, f'proof regression in fixture output: {n}'
           print(f'OK: {len(props)} ethvuln properties from {len(entries)} theorems; lean_status copied from the exporter: {n}')
           "
 
@@ -313,10 +312,9 @@ jobs:
         # (lean/MainEthVuln.lean) loads the in-repo SpecaExport.EthVuln
         # modules that the gasper `speca-export` deliberately does not. The
         # gate is the same as the gasper smoke above -- every target must
-        # resolve -- plus the honesty pairing proved <=> sorry_free. Proof
-        # status itself is reported, not asserted: since the PR #24 review
-        # revision the 66 shallow implications are proved, and this step
-        # would stay green (and honest) if one regressed to `sorry`.
+        # resolve -- plus the honesty pairing proved <=> sorry_free. The
+        # current acceptance bar is all 66 shallow implications proved;
+        # a regression to `sorry` must fail this job.
         working-directory: lean
         run: |
           python3 - <<'PY' > targets_ethvuln.txt
@@ -348,12 +346,15 @@ jobs:
               assert t["lean_status"] in ("proved", "unknown"), (t["name"], t["lean_status"])
               assert t["sorry_free"] == (t["lean_status"] == "proved"), t["name"]
           n_proved = sum(1 for t in h["theorems"] if t["lean_status"] == "proved")
+          assert n_proved == len(h["theorems"]), (
+              f"proof regression: {len(h['theorems']) - n_proved} target(s) are unknown"
+          )
+          assert all(t["sorry_free"] for t in h["theorems"]), "sorry-dependent target theorem"
           n_me = sum(1 for t in h["theorems"] for hy in t["hypotheses"]
                      if hy.get("class") == "must-establish")
           n_src = sum(1 for t in h["theorems"] if t["proof_source"])
           n_doc = sum(1 for t in h["theorems"] if t["doc_string"])
-          print(f"all {len(h['theorems'])} ethvuln targets resolved; {n_proved} proved, "
-                f"{len(h['theorems']) - n_proved} unknown (sorry-dependent); "
+          print(f"all {len(h['theorems'])} ethvuln targets resolved and proved; "
                 f"{n_me} must-establish hypotheses; {n_src} with verbatim proof source; "
                 f"{n_doc} with docstrings")
           PY
@@ -485,5 +486,6 @@ jobs:
           n = {}
           for p in props:
               n[p["lean_status"]] = n.get(p["lean_status"], 0) + 1
+          assert n == {"proved": len(props)}, f"proof regression in --run-lean output: {n}"
           print(f"01e_ethvuln_runlean.json: {len(props)} properties, all resolved; lean_status: {n}")
           PY

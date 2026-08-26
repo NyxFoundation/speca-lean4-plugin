@@ -237,9 +237,9 @@ undecomposed entries whose theorems are hypothesis-free spec clauses), all
 `lean_status: proved`, every one carrying its `audit_packet`.
 
 CI (`.github/workflows/ci.yml`): the `lean` job exports the track's health
-with `speca-export-ethvuln` (gate: every target resolved, `proved` ⇔
-`sorry_free`, expanded defs are `EthVulnFormalProps.*`) and emits the 01e
-from it; the `python` job emits from the versioned fixture health and checks
-the status is copied, not upgraded; the cold `run-lean-e2e` job runs
-`emit-01e --map theorem_map_ethvuln.json --run-lean` so the map-selected
-executable path is exercised end to end.
+with `speca-export-ethvuln` (gate: every target resolved and proved,
+`proved` ⇔ `sorry_free`, expanded defs are `EthVulnFormalProps.*`) and emits
+the 01e from it; the `python` job emits from the versioned fixture health and
+checks both status copying and the all-proved acceptance bar; the cold
+`run-lean-e2e` job runs `emit-01e --map theorem_map_ethvuln.json --run-lean`
+and rejects any unknown status, so a proof regression cannot remain green.

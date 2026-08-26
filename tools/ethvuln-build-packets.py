@@ -46,8 +46,10 @@ def build_packet(th: dict) -> dict:
         if cls == "must-establish":
             pres.append(f"{h.get('name', '?')}: {h.get('type', '')} (must-establish)")
             obligations.append(h)
-        elif cls == "context-precondition":
-            pres.append(f"{h.get('type', '')} (context-precondition)")
+        elif cls in {"context-precondition", "depend-allowed"}:
+            pres.append(
+                f"{h.get('name', '?')}: {h.get('type', '')} ({cls})"
+            )
     conclusion = th.get("conclusion") or th.get("statement") or ""
     facts: list[dict] = [
         {
@@ -99,9 +101,9 @@ def build_packet(th: dict) -> dict:
         # `obligations` = what the implementation must establish
         # (must-establish, one entry per named hypothesis, exact Lean type);
         # `preconditions` = the full class-tagged hypothesis list in the
-        # EthTotal-compatible rendering (obligations plus any
-        # context-precondition guards, which condition WHEN the guarantee
-        # applies and are never obligations).
+        # EthTotal-compatible rendering. This includes depend-allowed
+        # dependencies as well as context-precondition guards; only
+        # must-establish hypotheses are implementation obligations.
         "obligations": [
             {"name": h.get("name", "?"), "type": h.get("type", "")}
             for h in obligations

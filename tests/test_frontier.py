@@ -1,27 +1,19 @@
 import importlib.util
 from pathlib import Path
 
-import pytest
-
 from speca_lean4.frontier import proof_closure, proof_evidence
 from speca_lean4.health import load_health
 
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# These three tests read the FULL EthTotal health export
-# (lean-ethtotal/health.json), which is a generated artifact that was never
-# committed (only the trimmed health.mapped.json is, and the trim drops the
-# Lemmata-layer records the proof-closure assertions need). They have failed
-# on main since 27dc1d8 wherever the artifact is absent -- including CI.
-# Skipping with a reason keeps the suite honest where the artifact does not
-# exist while still running the tests wherever it does (regenerate with
-# `lake exe speca-export` in lean-ethtotal/).
 _FULL_HEALTH = ROOT / "lean-ethtotal" / "health.json"
-pytestmark = pytest.mark.skipif(
-    not _FULL_HEALTH.exists(),
-    reason="requires the uncommitted full lean-ethtotal/health.json export",
-)
+_FRONTIER_FIXTURE = ROOT / "tests" / "fixtures" / "theorem_health.frontier.sample.json"
+
+
+def _health_path() -> Path:
+    """Use a full export when available, otherwise the committed closure fixture."""
+    return _FULL_HEALTH if _FULL_HEALTH.exists() else _FRONTIER_FIXTURE
 
 
 def _load_generator():
@@ -34,7 +26,7 @@ def _load_generator():
 
 
 def test_proof_closure_is_transitive_and_excludes_definitions():
-    health = load_health(ROOT / "lean-ethtotal" / "health.json")
+    health = load_health(_health_path())
     root = "EthTotal.Ledger.destroy_guard_invalidated_by_credit"
     closure = proof_closure(health, root)
     names = [x["theorem"] for x in closure]
@@ -48,7 +40,7 @@ def test_proof_closure_is_transitive_and_excludes_definitions():
 
 def test_evidence_hash_changes_when_proof_closure_changes():
     generator = _load_generator()
-    health = load_health(ROOT / "lean-ethtotal" / "health.json")
+    health = load_health(_health_path())
     evidence = generator.evidence_for(
         {"theorem": "EthTotal.Ledger.destroy_guard_invalidated_by_credit"}, health
     )
@@ -60,7 +52,7 @@ def test_evidence_hash_changes_when_proof_closure_changes():
 
 def test_packet_validation_requires_full_closure_coverage():
     generator = _load_generator()
-    health = load_health(ROOT / "lean-ethtotal" / "health.json")
+    health = load_health(_health_path())
     evidence = generator.evidence_for(
         {"theorem": "EthTotal.Ledger.destroy_guard_invalidated_by_credit"}, health
     )

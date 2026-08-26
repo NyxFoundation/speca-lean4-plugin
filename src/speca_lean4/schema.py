@@ -54,7 +54,7 @@ LEAN_STATUSES = DIRECT_LEAN_STATUSES | DESCENDED_LEAN_STATUSES | BRIDGED_LEAN_ST
 PROOF_PROVENANCES = {"automated", "hand-written", "unknown"}
 
 # How a property's spec anchor was chosen (see Property.spec_reference_basis).
-SPEC_REFERENCE_BASES = {"named-in-text", "label-default"}
+SPEC_REFERENCE_BASES = {"named-in-text", "label-default", "per-entry-curated"}
 TYPE_CONSISTENCY = {"ok", "mismatch", "unchecked"}
 
 
@@ -113,7 +113,9 @@ class Property:
     # surface. A reader can tell an item's own claim from an inherited one
     # without leaving the 01e. Absent when no PER-PROPERTY anchor row exists —
     # the consensus table anchors by label only, and claiming "label-default"
-    # there would imply a per-property decision nobody made.
+    # there would imply a per-property decision nobody made. EthVuln entries
+    # may instead carry an explicit curation row, represented as
+    # "per-entry-curated".
     spec_reference_basis: str | None = None
     # Proof-aware stage-2 provenance. These identify the exact Lean evidence
     # payload and the proof-frontier packet generated from its full closure;
