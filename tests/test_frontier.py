@@ -7,6 +7,14 @@ from speca_lean4.health import load_health
 
 ROOT = Path(__file__).resolve().parents[1]
 
+_FULL_HEALTH = ROOT / "lean-ethtotal" / "health.json"
+_FRONTIER_FIXTURE = ROOT / "tests" / "fixtures" / "theorem_health.frontier.sample.json"
+
+
+def _health_path() -> Path:
+    """Use a full export when available, otherwise the committed closure fixture."""
+    return _FULL_HEALTH if _FULL_HEALTH.exists() else _FRONTIER_FIXTURE
+
 
 def _load_generator():
     path = ROOT / "tools" / "generate-properties.py"
@@ -18,7 +26,7 @@ def _load_generator():
 
 
 def test_proof_closure_is_transitive_and_excludes_definitions():
-    health = load_health(ROOT / "lean-ethtotal" / "health.json")
+    health = load_health(_health_path())
     root = "EthTotal.Ledger.destroy_guard_invalidated_by_credit"
     closure = proof_closure(health, root)
     names = [x["theorem"] for x in closure]
@@ -32,7 +40,7 @@ def test_proof_closure_is_transitive_and_excludes_definitions():
 
 def test_evidence_hash_changes_when_proof_closure_changes():
     generator = _load_generator()
-    health = load_health(ROOT / "lean-ethtotal" / "health.json")
+    health = load_health(_health_path())
     evidence = generator.evidence_for(
         {"theorem": "EthTotal.Ledger.destroy_guard_invalidated_by_credit"}, health
     )
@@ -44,7 +52,7 @@ def test_evidence_hash_changes_when_proof_closure_changes():
 
 def test_packet_validation_requires_full_closure_coverage():
     generator = _load_generator()
-    health = load_health(ROOT / "lean-ethtotal" / "health.json")
+    health = load_health(_health_path())
     evidence = generator.evidence_for(
         {"theorem": "EthTotal.Ledger.destroy_guard_invalidated_by_credit"}, health
     )

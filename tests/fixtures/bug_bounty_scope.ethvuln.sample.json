@@ -1,0 +1,24 @@
+{
+  "target": "example-full-node (consensus + execution client pair)",
+  "in_scope": [
+    "consensus layer: fork choice, attestation / sync-committee / slashing processing, block and payload validation, gossip and req/resp handling",
+    "execution layer: EVM and precompiles, gas accounting, transaction pool, block processing and state, engine API, sync and database",
+    "resource exhaustion and denial-of-service reachable from a peer, a transaction or an RPC/engine call",
+    "arithmetic and serialization faults that break consensus, cause a chain split or a client crash"
+  ],
+  "out_of_scope": [
+    "liveness / performance degradation without safety, availability or fund-integrity impact",
+    "issues that need local access or a compromised operator"
+  ],
+  "entry_points": [
+    "p2p:beacon_block",
+    "p2p:beacon_attestation",
+    "p2p:transactions",
+    "rpc:eth_sendRawTransaction",
+    "engine:newPayload"
+  ],
+  "severity_rubric": {
+    "min_eligible": "Low"
+  },
+  "x_note": "Sample full-node scope for the ethereum-vuln-dataset track (theorem_map_ethvuln.json): its 66 Critical/High entries span BOTH layers (bug_bounty_area consensus/* and execution/*), so this fixture names both, unlike the consensus-only bug_bounty_scope.sample.json (gasper) and the execution-only bug_bounty_scope.ethtotal.sample.json (EthTotal). The real BUG_BOUNTY_SCOPE.json comes from the speca run; this fixture exists so emit-01e and the tests can run without one."
+}

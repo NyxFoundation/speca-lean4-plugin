@@ -148,6 +148,20 @@
           "note": "not yet verified against the lighthouse source tree"
         }
       ]
+    },
+    "beacon-chain:execution-payload": {
+      "spec_doc": "specs/bellatrix/beacon-chain.md",
+      "spec_symbol": "process_execution_payload",
+      "client_code": [
+        {
+          "client": "lighthouse",
+          "repo": "sigp/lighthouse",
+          "symbol": "TODO",
+          "path": null,
+          "status": "todo",
+          "note": "not yet verified against the lighthouse source tree"
+        }
+      ]
     }
   },
   "defs": [

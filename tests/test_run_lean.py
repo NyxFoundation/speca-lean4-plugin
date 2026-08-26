@@ -26,7 +26,8 @@ def _fake_lake(*, rc=0, stdout="", stderr="", write_health=True, health_text=Non
     """Return a subprocess.run stand-in emulating `lake exe speca-export`."""
 
     def run(cmd, **kwargs):
-        assert cmd[:3] == ["lake", "exe", "speca-export"]
+        assert cmd[:2] == ["lake", "exe"]
+        assert cmd[2] in ("speca-export", "speca-export-ethvuln")
         assert "--output" in cmd, "health must travel via --output, not stdout"
         out_path = cmd[cmd.index("--output") + 1]
         if write_health:
@@ -85,3 +86,24 @@ def test_run_lean_invalid_json_raises_with_file_head(monkeypatch):
     msg = str(exc.value)
     assert "not valid JSON" in msg
     assert "not json at all" in msg        # file head preserved
+
+
+def test_run_lean_honors_map_lean_exe_and_src_roots(monkeypatch):
+    """A second-target map of the same workspace names its own executable
+    (theorem_map_ethvuln.json -> speca-export-ethvuln) and, optionally, extra
+    --src-root dirs; the default stays the gasper `speca-export`."""
+    seen: list[list[str]] = []
+
+    def run(cmd, **kwargs):
+        seen.append(list(cmd))
+        with open(cmd[cmd.index("--output") + 1], "w", encoding="utf-8") as fh:
+            fh.write(json.dumps(_HEALTH))
+        return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+    monkeypatch.setattr(cli.subprocess, "run", run)
+    _run_lean(_MAP)
+    assert seen[-1][:3] == ["lake", "exe", "speca-export"]
+    assert "--src-root" not in seen[-1]
+    _run_lean({**_MAP, "lean_exe": "speca-export-ethvuln", "x_src_roots": ["."]})
+    assert seen[-1][:3] == ["lake", "exe", "speca-export-ethvuln"]
+    assert seen[-1][seen[-1].index("--src-root") + 1] == "."

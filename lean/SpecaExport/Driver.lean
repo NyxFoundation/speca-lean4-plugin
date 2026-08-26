@@ -19,6 +19,8 @@ imports the formalization's root modules (so lake builds them) and calls
 
 * `lean/Main.lean`           — gasper-lean4      (`GasperBeaconChain.*`)
 * `lean-ethtotal/Main.lean`  — eth-total-supply-safety (`EthTotal.*`)
+* `lean/MainEthVuln.lean`    — ethereum-vuln-dataset track, in-repo
+                               (`EthVulnFormalProps.*`, exe `speca-export-ethvuln`)
 
 The environment is loaded at runtime via `importModules` of the given root
 modules, then `collectAxioms` runs in `CoreM` over that environment — the same

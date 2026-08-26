@@ -71,9 +71,10 @@ _SEVERITY_RANK = {"INFORMATIONAL": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICA
 # no prose judgment. Only the labels used by our FFG target set are mapped;
 # growing the target set means growing this table, not guessing.
 #
-# C3/C4: the authoritative table now lives in data/anchor_map.json (see
-# anchors.py) — this inline map is kept only as a fallback for installs
-# without the repo data file, and tests assert the two never drift.
+# C3/C4: the label-level authoritative table now lives in data/anchor_map.json
+# (see anchors.py) — this inline map is kept only as a fallback for installs
+# without the repo data file, and tests assert the two never drift. EthVuln's
+# explicit per-entry curation is handled separately in _entry_spec_reference.
 _LABEL_SPEC = {
     "beacon-chain:justification-and-finality":
         ("specs/phase0/beacon-chain.md", "process_justification_and_finalization"),
@@ -117,6 +118,26 @@ def _label_symbol(label: str | None) -> str | None:
     if not label or label not in _LABEL_SPEC:
         return None
     return _LABEL_SPEC[label][1]
+
+
+def _entry_spec_reference(entry: dict[str, Any]) -> tuple[str | None, str | None, bool]:
+    """Return the explicit per-entry anchor, when the map carries one.
+
+    EthVuln curation is intentionally more precise than the label-level anchor
+    tables. An explicit ``N/A`` must also suppress label fallback: otherwise
+    an out-of-spec finding can silently acquire an unrelated protocol anchor.
+    The third return value distinguishes an absent curation row from an
+    explicit N/A row.
+    """
+    raw = str(entry.get("x_spec_anchor") or "").strip()
+    if not raw:
+        return None, None, False
+    if raw == "N/A" or raw.startswith("N/A —"):
+        return None, None, True
+    symbol = str(entry.get("x_spec_symbol") or "").strip()
+    if not symbol:
+        return raw, None, True
+    return f"{raw}#{symbol}", symbol, True
 
 
 def _flatten_strings(obj: Any) -> list[str]:
@@ -366,13 +387,19 @@ def build_property(
     label = entry.get("label")
 
     # C5: covers is anchor-grounded first — with no subgraph match `covers` is a
-    # spec symbol, not prose. The per-property anchor leads when there is one
-    # (so `covers` and `spec_reference` name the same surface rather than
-    # disagreeing), then the label's primary symbol.
+    # spec symbol, not prose. An explicit per-entry curation suppresses the
+    # label fallback. Only a single machine-safe symbol is promoted to
+    # `covers`; multi-operation prose such as `shl / shr / sar` is left to the
+    # existing deterministic hints.
     covers_hints = list(entry.get("covers_hint", []))
-    anchored = _spec_reference(label, entry["property_id"], entry.get("theorem"))
-    symbol = anchored.rsplit("#", 1)[-1] if anchored and "#" in anchored else _label_symbol(label)
-    if symbol:
+    curated_reference, curated_symbol, has_curation = _entry_spec_reference(entry)
+    if has_curation:
+        anchored = curated_reference
+        symbol = curated_symbol
+    else:
+        anchored = _spec_reference(label, entry["property_id"], entry.get("theorem"))
+        symbol = anchored.rsplit("#", 1)[-1] if anchored and "#" in anchored else _label_symbol(label)
+    if symbol and not any(ch.isspace() for ch in symbol) and "/" not in symbol:
         covers_hints = [symbol] + [h for h in covers_hints if h != symbol]
 
     return Property(
@@ -400,9 +427,12 @@ def build_property(
         lean_conclusion=lean_conclusion,
         lean_proof_source=lean_proof_source,
         lean_doc_string=lean_doc_string,
-        spec_reference=_spec_reference(label, entry["property_id"], entry.get("theorem")),
-        spec_reference_basis=_anchor_spec_reference_basis(
-            entry["property_id"], entry.get("theorem")),
+        spec_reference=anchored,
+        spec_reference_basis=(
+            "per-entry-curated" if has_curation and anchored else
+            None if has_curation else
+            _anchor_spec_reference_basis(entry["property_id"], entry.get("theorem"))
+        ),
         x_evidence_id=entry.get("x_evidence_id"),
         x_evidence_sha256=entry.get("x_evidence_sha256"),
         x_evidence_kind=entry.get("x_evidence_kind"),

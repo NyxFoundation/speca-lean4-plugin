@@ -15,6 +15,11 @@ lean/lake-packages/
 lean/lake-manifest.json
 lean/health.json
 lean/targets.txt
+# ethereum-vuln-dataset track: same workspace, its own exporter output
+# (`lake exe speca-export-ethvuln`); the versioned copy is
+# tests/fixtures/theorem_health.ethvuln.sample.json
+lean/health_ethvuln.json
+lean/targets_ethvuln.txt
 lean-ethtotal/.lake/
 external/*/.lake/
 # full 3333-theorem export (11MB build artifact); the trimmed
@@ -31,3 +36,5 @@ outputs/**/.work/
 # root-level scratch emits only — outputs/<date>-<title>/01e_PARTIAL_*.json
 # is the versioned audit source and must stay tracked
 /01e_*.json
+/01e_*_shards/
+/recall_report.json

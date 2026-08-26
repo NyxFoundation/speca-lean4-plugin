@@ -1,0 +1,313 @@
+{
+  "plugin": "speca-lean4-plugin",
+  "project": "EthTotal",
+  "theorems": [
+    {
+      "choice_free": true,
+      "conclusion": "Ne (((L.setBal a 0 ha).setBal a (instHAdd.hAdd ((L.setBal a 0 ha).bal a) v) ha).bal a) 0",
+      "decl_end_line": 27,
+      "decl_start_line": 24,
+      "doc_string": "",
+      "export_error": "",
+      "gasper_axioms": [],
+      "hypotheses": [
+        {
+          "class": "depend-allowed",
+          "head": "",
+          "name": "A",
+          "type": "Type u"
+        },
+        {
+          "class": "depend-allowed",
+          "head": "DecidableEq",
+          "name": "inst._@.EthTotal.Extentions.CreditErase.1175633593._hygCtx._hyg.3",
+          "type": "DecidableEq A"
+        },
+        {
+          "class": "depend-allowed",
+          "head": "EthTotal.Ledger",
+          "name": "L",
+          "type": "EthTotal.Ledger A"
+        },
+        {
+          "class": "depend-allowed",
+          "head": "",
+          "name": "a",
+          "type": "A"
+        },
+        {
+          "class": "must-establish",
+          "head": "Membership.mem",
+          "name": "ha",
+          "type": "List.instMembership.mem L.live a"
+        },
+        {
+          "class": "depend-allowed",
+          "head": "Nat",
+          "name": "v",
+          "type": "Nat"
+        },
+        {
+          "class": "must-establish",
+          "head": "Ne",
+          "name": "hv",
+          "type": "Ne v 0"
+        }
+      ],
+      "lean_status": "proved",
+      "module": "EthTotal.Extentions.CreditErase",
+      "name": "EthTotal.Ledger.destroy_guard_invalidated_by_credit",
+      "native_free": true,
+      "project_axioms": [],
+      "proof_code": "fun {A} [DecidableEq A] L a ha v hv h0 => hv (Eq.trans (Eq.symm (EthTotal.Ledger.bal_credit_after_zero L a ha v)) h0)",
+      "proof_constants": [
+        "EthTotal.Ledger",
+        "EthTotal.Ledger.live",
+        "EthTotal.Ledger.bal",
+        "EthTotal.Ledger.setBal",
+        "EthTotal.Ledger.bal_credit_after_zero"
+      ],
+      "proof_provenance": "hand-written",
+      "proof_source": "theorem destroy_guard_invalidated_by_credit [DecidableEq A] (L : Ledger A)\n    (a : A) (ha : a ∈ L.live) (v : ℕ) (hv : v ≠ 0) :\n    ((L.setBal a 0 ha).setBal a (((L.setBal a 0 ha).bal a) + v) ha).bal a ≠ 0 :=\n  fun h0 => hv (Eq.trans (bal_credit_after_zero L a ha v).symm h0)",
+      "referenced_constants": [
+        "EthTotal.Ledger",
+        "EthTotal.Ledger.live",
+        "EthTotal.Ledger.bal",
+        "EthTotal.Ledger.setBal"
+      ],
+      "referenced_defs_expanded": [
+        {
+          "kind": "structure",
+          "name": "EthTotal.Ledger",
+          "pp": "structure EthTotal.Ledger : Type u → Type u\n  live : {A : Type u} → EthTotal.Ledger A → List A\n  live_distinct : ∀ {A : Type u} (self : EthTotal.Ledger A), EthTotal.Distinct self.live\n  bal : {A : Type u} → EthTotal.Ledger A → A → Nat\n  bal_live : ∀ {A : Type u} (self : EthTotal.Ledger A) (a : A), Ne (self.bal a) 0 → List.instMembership.mem self.live a"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Ledger.live",
+          "pp": "def EthTotal.Ledger.live : {A : Type u} → EthTotal.Ledger A → List A :=\n  fun A self => self.1"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Ledger.bal",
+          "pp": "def EthTotal.Ledger.bal : {A : Type u} → EthTotal.Ledger A → A → Nat :=\n  fun A self => self.3"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Ledger.setBal",
+          "pp": "def EthTotal.Ledger.setBal : {A : Type u} →\n  [inst : DecidableEq A] →\n    (L : EthTotal.Ledger A) → (a : A) → Nat → List.instMembership.mem L.live a → EthTotal.Ledger A :=\n  fun {A} [inst : DecidableEq A] L a v ha => L.setBalOfPoint a (fun b => inst b a) v ha"
+        },
+        {
+          "kind": "inductive",
+          "name": "EthTotal.Distinct",
+          "pp": "inductive EthTotal.Distinct : {A : Type u} → List A → Prop\n  | EthTotal.Distinct.nil : ∀ {A : Type u}, EthTotal.Distinct List.nil\n  | EthTotal.Distinct.cons : ∀ {A : Type u} {a : A} {l : List A},\n  Not (List.instMembership.mem l a) → EthTotal.Distinct l → EthTotal.Distinct (List.cons a l)"
+        },
+        {
+          "kind": "def",
+          "name": "EthTotal.Ledger.setBalOfPoint",
+          "pp": "def EthTotal.Ledger.setBalOfPoint : {A : Type u} →\n  (L : EthTotal.Ledger A) →\n    (a : A) → ((b : A) → Decidable (Eq b a)) → Nat → List.instMembership.mem L.live a → EthTotal.Ledger A :=\n  fun {A} L a dec v ha =>\n  { live := L.live, live_distinct := L.live_distinct, bal := fun b => ite (Eq b a) v (L.bal b),\n    bal_live := EthTotal.Ledger.setBalOfPoint._proof_1 L a dec v ha }"
+        }
+      ],
+      "resolved": true,
+      "sorry_free": true,
+      "statement": "∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (a : A) (ha : List.instMembership.mem L.live a) (v : Nat),\n  Ne v 0 → Ne (((L.setBal a 0 ha).setBal a (instHAdd.hAdd ((L.setBal a 0 ha).bal a) v) ha).bal a) 0"
+    },
+    {
+      "name": "EthTotal.Ledger.bal_credit_after_zero",
+      "resolved": true,
+      "statement": "∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (a : A) (ha : List.instMembership.mem L.live a) (v : Nat),\n  Eq (((L.setBal a 0 ha).setBal a (instHAdd.hAdd ((L.setBal a 0 ha).bal a) v) ha).bal a) v",
+      "conclusion": "Eq (((L.setBal a 0 ha).setBal a (instHAdd.hAdd ((L.setBal a 0 ha).bal a) v) ha).bal a) v",
+      "hypotheses": [
+        {
+          "name": "A",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst._@.EthTotal.Extentions.CreditErase.3565302179._hygCtx._hyg.3",
+          "type": "DecidableEq A",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "L",
+          "type": "EthTotal.Ledger A",
+          "head": "EthTotal.Ledger",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "a",
+          "type": "A",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "ha",
+          "type": "List.instMembership.mem L.live a",
+          "head": "Membership.mem",
+          "class": "must-establish"
+        },
+        {
+          "name": "v",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        }
+      ],
+      "proof_constants": [
+        "EthTotal.Ledger",
+        "EthTotal.Ledger.live",
+        "EthTotal.Ledger.bal",
+        "EthTotal.Ledger.setBal",
+        "EthTotal.Ledger.setBal_bal_self",
+        "EthTotal.Ledger.destroy_guard"
+      ],
+      "lean_status": "proved"
+    },
+    {
+      "name": "EthTotal.Ledger.setBal_bal_self",
+      "resolved": true,
+      "statement": "∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (a : A) (v : Nat) (ha : List.instMembership.mem L.live a),\n  Eq ((L.setBal a v ha).bal a) v",
+      "conclusion": "Eq ((L.setBal a v ha).bal a) v",
+      "hypotheses": [
+        {
+          "name": "A",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst",
+          "type": "DecidableEq A",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "L",
+          "type": "EthTotal.Ledger A",
+          "head": "EthTotal.Ledger",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "a",
+          "type": "A",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "v",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "ha",
+          "type": "List.instMembership.mem L.live a",
+          "head": "Membership.mem",
+          "class": "must-establish"
+        }
+      ],
+      "proof_constants": [
+        "EthTotal.Ledger",
+        "EthTotal.Ledger.live",
+        "EthTotal.Ledger.setBalOfPoint_bal_self"
+      ],
+      "lean_status": "proved"
+    },
+    {
+      "name": "EthTotal.Ledger.destroy_guard",
+      "resolved": true,
+      "statement": "∀ {A : Type u} [inst : DecidableEq A] (L : EthTotal.Ledger A) (a : A) (ha : List.instMembership.mem L.live a),\n  Eq ((L.setBal a 0 ha).bal a) 0",
+      "conclusion": "Eq ((L.setBal a 0 ha).bal a) 0",
+      "hypotheses": [
+        {
+          "name": "A",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "inst._@.EthTotal.Lemmata.Derives.Guard.280123068._hygCtx._hyg.3",
+          "type": "DecidableEq A",
+          "head": "DecidableEq",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "L",
+          "type": "EthTotal.Ledger A",
+          "head": "EthTotal.Ledger",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "a",
+          "type": "A",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "ha",
+          "type": "List.instMembership.mem L.live a",
+          "head": "Membership.mem",
+          "class": "must-establish"
+        }
+      ],
+      "proof_constants": [
+        "EthTotal.Ledger",
+        "EthTotal.Ledger.live",
+        "EthTotal.Ledger.setBal_bal_self"
+      ],
+      "lean_status": "proved"
+    },
+    {
+      "name": "EthTotal.Ledger.setBalOfPoint_bal_self",
+      "resolved": true,
+      "statement": "∀ {A : Type u} (L : EthTotal.Ledger A) (a : A) (dec : (b : A) → Decidable (Eq b a)) (v : Nat)\n  (ha : List.instMembership.mem L.live a), Eq ((L.setBalOfPoint a dec v ha).bal a) v",
+      "conclusion": "Eq ((L.setBalOfPoint a dec v ha).bal a) v",
+      "hypotheses": [
+        {
+          "name": "A",
+          "type": "Type u",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "L",
+          "type": "EthTotal.Ledger A",
+          "head": "EthTotal.Ledger",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "a",
+          "type": "A",
+          "head": "",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "dec",
+          "type": "(b : A) → Decidable (Eq b a)",
+          "head": "Decidable",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "v",
+          "type": "Nat",
+          "head": "Nat",
+          "class": "depend-allowed"
+        },
+        {
+          "name": "ha",
+          "type": "List.instMembership.mem L.live a",
+          "head": "Membership.mem",
+          "class": "must-establish"
+        }
+      ],
+      "proof_constants": [
+        "EthTotal.Ledger",
+        "EthTotal.Ledger.live",
+        "EthTotal.Ledger.bal"
+      ],
+      "lean_status": "proved"
+    }
+  ],
+  "x_fixture": "root plus the transitive proof closure captured from the full EthTotal exporter health"
+}

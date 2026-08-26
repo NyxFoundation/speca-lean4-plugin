@@ -36,16 +36,23 @@ into SPECA `01e` security properties.
 > hand-written text is not Lean-verified, only the theorem it descends from
 > is. Design: [`docs/high-angle-checklist.md`](docs/high-angle-checklist.md).
 
-## Two formalization targets
+## Three formalization targets
 
-| track | source | layer | map | workspace |
+| track | source | layer | map | workspace / exporter |
 |---|---|---|---|---|
-| **gasper** | [`gasper-lean4`](https://github.com/NyxFoundation/gasper-lean4) (git dep) | consensus — Casper FFG accountable safety | `theorem_map.json` | `lean/` (Lean 4.31.0) |
-| **ethtotal** | [`eth-total-supply-safety`](https://github.com/NyxFoundation/eth-total-supply-safety) (submodule at `external/`) | execution — total-supply & ledger accounting | `theorem_map_ethtotal.json` | `lean-ethtotal/` (Lean 4.33.0-rc1) |
+| **gasper** | [`gasper-lean4`](https://github.com/NyxFoundation/gasper-lean4) (git dep) | consensus — Casper FFG accountable safety | `theorem_map.json` | `lean/` (Lean 4.31.0), `lake exe speca-export` |
+| **ethtotal** | [`eth-total-supply-safety`](https://github.com/NyxFoundation/eth-total-supply-safety) (submodule at `external/`) | execution — total-supply & ledger accounting | `theorem_map_ethtotal.json` | `lean-ethtotal/` (Lean 4.33.0-rc1), `lake exe speca-export` |
+| **ethvuln** | in-repo `lean/SpecaExport/EthVuln/` (from [`ethereum-vuln-dataset`](https://github.com/NyxFoundation/ethereum-vuln-dataset) Critical/High, speca#146) | consensus + execution — the invariant each real client bug broke | `theorem_map_ethvuln.json` | `lean/` (Lean 4.31.0), `lake exe speca-export-ethvuln` |
 
 Everything below describes the gasper track unless stated otherwise; the second
 track has its own end-to-end write-up in
-[`docs/ethtotal-track.md`](docs/ethtotal-track.md). Short version: all **3333**
+[`docs/ethtotal-track.md`](docs/ethtotal-track.md), the third in
+[`docs/ethvuln-track.md`](docs/ethvuln-track.md) (66 statements, each stated
+as named implementation obligations implying a named-predicate conclusion;
+since the PR #24 review revision the shallow implications are **proved** —
+`sorry`-free — and the exporter reports `lean_status: proved`; the map still
+never claims a status itself). Short version of the
+EthTotal track: all **3333**
 theorems of the EthTotal development are exported and certified
 (`lean_status: proved`, zero non-builtin axioms), every one of them is bucketed
 by a reviewable triage so the `Lemmata/` layer is swept rather than sampled, 176
@@ -61,10 +68,14 @@ ones through `data/anchor_map_execution.json` to
 symbols, each row verified (file + line) against a pinned checkout by
 `tools/build-el-anchor-map.py`.
 
-The two tracks share one exporter: `SpecaExport` is parameterized by a
+The three tracks share one exporter: `SpecaExport` is parameterized by a
 `ProjectConfig` (namespace, project name, model assumptions), with
 `gasperConfig` holding exactly the previous hardcoded values — the gasper export
-is byte-compatible, `gasper_axioms` included.
+is byte-compatible, `gasper_axioms` included. Each track has its own entry
+point (`lean/Main.lean`, `lean-ethtotal/Main.lean`, `lean/MainEthVuln.lean`)
+that imports that track's root modules and passes them to `driverMain`; a map
+that is not the gasper one names its executable in `lean_exe` so
+`emit-01e --map <map> --run-lean` invokes the right one.
 
 ## Why a plugin (not vendored into speca)
 
@@ -91,7 +102,8 @@ speca  (02c → 03 → 04 audit)  ──►  #92 Kurtosis reproduction
   theorem, collect the axioms its proof depends on (the same mechanism as
   gasper-lean4's `#mr_audit_json`), classify it `proved` (no `sorry`) or
   `unknown`, and extract the proof content (statement, hypothesis telescope
-  with depend-allowed/must-establish tags, conclusion, referenced constants,
+  with depend-allowed/must-establish/context-precondition tags, conclusion,
+  referenced constants,
   proof term + verbatim source). Nothing about `01e` lives here.
 - **Python driver (`src/speca_lean4/`)** owns the lowering semantics (B1-B5
   below), scope resolution, and `covers` matching. `theorem_map.json` is the
@@ -204,7 +216,15 @@ tuned with the gasper maintainers:
 3. `Prop` hypotheses whose head predicate is a fixed world/model assumption
    (`two_thirds_good`, `good_votes`, `blocks_exist_*`, `target_height_bound`)
    -> **depend-allowed**;
-4. every other `Prop` hypothesis -> **must-establish**: a computed/structural
+4. under configs that opt in (`contextualizeAnonymousGuards` — currently the
+   ethvuln track; gasper/EthTotal keep their historical classification),
+   anonymous `Prop` binders (hygienic names — unnamed `→` guards, i.e. the
+   stated conclusion's own quantifiers/guards flattened into the telescope)
+   -> **context-precondition**: an input/context premise that conditions
+   *when* the guarantee applies, never an obligation the implementation
+   establishes. B1 never lowers these to standalone properties; audit
+   packets list them as preconditions of the guarantee (PR #24 review);
+5. every other `Prop` hypothesis -> **must-establish**: a computed/structural
    fact (`k_finalized ...`, `justified ...`, `quorum_2 ...`, height
    inequalities, ...) the implementation must preserve for the theorem's
    guarantee to transfer.

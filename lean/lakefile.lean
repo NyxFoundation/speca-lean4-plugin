@@ -37,3 +37,10 @@ lean_lib «SpecaExport» where
 @[default_target]
 lean_exe «speca-export» where
   root := `Main
+
+-- ethereum-vuln-dataset track (speca#146 c-1): same driver, project config
+-- `ethVulnConfig`, root module `SpecaExport.EthVuln` (in this package). Kept
+-- as a separate executable so the gasper export above stays byte-compatible.
+@[default_target]
+lean_exe «speca-export-ethvuln» where
+  root := `MainEthVuln
